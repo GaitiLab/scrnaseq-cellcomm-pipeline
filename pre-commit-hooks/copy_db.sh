@@ -20,3 +20,11 @@ cp -f "${liana_db}" "${target_interactions_db_dir}"
 cp -f "${liana_db_csv}" "${target_interactions_db_dir}"
 cp -f "${ref_db}" "${target_interactions_db_dir}"
 cp -f "${cellphone_db}" "${target_interactions_db_dir}"
+
+if [ -e .commit ]
+    then
+    rm .commit
+    git add "${target_interactions_db_dir}"
+    git commit --amend -C HEAD --no-verify
+fi
+exit
