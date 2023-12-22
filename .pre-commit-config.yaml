@@ -1,0 +1,8 @@
+repos:
+- repo: local
+  hooks:
+  - id: copy_interactions_db
+    name: copy_interactions_db
+    entry: pre-commit-hooks/copy_db.sh
+    language: script
+    pass_filenames: false
