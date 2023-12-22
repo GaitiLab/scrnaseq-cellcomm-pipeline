@@ -1,0 +1,9 @@
+jobs/
+!jobs/[0-5][0-9]*\.sh
+scripts/
+!scripts/[0-4][0-9]*\.R
+
+Python/
+!017_update_cellphonedb.py
+!Python/202_cci_cell2cell.py
+!Python/203_cci_cpdb.py

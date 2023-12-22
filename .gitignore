@@ -41,6 +41,16 @@ vignettes/*.pdf
 # Coding environment 
 .vscode
 
+# Other files (cache, etc)
+._.*
+._*
+.DS_Store
+.nextflow/*
+
+# Python
+Python/__pycache__
+
+
 # Files
 000_misc_local/
 001_data_local/
@@ -56,12 +66,5 @@ omnipathr-log
 nf-logs
 slurm_out
 
-# Other files (cache, etc)
-._.*
-._*
-.DS_Store
-.nextflow/*
 
-# Python
-Python/__pycache__
 
