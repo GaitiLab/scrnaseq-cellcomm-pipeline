@@ -37,17 +37,22 @@ input_file="/cluster/projects/gaitigroup/Users/Joan/002_Project_GBM/001_data/gbm
 split_varname="Sample"
 annot="CCI_CellClass_L1"
 min_cells=100
-min_cell_types=3
+min_cell_types=4
+
+# Cell-cell interactions
 n_perm=1000
 min_pct=0.10
 alpha=0.05
+
+# Post-processing/formatting
+meta_vars_oi="000_misc_local/meta_vars_oi.txt"
 
 # Databases of interactions
 interactions_db="${project_dir}/001_data/interactions_db_v2"
 cellphone_db="${interactions_db}/cellphonedb_custom/cellphonedb_12_18_2023_120229.zip"
 cellchat_db="${interactions_db}/cellchat_db.rds"
 liana_db="${interactions_db}/liana_db.rds"
-liana_db_csv="${interactions_db}/liana_db.csv"
+liana_db_csv="${interactions_db}/cell2cell_db.csv"
 ref_db="${interactions_db}/ref_db.rds"
 
 # Create output directory if not existing
@@ -72,5 +77,5 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --liana_db_csv ${liana_db_csv} \
     --ref_db $ref_db \
     --alpha $alpha \
-    --skip_add_annot
+    --meta_vars_oi $meta_vars_oi 
 echo "Done!"
