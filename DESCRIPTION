@@ -1,0 +1,65 @@
+Package: scrnaq.cellcomm
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R:
+    person("Joan", "Kant", "Joan.Kant@uhn.ca", role = c("aut", "cre"),
+           comment = c(ORCID = "0009-0007-1837-5854"))
+Description: What the package does (one paragraph).
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
+Imports:
+    devtools,
+    roxygen2,
+    data.table,
+    tidyverse,
+    dplyr,
+    presto,
+    CellChat,
+    fs,
+    stringr,
+    glue,
+    entropy,
+    log4r,
+    ggplot2,
+    here,
+    ggthemes,
+    VennDiagram,
+    lemon,
+    reshape2,
+    tibble,
+    Seurat,
+    DropletUtils,
+    pbapply,
+    OmnipathR,
+    ComplexHeatmap,
+    circlize,
+    tidyr,
+    ggrepel,
+    scales,
+    ggpubr,
+    gridExtra,
+    readxl,
+    rstatix,
+    BiocManager,
+    BiocVersion,
+    curl,
+    Cairo,
+    argparse,
+    colorjam,
+    pacman,
+Suggests:
+    styler,
+    lintr,
+    languageserver,
+    jsonlite,
+    httpgd,
+    rlang
+Remotes:
+    immunogenomics/presto,
+    jmw86069/colorjam,
+    jinworks/CellChat,
+    saezlab/liana
+
