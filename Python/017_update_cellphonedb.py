@@ -1,7 +1,5 @@
 import argparse
 import logging
-import pandas as pd
-import os
 from cellphonedb.utils import db_utils
 
 
@@ -20,6 +18,6 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--input_dir", type=str,
                         default="", help="Directory wit files necessary to create the database")
     args = parser.parse_args()
-    # TODO make sure that the line is commented when running from the command line
+    # TODO make sure that the line is commented when running from the command line, only uncomment if run from Python
     # args.input_dir = "/Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/001_data_local/interactions_db_v2/cellphonedb_custom"
     main(args)

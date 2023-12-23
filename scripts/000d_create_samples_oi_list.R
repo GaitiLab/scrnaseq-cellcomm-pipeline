@@ -16,8 +16,10 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Get metadata",
+        description = "Create list with samples of interest",
     )
+    parser$add_argument("--sample_sheet", required = TRUE, help = "Path to sample sheet")
+    parser$add_argument("--sheet_name", required = TRUE, help = "Sheet name")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs

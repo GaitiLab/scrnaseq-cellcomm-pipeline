@@ -57,8 +57,6 @@ if (!interactive()) {
     args$ref_db <- glue("{here::here()}/001_data_local/interactions_db_v2/ref_db.rds")
 }
 
-# output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5
-
 # Set up logging
 logr <- init_logging(log_level = args$log_level)
 log_info(ifelse(interactive(),
@@ -68,7 +66,6 @@ log_info(ifelse(interactive(),
 
 log_info("Create output directory...")
 create_dir(args$output_dir)
-
 
 log_info("Load reference database...")
 ref_db <- readRDS(args$ref_db) %>% select(interaction, simple_interaction, complex_interaction, interaction)

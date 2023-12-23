@@ -77,7 +77,7 @@ input_file <- readRDS(args$input_file)
 
 log_info("Loading metadata...")
 metadata <- readRDS(args$metadata)
-cols_oi <- c("Sample", "Region", args$annot)
+cols_oi <- c("Sample", "Region_Grouped", args$annot)
 # Check per sample, the cell types that are included (n_cells >= args$min_cells)
 included_celltypes_per_sample <- metadata %>%
     select(all_of(cols_oi)) %>%
@@ -95,24 +95,24 @@ source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample
 # Determine number of available samples per region
 n_samples_by_region <- input_file %>%
     ungroup() %>%
-    select(Sample, Region) %>%
+    select(Sample, Region_Grouped) %>%
     distinct() %>%
-    group_by(Region) %>%
+    group_by(Region_Grouped) %>%
     reframe(total_samples_per_region = n()) %>%
     mutate(min_samples_by_region = ceiling(total_samples_per_region * args$min_frac_samples))
 
 # Combine available source-targets + samples per region
 n_samples_by_region_pair <- input_file %>%
     ungroup() %>%
-    select(Sample, Region) %>%
+    select(Sample, Region_Grouped) %>%
     distinct() %>%
     left_join(source_targets_per_sample, by = "Sample") %>%
     distinct() %>%
-    group_by(Region, source_target) %>%
+    group_by(Region_Grouped, source_target) %>%
     reframe(total_samples_by_region_pair = n()) %>%
     mutate(min_samples_by_region_pair = ceiling(total_samples_by_region_pair * args$min_frac_samples))
 
-threshold_df <- merge(n_samples_by_region, n_samples_by_region_pair, by = "Region")
+threshold_df <- merge(n_samples_by_region, n_samples_by_region_pair, by = "Region_Grouped")
 
 write.xlsx(threshold_df,
     file = number_of_interactions_filename,
@@ -120,12 +120,12 @@ write.xlsx(threshold_df,
 )
 
 input_file_w_thresholds <- input_file %>%
-    left_join(threshold_df, by = c("Region", "source_target"))
+    left_join(threshold_df, by = c("Region_Grouped", "source_target"))
 
 # lenient voting
 input_file_lenient <- input_file %>%
     filter(lenient_voting) %>%
-    group_by(complex_interaction, Region, source_target) %>%
+    group_by(complex_interaction, Region_Grouped, source_target) %>%
     reframe(
         lenient_voting_n_samples = n(),
         lenient_voting_samples = paste0(Sample, collapse = ", "),
@@ -135,7 +135,7 @@ input_file_lenient <- input_file %>%
 # stringent voting
 input_file_stringent <- input_file %>%
     filter(stringent_voting) %>%
-    group_by(complex_interaction, Region, source_target) %>%
+    group_by(complex_interaction, Region_Grouped, source_target) %>%
     reframe(
         stringent_voting_n_samples = n(),
         stringent_voting_samples = paste0(Sample, collapse = ", "),
@@ -160,7 +160,7 @@ input_file_w_filters <- merge(input_file_w_thresholds, input_file_voted, all.x =
             str_detect(target, "Malignant") ~ "Other-Malignant",
             TRUE ~ "default"
         ),
-        Region = factor(Region, levels = c("PT", "TE", "SC", "NC"))
+        Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC", "NC"))
     ) %>%
     select(-all_of(cols_to_remove))
 
@@ -171,7 +171,7 @@ log_info(glue("Number of interactions: {nrow(input_file_w_filters)}"))
 
 lenient_by_region <- input_file_w_filters %>%
     filter(lenient_region) %>%
-    group_by(Region, source, target) %>%
+    group_by(Region_Grouped, source, target) %>%
     summarise(n = n()) %>%
     pivot_wider(names_from = target, values_from = n, values_fill = NA) %>%
     data.frame()
@@ -182,7 +182,7 @@ write.xlsx(lenient_by_region,
 
 lenient_by_region_pair <- input_file_w_filters %>%
     filter(lenient_region_pair) %>%
-    group_by(Region, source, target) %>%
+    group_by(Region_Grouped, source, target) %>%
     summarise(n = n()) %>%
     pivot_wider(names_from = target, values_from = n, values_fill = NA) %>%
     data.frame()
@@ -193,7 +193,7 @@ write.xlsx(lenient_by_region_pair,
 
 stringent_by_region <- input_file_w_filters %>%
     filter(stringent_region) %>%
-    group_by(Region, source, target) %>%
+    group_by(Region_Grouped, source, target) %>%
     summarise(n = n()) %>%
     pivot_wider(names_from = target, values_from = n, values_fill = NA) %>%
     data.frame()
@@ -204,7 +204,7 @@ write.xlsx(stringent_by_region,
 
 stringent_by_region_pair <- input_file_w_filters %>%
     filter(stringent_region_pair) %>%
-    group_by(Region, source, target) %>%
+    group_by(Region_Grouped, source, target) %>%
     summarise(n = n()) %>%
     pivot_wider(names_from = target, values_from = n, values_fill = NA) %>%
     data.frame()

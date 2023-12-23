@@ -16,8 +16,9 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Get metadata",
+        description = "Analyse cells by group",
     )
+    parser$add_argument("--input_file", required = TRUE, help = "Path to metadata file")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs

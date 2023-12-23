@@ -43,7 +43,7 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-pacman::p_load(reshape2, tidyverse)
+pacman::p_load(reshape2)
 
 log_info("Load reference database...")
 ref_db <- readRDS(args$ref_db) %>%

@@ -1,9 +1,3 @@
-if (dir.exists("/opt/.renv")) {
-    print("running with Docker/Singularity")
-    renv::load("/opt/.renv")
-}
-print(renv::paths$library())
-
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()
@@ -38,7 +32,7 @@ if (!interactive()) {
 }
 
 # Set up logging
-logr <- init_logging(log_level = args$log_level, log_file = "logs/002_prep_sample.log")
+logr <- init_logging(log_level = args$log_level)
 log_info(ifelse(interactive(),
     "Running interactively...",
     "Running from command line/terminal..."

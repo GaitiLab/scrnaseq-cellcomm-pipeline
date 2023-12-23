@@ -304,6 +304,6 @@ log_info("Saving LIANA database...")
 saveRDS(liana_db_updated, glue("{args$output_dir}/liana_db.rds"))
 
 log_info("Saving LIANA database as CSV for cell2cell...")
-write.csv(liana_db_updated, glue("{args$output_dir}/liana_db.csv"), row.names = FALSE)
+write.csv(liana_db_updated, glue("{args$output_dir}/cell2cell_db.csv"), row.names = FALSE)
 
 log_info("COMPLETED!")
