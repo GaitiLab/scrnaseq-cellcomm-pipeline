@@ -67,4 +67,4 @@ nf-logs
 slurm_out
 .nextflow.log*
 
-
+.fuse_hidden*
