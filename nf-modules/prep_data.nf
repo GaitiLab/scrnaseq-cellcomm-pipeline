@@ -11,7 +11,7 @@ process ADAPT_ANNOTATION {
     output:
     path "000_data/seurat_annot_adapted.rds"
 
-    when: !params.skip_add_annot
+    when: params.do_annot
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30

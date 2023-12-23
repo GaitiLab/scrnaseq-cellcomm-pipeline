@@ -28,21 +28,18 @@ infer_cellchat <- function(seurat_obj, output_dir, args, i = NULL) {
     log_info("Preprocessing the expression data...")
     cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
 
-    # TODO: NEW in cellchat v2 tutorial
     future::plan("multisession", workers = args$n_cores)
 
     cellchat <- identifyOverExpressedGenes(cellchat)
     cellchat <- identifyOverExpressedInteractions(cellchat)
 
     log_info("Infer cell-cell interactions...")
-    # TODO: add accounting for population size -> population.size = TRUE
     cellchat <- computeCommunProb(cellchat, nboot = args$n_perm, population.size = TRUE)
     cellchat <- filterCommunication(cellchat)
     # a. signaling pathway level cellchat <- computeCommunProbPathway(cellchat)
 
     # b. aggregated cell-cell communication network
     cellchat <- aggregateNet(cellchat)
-    # TODO: save raw object
     saveRDS(cellchat, file = glue("{output_dir}/cellchat__{get_name(args$gene_expr)}__raw_obj.rds"))
 
     log_info("Post-processing...")
@@ -63,11 +60,6 @@ infer_cellchat <- function(seurat_obj, output_dir, args, i = NULL) {
     res_concat <- do.call("rbind", res)
 
     log_info("Save CellChat results...")
-    # TODO: also store cellchat object for later potential use
-    # saveRDS(cellchat, file = ifelse(is.null(i),
-    #     glue("{output_dir}/cellchat__{get_name(args$gene_expr)}.rds"),
-    #     glue("{output_dir}/cellchat__{get_name(args$gene_expr)}__{i}.rds")
-    # ))
     saveRDS(res_concat, file = ifelse(is.null(i),
         glue("{output_dir}/cellchat__{get_name(args$gene_expr)}.rds"),
         glue("{output_dir}/cellchat__{get_name(args$gene_expr)}__{i}.rds")

@@ -33,8 +33,8 @@ workflow {
     Run name:           ${params.output_run_name}
     Approach:           ${params.approach}
 
-    ---- SKIP STEPS -------------------------------------------------------------------------------
-    Skip add annot:     ${params.skip_add_annot}
+    ---- SKIP OR EXECUTE STEPS --------------------------------------------------------------------
+    Do annot:           ${params.do_annot}
     Skip reduction:     ${params.skip_reduction}
     Skip preprocessing: ${params.skip_preprocessing}
 
@@ -75,12 +75,12 @@ workflow {
 
 
 
-    if(params.approach >= 0) {
+    if(params.approach > 0) {
         // OPTIONAL: Re-annotate / Annotate 
         // - input file provided
-        // - skip_add_annot = false    
+        // - do_annot = false    
         ADAPT_ANNOTATION(input_file = input_file, samples_oi = samples_oi)
-        input_file = (params.skip_add_annot) ? input_file : ADAPT_ANNOTATION.out
+        input_file = (params.do_annot) ? ADAPT_ANNOTATION.out : input_file
 
         // Grabbing metadata from input file 
         // - if metadata files aren't provided
@@ -106,7 +106,7 @@ workflow {
         preprocessing_seurat_obj = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/seurat/*.rds", type: 'file') : PREPROCESSING.out.seurat_obj.flatten()
     }
     // INFERRING INTERACTIONS
-    if (params.approach > 0 ) {
+    if (params.approach > 1 ) {
         INFER_CELLCHAT(preprocessing_seurat_obj, interactions_db = cellchat_db, annot = params.annot, n_perm = params.n_perm)
 
         INFER_LIANA(preprocessing_seurat_obj, interactions_db = liana_db, annot = params.annot, n_perm = params.n_perm)
@@ -119,7 +119,7 @@ workflow {
 
     }
     // POST-PROCESSING INTERACTIONS
-    if (params.approach > 1) {
+    if (params.approach > 2) {
         POSTPROCESSING_CELLCHAT(INFER_CELLCHAT.out.cellchat_obj, interactions_db = ref_db)
 
         POSTPROCESSING_LIANA(INFER_LIANA.out.liana_obj, ref_db = ref_db)
@@ -129,14 +129,15 @@ workflow {
         POSTPROCESSING_CPDB(INFER_CPDB.out.cpdb_obj, interactions_db = ref_db)
     }
     // MERGE INTERACTIONS based on sample id
-    if (params.approach > 2) {
+    if (params.approach > 3) {
         combined_objects = POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
-
         // // Take consensus - sample wise
         CONSENSUS(combined_objects, alpha = params.alpha)
-
-        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi)
-
-        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot)
     }
+    if (params.approach > 4) {
+        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi)
+    }
+    if (params.approach > 5) {
+        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot)
+    } 
 }

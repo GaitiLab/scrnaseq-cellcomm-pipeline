@@ -1,9 +1,3 @@
-if (dir.exists("/opt/.renv")) {
-    print("running with Docker/Singularity")
-    renv::load("/opt/.renv")
-}
-print(renv::paths$library())
-
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()
@@ -76,7 +70,7 @@ create_dir(output_dir)
 
 # Load additional libraries
 log_info("Loading libraries...")
-pacman::p_load(tidyverse, OmnipathR)
+pacman::p_load(OmnipathR)
 pacman::p_load_gh("saezlab/liana")
 
 # ---- Constants ----

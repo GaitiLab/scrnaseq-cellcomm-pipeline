@@ -113,10 +113,12 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # args.file_dir = "/Users/joankant/Library/CloudStorage/OneDrive-UHN/local_pmcc_internship/output/samples_10x_format/6237_2222190_F__Necrotic_core__data"
-    # args.meta = "/Users/joankant/Library/CloudStorage/OneDrive-UHN/local_pmcc_internship/data/parsebio_integrated_0309_metadata.csv"
-    # args.output_dir = "/Users/joankant/Library/CloudStorage/OneDrive-UHN/local_pmcc_internship/Python/output/"
-    # args.interactions = "/Users/joankant/Library/CloudStorage/OneDrive-UHN/local_pmcc_internship/data/custom_liana.csv"
+    # TODO: if run from Python, please uncomment the following lines
+    # args.output_dir = "project_dir/output"
+    # args.meta = "project_dir/data/metadata.csv"
     # args.annot = "cell_type"
+    # args.interactions = "project_dir/data/custom_liana.csv"
     # args.nperm = 1000
+    # args.input_dir = "project_dir/data/10x_data"
+    # args.sample_id = "sample_id"
     main(args)

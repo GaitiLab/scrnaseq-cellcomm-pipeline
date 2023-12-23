@@ -16,7 +16,7 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Get metadata",
+        description = "get OmniPath data",
     )
     args <- parser$parse_args()
 } else {

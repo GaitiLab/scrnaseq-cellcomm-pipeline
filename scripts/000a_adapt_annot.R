@@ -1,9 +1,3 @@
-if (dir.exists("/opt/.renv")) {
-    print("running with Docker/Singularity")
-    renv::load("/opt/.renv")
-}
-print(renv::paths$library())
-
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()

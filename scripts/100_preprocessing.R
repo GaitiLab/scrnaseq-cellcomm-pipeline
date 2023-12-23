@@ -1,9 +1,3 @@
-if (dir.exists("/opt/.renv")) {
-    print("running with Docker/Singularity")
-    renv::load("/opt/.renv")
-}
-print(renv::paths$library())
-
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()
@@ -14,8 +8,6 @@ has_script_filepath <- startsWith(cmd_args, "--file=")
 if (sum(has_script_filepath)) {
     setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
 }
-
-# .libPaths(c(.libPaths(), "renv/library/R-4.2/x86_64-apple-darwin13.4.0"))
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
@@ -61,6 +53,7 @@ if (!interactive()) {
     # args$celltypes_oi <- glue("{here::here()}/data/celltypes_oi.txt")
     args$celltypes_oi <- ""
     args$first_n <- 0
+    args$min_cell_types <- 3
 }
 
 # Set up logging

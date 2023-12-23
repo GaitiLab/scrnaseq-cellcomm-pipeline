@@ -258,6 +258,7 @@ create_venndiagram <- function(x, category.names, filename, main = "", ...) {
 #' @export
 #' @importFrom ggplot2 ggplot aes geom_line geom_point geom_text scale_alpha_discrete scale_color_manual scale_fill_gradient2 scale_x_discrete scale_y_reverse theme guides
 #' @importFrom lemon facet_rep_wrap
+#' @importFrom scales pretty_breaks
 create_lineplot <- function(interactions_df) {
     return(ggplot(data = interactions_df, aes(x = type, y = gene_id, group = pair_id)) +
         geom_line(aes(

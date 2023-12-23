@@ -80,3 +80,4 @@ cpdb_complex_protein_to_symbol$complex_protein <- apply(cpdb_complex_protein_to_
 
 log_info("Saving complex output specific for CellPhoneDB...")
 saveRDS(cpdb_complex_protein_to_symbol, glue("{args$output_dir}/cpdb_complex_protein_to_symbol.rds"))
+log_info("COMPLETED!")

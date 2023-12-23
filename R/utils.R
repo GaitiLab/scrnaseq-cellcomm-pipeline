@@ -30,27 +30,6 @@ create_dir <- function(dir_path) {
     }
 }
 
-#' Extract patient id from filepath
-#'
-#' @description Extract patient id from filepath from following format:
-#' liana__6237_2222190_A__Cortex__Batch_1, where 6237_2222190 is patient id
-#'
-#' @param filepath filepath
-#' @return patient id
-#'
-#' @export
-#' @importFrom stringr str_split
-extract_patient_id <- function(filepath, platform = "parsebio") {
-    if (platform == "parsebio") {
-    return(paste(stringr::str_split(get_name(filepath),
-        "_",
-        simplify = TRUE
-    )[c(3, 4)], collapse = "_"))
-    } else if (platform == "10x") {
-        return(stringr::str_split(stringr::str_split(get_name(files[1]), "__", simplify = TRUE)[2], "_", simplify = TRUE)[1])
-    }
-}
-
 #' Obtain current date
 #' @description Obtain current date in format YYYYMMDD
 #' @return current date

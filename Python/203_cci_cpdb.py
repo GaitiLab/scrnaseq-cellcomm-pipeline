@@ -124,12 +124,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # args.cpdb_file_path = '/Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/001_data_local/interactions_db_v2/cellphonedb_custom/cellphonedb_12_14_2023_225749.zip'
-    # args.meta = '/Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/001_data_local/seurat_annot_adapted__metadata.csv'
-    # args.output_dir = '/users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/output/test_cellphonedb'
-    # args.input_dir = "/Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/001_data_local/preprocessing/mtx/6419_cortex"
-    # args.annot = "CellClass_L4"
-    # args.nperm = 10
-    # args.threads = 5
+    # TODO: if run from Python, please uncomment the following lines
+    # args.output_dir = "project_dir/output"
+    # args.meta = "project_dir/data/metadata.csv"
+    # args.annot = "cell_type"
+    # args.cpdb_file_path = "project_dir/data/cellphonedb_custom.zip"
+    # args.n_perm = 1000
+    # args.input_dir = "project_dir/data/10x_data"
+    # args.threads = 4
     # args.alpha = 0.05
+    # args.min_pct = 0.1
+    # args.sample_id = "sample_id"
     main(args)
