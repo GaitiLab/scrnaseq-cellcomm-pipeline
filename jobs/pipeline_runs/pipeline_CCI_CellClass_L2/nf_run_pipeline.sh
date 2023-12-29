@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_cci_pipeline_CCI_CellClass_L1
+#SBATCH -J launch_cci_pipeline_CCI_CellClass_L2
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --partition=long
@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
-#SBATCH --time=5-00:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --output=slurm_out/%x_%j.out
 #SBATCH --error=slurm_out/%x_%j.out
 
@@ -16,21 +16,21 @@ module load java/18
 # Local
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
 nf_exec="${HOME}/nextflow-23.04.3-all"
-work_dir="${base_dir}/nf_work_cci"
+work_dir="${base_dir}/nf_work_cci_L2"
 nf_profile="slurm"
 
 echo "Create work directory if not existing..."
 mkdir -p $work_dir
 
-project_dir="${base_dir}/h4h-cell-cell-interactions"
+project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
 output_run_name="CCI_CellClass_L2"
-approach=4
+approach=6
 
 # Inputs 
-input_file="/cluster/projects/gaitigroup/Users/Joan/002_Project_GBM/001_data/gbm_regional_study.rds"
+input_file="${project_dir}/001_data/gbm_regional_study.rds"
 
 # Pre-processing
 split_varname="Sample"
@@ -44,11 +44,11 @@ min_pct=0.10
 alpha=0.05
 
 # Post-processing/formatting
-meta_vars_oi="000_misc_local/meta_vars_oi.txt"
+meta_vars_oi="${project_dir}/000_misc/meta_vars_oi.txt"
 
 # Databases of interactions
-interactions_db="${project_dir}/001_data/interactions_db_v2"
-cellphone_db="${interactions_db}/cellphonedb_custom/cellphonedb_12_18_2023_120229.zip"
+interactions_db="${project_dir}/data/interactions_db"
+cellphone_db="${interactions_db}/cellphonedb_12_18_2023_120229.zip"
 cellchat_db="${interactions_db}/cellchat_db.rds"
 liana_db="${interactions_db}/liana_db.rds"
 liana_db_csv="${interactions_db}/cell2cell_db.csv"
@@ -76,5 +76,6 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --liana_db_csv ${liana_db_csv} \
     --ref_db $ref_db \
     --alpha $alpha \
-    --meta_vars_oi $meta_vars_oi 
+    --meta_vars_oi $meta_vars_oi \
+    --approach $approach
 echo "Done!"

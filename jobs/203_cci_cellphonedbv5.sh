@@ -17,7 +17,7 @@ annot="CellClass_L2"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 cpdb_file_path="${work_dir}/001_data/interactions_db_v2/cellphonedb_v5.0.0/cellphonedb.zip"
 meta="${work_dir}/001_data/seurat_annot_adapted__metadata.csv"

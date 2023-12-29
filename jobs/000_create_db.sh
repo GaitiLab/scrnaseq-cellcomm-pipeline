@@ -16,11 +16,11 @@ source "$HOME/miniforge3/bin/activate" "standard_env"
 
 base_dir="${HOME}/Desktop/gaitigroup/Users"
 # base_dir="/cluster/projects/gaitigroup/Users"
-work_dir="$base_dir/Joan/h4h-cell-cell-interactions"
+work_dir="$base_dir/Joan/scrnaseq-cellcomm"
 
-output_dir="${work_dir}/001_data_local/interactions_db_v2"
-cpdb_dir="${work_dir}/000_misc_local/references/cellphonedb_v5.0.0"
-ref_dir="${work_dir}/000_misc_local/references"
+output_dir="${work_dir}/001_data/interactions_db_v2"
+cpdb_dir="${work_dir}/000_misc/references/cellphonedb_v5.0.0"
+ref_dir="${work_dir}/000_misc/references"
 
 Rscript "${work_dir}/scripts/011_base_liana_db.R" \
     --output_dir ${output_dir} 

@@ -15,7 +15,7 @@ job_min=1
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 output_dir="${work_dir}/final_output/CellClass_L2_all/"
 input_dir="${work_dir}/final_output/CellClass_L2_all/100_preprocessing/seurat"

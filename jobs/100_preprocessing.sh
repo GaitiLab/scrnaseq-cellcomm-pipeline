@@ -20,7 +20,7 @@ first_n=0
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 interactions_db="${work_dir}/data/interactions_db/interactions_ref.rds"
 

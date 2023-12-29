@@ -17,7 +17,7 @@ annot="CellClass_L4"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 sample_id="6467_solid_core"
 resource="${work_dir}/001_data/interactions_db_v2/liana_db.csv"
 

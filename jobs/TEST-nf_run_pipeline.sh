@@ -23,7 +23,7 @@ nf_profile="slurm"
 echo "Create work directory if not existing..."
 mkdir -p $work_dir
 
-project_dir="${base_dir}/h4h-cell-cell-interactions"
+project_dir="${base_dir}/scrnaseq-cellcomm"
 outdir="nf-logs"
 
 # TODO: if new run, then remove following

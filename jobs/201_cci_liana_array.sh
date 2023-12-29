@@ -18,13 +18,13 @@ n_cells=200
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 resource="${work_dir}/data/interactions_db/custom_liana.rds"
 
-# /Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/final_output/CellClass_L2_all/100_preprocessing/seurat
+# /Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/final_output/CellClass_L2_all/100_preprocessing/seurat
 
-# /Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/final_output/CellClass_L2_all/100_preprocessing/seurat
+# /Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/final_output/CellClass_L2_all/100_preprocessing/seurat
 sample_dir="${work_dir}/final_output/${ident_col}_all/100_preprocessing/seurat"
 output_dir="${work_dir}/final_output/${ident_col}_all/201_cci_liana/"
 
