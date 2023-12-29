@@ -16,7 +16,7 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        descriTEion = "Create heatmaps",
+        description = "Create Network Visualization",
     )
     parser$add_argument("--input_file", type = "character", help = "Input file")
     parser$add_argument("--interactions_db", type = "character", help = "Interactions database")
@@ -25,13 +25,13 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CellClass_L4_min3_types/503c_number_of_interactions")
-    args$input_file <- glue("{here::here()}/output/CellClass_L4_min3_types/400_consensus/400c_post_filtering.rds")
-    args$interactions_db <- "001_data_local/interactions_db/interactions_ref.rds"
-
-    args$meta <- glue("{here::here()}/001_data_local/seurat_annot_adapted__metadata.rds")
-    args$region_oi <- "PT"
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1/503_networks")
+    args$input_file <- glue("{here::here()}/output/CCI_CellClass_L1/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+    args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
+    args$meta <- glue("{here::here()}/output/CCI_CellClass_L1/000_data/gbm_regional_study__metadata.rds")
+    args$region_oi <- "TE"
     args$stringency <- 0
+    args$colors <- glue("{here::here()}/000_misc_local/colors_CellClassL4.rds")
 }
 
 # Set up logging
@@ -47,7 +47,7 @@ create_dir(args$output_dir)
 # Load additional libraries
 log_info("Load additional libraries...")
 pacman::p_load_gh("jokergoo/ComplexHeatmap")
-pacman::p_load(ggnetwork, network, randomcoloR)
+pacman::p_load(randomcoloR, igraph, extrafont)
 log_info("Load interactions...")
 interactions <- readRDS(args$input_file)
 
@@ -62,23 +62,32 @@ meta <- readRDS(args$meta)
 
 log_info("Determine number of cells per cell type per region...")
 # Determine number of cells per cell type per sample
+cols_oi <- c("Region_Grouped", "Sample", "CCI_CellClass_L1")
+
 n_cells_per_type <- meta %>%
-    # Number of cells per cell type per sample
-    # TODO change if annotation level changes
-    count(Region, Sample, CellClass_L4) %>%
-    group_by(Region, Sample) %>%
-    # Determine proportion of cells per cell type per sample
+    group_by(Region_Grouped, Sample, CCI_CellClass_L1) %>%
+    # Number of cells per cell type per sample (per region)
+    summarise(n = n()) %>%
+    # Deetermine proportion of cells per cell type per sample
     mutate(prop = prop.table(n)) %>%
-    # Determine proportion of cells per cell type per region (averaging)
-    # TODO change if annotation level changes
-    group_by(Region, CellClass_L4) %>%
-    summarise(avg_n_cells = mean(n), avg_prop_cells = mean(prop), avg_pct_cells = 100 * mean(prop)) %>%
-    ungroup()
+    ungroup() %>%
+    group_by(Region_Grouped, CCI_CellClass_L1) %>%
+    # Determine average proportion of cells per cell type per region
+    summarise(avg_prop = mean(prop), avg_pct = 100 * mean(prop))
 
 # Count the number of interactions between cell type groups
+# Types of filters:
+# - stringent_region (voting method based stringent + take into account only region)
+# - stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
+# - lenient_region (take into account only region)
+# - lenient_region_pair (take into account both region and presence of pair in sample of that region)
+
+interactions %>% filter(lenient_region)
+
 interactions_filtered <- interactions %>%
-    filter(cond_min_samples_region) %>%
-    select(is_stringent, Region, source_target, interaction, source, target) %>%
+    # TODO comment only for SC region (temporary)
+    filter(lenient_region) %>%
+    select(stringent_voting, Region, source_target, interaction, source, target) %>%
     group_by(is_stringent, Region, source_target, source, target) %>%
     summarise(n = n()) %>%
     ungroup() %>%
@@ -96,7 +105,7 @@ interactions_filtered <- interactions %>%
 # names(colors) <- celltypes
 # saveRDS(colors, glue("{args$output_dir}/503c_number_of_interactions_network_colors.rds"))
 
-colors <- readRDS(glue("{args$output_dir}/503c_number_of_interactions_network_colors.rds"))
+colors <- readRDS(args$colors)
 
 log_info("Current selection...")
 df_subset <- interactions_filtered %>%
@@ -120,7 +129,7 @@ edge_list <- df_subset %>%
     ungroup()
 log_info("Create weighted adjacency matrix...")
 adj_mat <- edge_list %>%
-    pivot_wider(names_from = target, values_from = n_normalized) %>%
+    pivot_wider(names_from = target, values_from = n_normalized, values_fill = 0) %>%
     column_to_rownames("source") %>%
     as.matrix()
 adj_mat <- adj_mat[order(rownames(adj_mat)), order(colnames(adj_mat))]
@@ -131,45 +140,75 @@ igraph_network <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "directed"
 
 log_info("Add node and edge attributes...")
 noc_subset <- n_cells_per_type %>%
-    filter(Region == args$region_oi) %>%
-    column_to_rownames("CellClass_L4") %>%
-    select(avg_pct_cells)
+    filter(Region == args$region_oi) # column_to_rownames("CellClass_L4") %>%
+# select(avg_pct_cells)
+
+edges <- data.frame(igraph::ends(igraph_network, es = igraph::E(igraph_network), names = TRUE))
+vertices <- data.frame(igraph::V(igraph_network)$name)
+colnames(vertices) <- c("vertex")
+colnames(edges) <- c("sender", "receiver")
+colors_df <- data.frame(colors) %>% rownames_to_column("cell_type")
+
+edge_colors <- edges %>%
+    left_join(colors_df, by = c("sender" = "cell_type")) %>%
+    select(colors) %>%
+    pull()
+
+vertex_colors <- vertices %>%
+    left_join(colors_df, by = c("vertex" = "cell_type")) %>%
+    select(colors) %>%
+    pull()
+
+edge_width <- edges %>%
+    left_join(edge_list, by = c("sender" = "source", "receiver" = "target")) %>%
+    select(n_normalized) %>%
+    pull()
+
+vertex_size <- vertices %>%
+    left_join(noc_subset, by = c("vertex" = "CellClass_L4")) %>%
+    select(avg_pct_cells) %>%
+    pull()
 
 igraph_network <- igraph_network %>%
     igraph::set_vertex_attr("cell_type", value = igraph::V(igraph_network)$name) %>%
-    igraph::set_vertex_attr("avg_pct_cells", value = noc_subset[igraph::V(igraph_network)$name, "avg_pct_cells"]) %>%
-    igraph::set_edge_attr("edge_color", value = igraph::ends(igraph_network, es = igraph::E(igraph_network), names = TRUE)[, 1])
+    igraph::set_edge_attr("edge_width", value = edge_width) %>%
+    igraph::set_edge_attr("edge_color", value = edge_colors) %>%
+    igraph::set_vertex_attr("vertex_color", value = vertex_colors) %>%
+    igraph::set_vertex_attr("vertex_size", value = vertex_size)
+
 
 
 # Visualize with igraph
 # plot(igraph_network, edge.width = igraph::E(igraph_network)$weight, main = "circle", vertex.size = igraph::V(igraph_network)$n_cells)
 
-log_info("Create ggnetwork...")
-nw <- ggnetwork(igraph_network, layout = igraph::layout_in_circle(igraph_network), weights = "weight", niter = 1000, arrow.gap = 0)
+adjustcolor(vertex_colors[1], alpha.f = vertex_size[1] / 100)
+
+# Adjust colors to emphasize the most abundant interactions/bigger groups
+vertex_color_adj <- sapply(seq_along(vertex_colors), function(i) {
+    adjustcolor(vertex_colors[i], alpha.f = vertex_size[i] / 100)
+})
+edge_color_adj <- sapply(seq_along(edge_colors), function(i) {
+    if (!is.na(edge_width[i])) {
+        adjustcolor(edge_colors[i], alpha.f = edge_width[i])
+    } else {
+        edge_colors[i]
+    }
+})
 
 
+log_info("Plot network...")
+graph_layout <- layout_in_circle(igraph_network)
 
-
-
-nw %>% mutate(name = factor(name), edge_color = factor(edge_color))
-pt <- nw %>%
-    ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
-    geom_edges(aes(linewidth = weight, color = edge_color),
-        curvature = 0.1
-    ) +
-    geom_nodes(aes(size = avg_pct_cells, color = name)) +
-    custom_theme() +
-    theme_void() +
-    geom_nodetext_repel(
-        color = "black", aes(label = name),
-        fontface = "bold", size = rel(10)
-    ) +
-    theme(legend.position = "none") +
-    scale_radius(range = c(10, 20)) +
-    scale_linewidth(range = c(1, 10)) +
-    scale_colour_manual(values = colors)
-pt
-ggsave(
-    plot = pt,
-    filename = glue("{args$output_dir}/503c_number_of_interactions_network_{args$region_oi}_stringency_{args$stringency}.pdf"), width = 10, height = 10, dpi = 300
+extrafont::loadfonts()
+pdf(glue("{args$output_dir}/network_vis_{args$region_oi}_stringency_{args$stringency}.pdf"))
+plot(igraph_network,
+    layout = graph_layout,
+    edge.color = edge_color_adj,
+    vertex.color = vertex_colors,
+    edge.curved = 0.1,
+    edge.width = edge_width * 10,
+    vertex.size = vertex_size,
+    # vertex.label.family = "Arial"
+    # vertex.label.dist = 2
 )
+dev.off()

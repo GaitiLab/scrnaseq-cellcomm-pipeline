@@ -137,7 +137,10 @@ head(all_votes)
 log_info("Take consensus...")
 interactions_mvoted <- all_votes %>%
     group_by(Sample, source_target, complex_interaction) %>%
-    mutate(lenient_voting = (n_methods >= 2) & (in_liana == 1), stringent_voting = (n_methods >= 3) & (in_liana == 1))
+    mutate(
+        lenient_voting = (n_methods >= 2) & (in_liana == 1),
+        stringent_voting = (n_methods >= 3) & (in_liana == 1)
+    )
 
 log_info(glue("Number of interactions after consensus: {nrow(interactions_mvoted)}"))
 
