@@ -18,19 +18,49 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Create scatterplots",
     )
+    parser$add_argument("--interactions_db",
+        type = "character", default = NULL,
+        help = "Path to interactions database"
+    )
+    parser$add_argument("--cutoff_quantile",
+        type = "numeric", default = 0.90,
+        help = "Cutoff quantile for filtering"
+    )
+    parser$add_argument("--min_pct_exp",
+        type = "numeric", default = 10,
+        help = "Minimum percentage of cells expressing a gene"
+    )
+    parser$add_argument("--res_threshold",
+        type = "numeric", default = 1.96,
+        help = "Residual threshold for labeling"
+    )
+    parser$add_argument("--gene_exp_dir",
+        type = "character", default = NULL,
+        help = "Path to gene expression directory"
+    )
+    parser$add_argument("--meta",
+        type = "character", default = NULL,
+        help = "Path to metadata file"
+    )
+    parser$add_argument("--interactions",
+        type = "character", default = NULL,
+        help = "Path to interactions file"
+    )
+
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CellClass_L4_min3_types/521_gene_exp_scatter")
-    args$interactions_db <- "001_data_local/interactions_db/interactions_ref.rds"
-    args$stringency <- 0
+    args$annot <- "CCI_CellClass_L1"
+    args$output_dir <- glue("{here::here()}/output/{args$annot}/511_gene_exp_scatter")
+    args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
     args$cutoff_quantile <- 0.90
     args$min_pct_exp <- 10
     args$res_threshold <- 1.96
-    args$gene_exp_dir <- glue("{here::here()}/output/CellClass_L4_min3_types/520_compute_avg_expr")
-    args$meta <- glue("{here::here()}/001_data_local/seurat_annot_adapted__metadata.rds")
+    args$gene_exp_dir <- glue("{here::here()}/output/{args$annot}/510_compute_avg_expr")
+    args$meta <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
+    args$interactions <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
 }
 
 # Set up logging
@@ -52,32 +82,35 @@ colors <- c("sender" = "#0043fc", "receiver" = "#FF3333", "background" = "grey")
 
 log_info("Reading metadata...")
 meta <- readRDS(args$meta) %>%
-    select(Sample, Region) %>%
+    select(Sample, Region_Grouped) %>%
     distinct()
 rownames(meta) <- NULL
 
 log_info("Load detected interactions...")
-interactions <- readRDS(glue("{here::here()}/output/CellClass_L4_min3_types/400_consensus/400c_post_filtering.rds"))
+interactions <- readRDS(args$interactions) %>% separate(source_target, into = c("source", "target"), sep = "__", remove = FALSE) %>% separate(complex_interaction, into = c("ligand_complex", "receptor_complex"), sep = "__", remove = FALSE) %>% rowwise() %>%
+mutate(ligand = str_split(ligand_complex, "\\:", simplify = TRUE)[1], receptor = str_split(receptor_complex, "\\:", simplify = TRUE)[1]) %>% ungroup()
 
 # Ligands/receptors from database for shape of points
 log_info("Load database of interactions...")
-interactions_db <- readRDS(args$interactions_db)
+interactions_db <- readRDS(args$interactions_db) %>% rowwise() %>% mutate(ligand = str_split(ligand_complex, "\\:", simplify = TRUE)[1], receptor = str_split(receptor_complex, "\\:", simplify = TRUE)[1]) %>% ungroup()
+
 ligands <- interactions_db %>%
-    pull(genename_a) %>%
+    pull(ligand) %>%
     unique()
 receptors <- interactions_db %>%
-    pull(genename_b) %>%
+    pull(receptor) %>%
     unique()
 
 log_info("Load gene expression...")
 gene_exp_samples <- list.files(args$gene_exp_dir, full.names = TRUE)
+log_info(glue("Found {length(gene_exp_samples)} samples..."))
 avg_gene_exp <- do.call(rbind, lapply(gene_exp_samples, function(filename) {
     sample_name <- get_name(filename)
     obj <- readRDS(filename) %>% mutate(Sample = sample_name)
     return(obj)
 }))
 
-# Update metadata + filtering on min. pct. cells
+log_info("Update metadata + filtering on min. pct. cells...")
 avg_gene_exp <- avg_gene_exp %>%
     rename(gene = features.plot, cell_type = id) %>%
     filter(pct.exp >= args$min_pct_exp) %>%
@@ -85,26 +118,33 @@ avg_gene_exp <- avg_gene_exp %>%
 
 # Average samples per region
 overall_avg_gene_exp <- avg_gene_exp %>%
-    group_by(Region, cell_type, gene) %>%
+    group_by(Region_Grouped, cell_type, gene) %>%
     summarise(sd = sd(avg.exp), mean = mean(avg.exp)) %>%
-    mutate(Region = factor(Region, levels = c("PT", "TE", "SC")))
+    mutate(Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC")))
 
 # source_oi <- "Malignant"
 # target_oi <- "Neuron"
 # region_oi <- "PT"
 
 all_regions <- interactions %>%
-    filter(is_stringent == args$stringency) %>%
-    pull(Region) %>%
+    filter(stringent_region_pair) %>%
+    pull(Region_Grouped) %>%
     unique()
 
-
+# Count the number of interactions between cell type groups
+# Types of filters:
+# - stringent_region (voting method based stringent + take into account only region)
+# - stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
+# - lenient_region (take into account only region)
+# - lenient_region_pair (take into account both region and presence of pair in sample of that region)
+options <- c("stringent_region", "stringent_region_pair", "lenient_region", "lenient_region_pair")
+# region_oi <- "PT"
 for (region_oi in all_regions) {
     available_sender_receiver_pairs <- interactions %>%
-        filter(Region == region_oi, is_stringent == args$stringency, cond_min_samples_region) %>%
+        filter(Region_Grouped == region_oi, stringent_region_pair) %>%
         select(source_target, source, target) %>%
         distinct()
-
+    # i <- 1
     for (i in seq_len(nrow(available_sender_receiver_pairs))) {
         source_oi <- available_sender_receiver_pairs$source[i]
         target_oi <- available_sender_receiver_pairs$target[i]
@@ -112,9 +152,8 @@ for (region_oi in all_regions) {
         log_info("Select ligands/receptors from detected interactions...")
         interactions_subset <- interactions %>%
             filter(
-                cond_min_samples_region,
-                is_stringent == args$stringency,
-                Region == region_oi, source == source_oi,
+                stringent_region_pair,
+                Region_Grouped == region_oi, source == source_oi,
                 target == target_oi
             ) %>%
             select(ligand, receptor)
@@ -145,7 +184,7 @@ for (region_oi in all_regions) {
         }
         log_info("Convert to wide format...")
         avg_gene_expr_subset_wide <- avg_gene_expr_subset %>%
-            select(Region, group, exp_by_type, mean, sd, cell_type, gene) %>%
+            select(Region_Grouped, group, exp_by_type, mean, sd, cell_type, gene) %>%
             ungroup() %>%
             pivot_wider(names_from = cell_type, values_from = c(mean, sd), values_fill = NA) %>%
             filter(!is.na(group)) %>%
@@ -157,14 +196,10 @@ for (region_oi in all_regions) {
                         TRUE ~ 1
                     )
             ) %>%
-            filter(Region == region_oi) %>%
+            filter(Region_Grouped == region_oi) %>%
             ungroup() %>%
-            select(-Region)
-
-
+            select(-Region_Grouped)
         loess_fit <- loess(avg_gene_expr_subset_wide$mean_sender ~ avg_gene_expr_subset_wide$mean_receiver)
-
-
         # # Take residuals
         resid <- scale(residuals(loess_fit), scale = TRUE, center = TRUE)
         # his <- hist(resid)
@@ -208,103 +243,13 @@ for (region_oi in all_regions) {
             ) +
             scale_x_log10() +
             scale_y_log10()
-        # facet_wrap(~Region, ncol = 3)
+        # facet_wrap(~Region_Grouped, ncol = 3)
         plt_all
         log_info("Saving...")
         ggsave(
             plot = plt_all,
-            filename = glue("{args$output_dir}/scatter_{source_oi}_{target_oi}_{region_oi}_{args$stringency}.pdf"),
+            filename = glue("{args$output_dir}/scatter_{source_oi}_{target_oi}_{region_oi}.pdf"),
             width = 8, height = 7
         )
     }
 }
-
-# plt_all
-# plt_sub <- plt_all + xlim(0, 20) + ylim(0, 20) +  geom_text_repel(
-#         aes(mean_Malignant, mean_Neuron,
-#             # label = ifelse((abs(resid) > args$res_threshold & !is.na(exp_by_type)), as.character(gene), ""),
-#             label = ifelse(exp_by_type == "background", "", as.character(gene)), color = exp_by_type
-#         ),) + labs(subtitle = "Zoomed in")
-# plt_combi <- ggarrange(plt_all, plt_sub, ncol = 2, common.legend = TRUE, legend = "bottom")
-# plt_combi
-# ggsave(plot = plt_all, filename = glue("{args$output_dir}/scatter_{region_oi}_{args$stringency}.pdf"), width = 10, height = 5)
-
-# # ---- Filter by cutoff quantile ---- #
-# max_source <- quantile(avg_expr_subset[[source_oi]], args$cutoff_quantile)
-# max_target <- quantile(avg_expr_subset[[target_oi]], args$cutoff_quantile)
-# expr_cutoff <- ceiling(max(c(max_source, max_target)))
-
-# avg_expr_subset_filtered <- avg_expr_subset %>% filter(Malignant <= expr_cutoff, Neuron <= expr_cutoff)
-# loess_fit <- loess(avg_expr_subset_filtered$Malignant ~ avg_expr_subset_filtered$Neuron)
-
-# # Take residuals
-# resid <- scale(residuals(loess_fit), scale = TRUE, center = TRUE)
-# his <- hist(resid)
-# print(his)
-
-# avg_expr_subset_filtered$resid <- resid
-# avg_expr_subset_filtered$fitted <- loess_fit$fitted
-
-# plt_subset <- ggplot(data = avg_expr_subset_filtered) +
-#     geom_smooth(aes(x = Malignant, y = Neuron),
-#         se = FALSE, color = "lightgrey", linetype = "dashed", method = "loess"
-#     ) +
-#     geom_point(aes(x = Malignant, y = Neuron, shape = group, color = exp_by_type)) +
-#     custom_theme() +
-#     labs(x = glue("Average expression in {source_oi} (sender)"), y = glue("Average expression in {target_oi} (receiver)")) +
-#     guides(color = guide_legend(title = ""), shape = guide_legend(title = "")) +
-#     # Only label the genes with residuals > 1.96 and
-#     # Color labels of genes that are also within the ligand/receptor list of interest in black
-#     geom_text_repel(
-#         aes(Malignant, Neuron,
-#             label = ifelse((abs(resid) > args$res_threshold & !is.na(exp_by_type)), as.character(gene), "")
-#         )
-#     )
-# ggsave(plot = plt_subset, filename = glue("{args$output_dir}/scatter_sub_{region_oi}_{args$stringency}.pdf"), width = 10, height = 5)
-
-
-# ggarrange(plt_all, plt_subset)
-# # interactions_with_exp <- interactions %>%
-#     left_join(avg_expr %>% rename(source_avg_exp = avg.exp, source_pct_exp = pct.exp, source_avg_exp_scaled = avg.exp.scaled), by = c("source" = "id", "ligand" = "gene")) %>%
-#     left_join(avg_expr %>% rename(target_avg_exp = avg.exp, target_pct_exp = pct.exp, target_avg_exp_scaled = avg.exp.scaled), by = c("target" = "id", "receptor" = "gene"))
-
-# interactions_with_exp_group <- interactions_with_exp %>% filter(is_stringent == 0, cond_min_samples_region, Region == "PT", source == "Malignant", target == "Neuron")
-
-
-# loess_fit <- loess(interactions_with_exp_group$source_avg_exp ~ interactions_with_exp_group$target_avg_exp)
-
-# # Take residuals
-# resid <- scale(residuals(loess_fit), scale = TRUE, center = TRUE)
-# # his <- histogram(resid)
-# # print(his)
-
-# interactions_with_exp_group$resid <- resid
-# interactions_with_exp_group$fitted <- loess_fit$fitted
-# interactions_with_exp_group$type <- ""
-# interactions_with_exp_group[interactions_with_exp_group$gene %in% interactinos_db$genename_a, "type"] <- "ligands"
-# interactions_with_exp_group[interactions_with_exp_group$gene %in% interactions_db$genename_b, "type"] <- "receptors"
-
-
-
-# p <- ggplot(data = avg_expr, aes(source_avg_exp, target_avg_exp)) +
-#     geom_smooth(aes(source_avg_exp, target_avg_exp),
-#         se = FALSE, color = "lightgrey", linetype = "dashed", method = "loess"
-#     ) +
-#     geom_point(aes(color = resid, shape = type)) +
-#     scale_color_gradient2(low = "#0043fc", mid = "white", high = "#FF3333") +
-#     guides(color = guide_colorbar("Residual")) +
-#     labs(title = glue("Average expression of ligand/receptor genes in \n{str_replace(source_target, '__', '-')} interactions"), subtitle = glue("{str_replace_all(region, '_', ' ')}"), x = glue("{c(str_split(source_target, '__', simplify = TRUE)[1])} cell gene expression"), y = glue("{c(str_split(source_target, '__', simplify = TRUE)[2])} cell gene expression")) +
-#     scale_x_continuous(limits = c(0, 3)) +
-#     scale_y_continuous(limits = c(0, 3)) +
-#     theme(
-#         panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-#         panel.background = element_blank(), axis.line = element_line(colour = "black")
-#     ) +
-#     # Only label the genes with residuals > 1.96 and
-#     # Color labels of genes that are also within the ligand/receptor list of interest in black
-#     geom_text_repel(
-#         aes(source_avg_exp, target_avg_exp,
-#             label = ifelse((abs(resid) > args$res_threshold), as.character(gene), "")
-#         ),
-#         color = ifelse(((abs(resid) > args$res_threshold) & (interactions_with_exp_group$gene %in% genes_oi$gene)), "black", "grey")
-#     )

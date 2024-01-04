@@ -18,16 +18,15 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Get metadata",
     )
-    parser$add_argument("--gene_exp", type = "character", help = "Gene expression file")
-    parser$add_argument("--interactions_db", type = "character", help = "Interactions database")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("{here::here()}/output/")
-    args$interactions_db <- "001_data_local/interactions_db/interactions_ref.rds"
-    args$gene_exp <- glue("{here::here()}/output/CellClass_L4_min3_types/100_preprocessing/seurat/6419_enhancing_border.rds")
+    args$annot <- "CCI_CellClass_L2"
+    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+
 }
 
 # Set up logging
@@ -41,27 +40,9 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-pacman::p_load(Seurat, ggplot2, ggrepel, ggpubr)
+interactions <- readRDS(args$input_file)
 
-log_info("Load interactions...")
-interactions_db <- readRDS(args$interactions_db)
-ligands <- interactions_db %>%
-    pull(genename_a) %>%
-    unique()
-receptors <- interactions_db %>%
-    pull(genename_b) %>%
-    unique()
+lenient_voting <- rownames(interactions)[interactions$lenient_voting]
+stringent_voting <- rownames(interactions)[interactions$stringent_voting]
 
-gene_exp <- readRDS(args$gene_exp)
-
-genes_oi <- c(ligands, receptors)
-
-log_info("Determine average expression per cell type...")
-avg_expr <- Seurat::DotPlot(gene_exp, features = intersect(rownames(gene_exp), genes_oi), group.by = "CellClass_L4")$data
-rownames(avg_expr) <- NULL
-
-log_info("Writing output...")
-saveRDS(avg_expr, file = glue("{args$output_dir}/{get_name(args$gene_exp)
-}.rds"))
-
-log_info("COMPLETED!")
+100* length(setdiff(lenient_voting, stringent_voting)) / nrow(interactions)

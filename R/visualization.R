@@ -1,3 +1,12 @@
+#' @title Autocrop plot
+#' @description Crop plot to remove white space
+#' @param filename filename
+#' @return NA
+#' @export
+auto_crop <- function(filename) { 
+    knitr::plot_crop(filename)
+} 
+
 #' Obtain optimal size of heatmap or list of heatmaps
 #'
 #' @param hm heatmap or list of heatmaps
@@ -342,3 +351,4 @@ plot_expr_hist_ccis <- function(avg_expr, annot, args) {
         list(p_hist, p_hist_log_transformed)
     )
 }
+
