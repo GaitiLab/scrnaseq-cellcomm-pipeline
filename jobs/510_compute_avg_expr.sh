@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_520_compute_avg_expr
+#SBATCH -J launch_510_compute_avg_expr
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --ntasks=1
@@ -11,19 +11,16 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 job_min=1
+run_name="CCI_CellClass_L1"
 
-n_perm=1000
-ident_col="CellClass_L4"
-n_cells=200
-
+annot=$run_name
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-resource="${work_dir}/001_data/interactions_db/interactions_ref.rds"
-
-sample_dir="${work_dir}/output/CellClass_L4_min3_types/100_preprocessing/seurat"
-output_dir="${work_dir}/output/CellClass_L4_min3_types/520_compute_avg_expr/"
+output_dir="${work_dir}/output/${run_name}/510_compute_avg_expr"
+sample_dir="${work_dir}/output/${run_name}/100_preprocessing/seurat"
+ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
 
 # Determine job array limits
 # A. Determine number of files
@@ -37,26 +34,31 @@ echo $job_max
 sbatch <<EOF
 #!/usr/bin/env bash
 
-#SBATCH -J 520_compute_avg_expr
+#SBATCH -J 510_compute_avg_expr
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
-##SBATCH --partition=himem
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=16G
-#SBATCH --time=00:15:00
+#SBATCH --mem=8G
+#SBATCH --time=00:10:00
 #SBATCH --output=slurm_out/%x_%A_%a.out
 #SBATCH --error=slurm_out/%x_%A_%a.out
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
-sample=\$(ls -d -- $sample_dir/* | sed -n \${SLURM_ARRAY_TASK_ID}p)
+input_file=\$(ls -d -- $sample_dir/* | sed -n \${SLURM_ARRAY_TASK_ID}p)
+filename=\$(basename -- "\$input_file")
+sample_id="\${filename%.*}"
 
-Rscript "$work_dir/scripts/520_compute_avg_expr.R" \
+echo \$sample_id
+
+Rscript "$work_dir/scripts/510_compute_avg_expr.R" \
+    --sample_id \${sample_id} \
     --output_dir ${output_dir} \
-    --interactions_db $resource \
-    --gene_exp \$sample 
+    --gene_ex \${input_file} \
+    --annot ${annot} \
+    --ref_db ${ref_db}
 EOF

@@ -14,11 +14,14 @@
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=${base_dir}/Joan/scrnaseq-cellcomm
 
-input_file="${work_dir}/output/CCI_CellClass_L2/400_consensus/400_samples_interactions_mvoted.rds"
-metadata="${work_dir}/output/CCI_CellClass_L2/000_data/gbm_regional_study__metadata.rds"
+run_name="CCI_CellClass_L2"
+
+input_file="${work_dir}/output/${run_name}/400_consensus/400_samples_interactions_mvoted.rds"
+metadata="${work_dir}/output/${run_name}/000_data/gbm_regional_study__metadata.rds"
 min_cells=100
 min_frac_samples=0.5
-annot="CCI_CellClass_L2"
+annot=$run_name
+output_dir="${work_dir}/output/${run_name}/400_consensus"
 
 echo "Activating conda environment..."
 source "$HOME/miniforge3/bin/activate" "cci"
@@ -28,6 +31,7 @@ Rscript "$work_dir/scripts/400c_post_filtering.R" \
     --metadata $metadata \
     --min_cells $min_cells \
     --min_frac_samples $min_frac_samples \
-    --annot $annot
+    --annot $annot \
+    --output_dir $output_dir
 
 echo "COMPLETED!"
