@@ -46,7 +46,6 @@ Imports:
     BiocManager,
     BiocVersion,
     curl,
-    Cairo,
     argparse,
     colorjam,
     pacman,
