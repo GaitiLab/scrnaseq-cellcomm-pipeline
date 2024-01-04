@@ -13,7 +13,7 @@
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 input_file="${work_dir}/001_data/gbm_regional_study.rds"
 output_dir="${work_dir}/output/"

@@ -17,14 +17,14 @@ annot="CellClass_L2"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 resource="${work_dir}/data/interactions_db/custom_liana.csv"
 
 meta="/cluster/projects/gaitigroup/Users/Joan/001_data/GBM/combined_metadata.csv"
-# /Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/final_output/CellClass_L2_all/100_preprocessing/seurat
+# /Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/final_output/CellClass_L2_all/100_preprocessing/seurat
 
-# /Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/final_output/CellClass_L2_all/100_preprocessing/seurat
+# /Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/final_output/CellClass_L2_all/100_preprocessing/seurat
 sample_dir="${work_dir}/final_output/${annot}_all/100_preprocessing/mtx"
 output_dir="${work_dir}/final_output/${annot}_all/202_cci_cell2cell/"
 

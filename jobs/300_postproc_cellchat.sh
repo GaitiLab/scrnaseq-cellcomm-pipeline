@@ -14,7 +14,7 @@
 job_min=1
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 output_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/300_postproc_cellchat"
 ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"

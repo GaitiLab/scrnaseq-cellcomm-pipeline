@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#SBATCH -J 000b_get_metadata
+#SBATCH -J 001_reduce_seurat_object_size
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --partition=himem
@@ -19,6 +19,6 @@ input_file="${work_dir}/001_data/gbm_regional_study.rds"
 output_dir="${work_dir}/output"
 
 
-Rscript "${work_dir}/scripts/000b_get_metadata.R" \
+Rscript "${work_dir}/scripts/001_reduce_seurat_object_size.R" \
     --input_file $input_file \
     --output_dir ${output_dir}

@@ -52,7 +52,7 @@ log_info(glue("\n\nParameters: \nInteraction file:\t{args$all_interactions}\nCCI
 
 log_info("Load interactions...")
 all_interactions <- readRDS(args$all_interactions) %>%
-    group_by(is_stringent, interaction, Region, source_target, source, target) %>%
+    group_by(is_stringent, interaction, Region_Grouped, source_target, source, target) %>%
     reframe(
         n_samples = n(),
         samples = paste0(Sample, collapse = ", "),
@@ -62,13 +62,13 @@ all_interactions <- readRDS(args$all_interactions) %>%
         source == "Malignant" & target == "Malignant" ~ "Malignant-Malignant",
         str_detect(source, "Malignant") ~ "Malignant-Other", str_detect(target, "Malignant") ~ "Other-Malignant"
     )) %>%
-    mutate(Region = factor(Region, levels = c("PT", "TE", "SC", "NC")))
+    mutate(Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC", "NC")))
 
 log_info("Load CCIs of interest (post-filtered)...")
 interactions_oi <- readRDS(args$interactions_oi)
 
 available_regions <- interactions_oi %>%
-    pull(Region) %>%
+    pull(Region_Grouped) %>%
     unique()
 
 # region <- available_regions[1]
@@ -76,23 +76,23 @@ available_regions <- interactions_oi %>%
 
 for (stringency in c(0, 1)) {
     for (region in available_regions) {
-        log_info(glue("Stringency: {stringency}, Region: {region}"))
+        log_info(glue("Stringency: {stringency}, Region_Grouped: {region}"))
         # Malignant-Other
         setname_oi <- "Malignant-Other"
         interactions_oi_subset <- interactions_oi %>%
-            filter(setname == setname_oi, Region == region, cond_min_samples_region, is_stringent == stringency) %>%
+            filter(setname == setname_oi, Region_Grouped == region, cond_min_samples_region, is_stringent == stringency) %>%
             pull(interaction) %>%
             unique()
 
         mat <- all_interactions %>%
-            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region == region, is_stringent == stringency) %>%
+            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region_Grouped == region, is_stringent == stringency) %>%
             select(target, interaction, n_samples) %>%
             pivot_wider(names_from = target, values_from = n_samples, values_fill = 0) %>%
             column_to_rownames("interaction") %>%
             as.matrix()
 
         mat_pval <- all_interactions %>%
-            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region == region, is_stringent == stringency) %>%
+            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region_Grouped == region, is_stringent == stringency) %>%
             select(target, interaction, pval_combined) %>%
             pivot_wider(names_from = target, values_from = pval_combined, values_fill = NA) %>%
             column_to_rownames("interaction") %>%
@@ -146,19 +146,19 @@ for (stringency in c(0, 1)) {
         # Other-Malignant
         setname_oi <- "Other-Malignant"
         interactions_oi_subset <- interactions_oi %>%
-            filter(setname == setname_oi, Region == region, cond_min_samples_region, is_stringent == stringency) %>%
+            filter(setname == setname_oi, Region_Grouped == region, cond_min_samples_region, is_stringent == stringency) %>%
             pull(interaction) %>%
             unique()
 
         mat <- all_interactions %>%
-            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region == region, is_stringent == stringency) %>%
+            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region_Grouped == region, is_stringent == stringency) %>%
             select(source, interaction, n_samples) %>%
             pivot_wider(names_from = source, values_from = n_samples, values_fill = 0) %>%
             column_to_rownames("interaction") %>%
             as.matrix()
 
         mat_pval <- all_interactions %>%
-            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region == region, is_stringent == stringency) %>%
+            filter(interaction %in% interactions_oi_subset, setname == setname_oi, Region_Grouped == region, is_stringent == stringency) %>%
             select(source, interaction, pval_combined) %>%
             pivot_wider(names_from = source, values_from = pval_combined, values_fill = NA) %>%
             column_to_rownames("interaction") %>%

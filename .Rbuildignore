@@ -2,3 +2,4 @@
 ^renv$
 ^renv\.lock$
 ^\.github$
+^\.pre-commit-config\.yaml$

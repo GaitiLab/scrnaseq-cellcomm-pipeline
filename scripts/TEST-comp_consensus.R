@@ -16,18 +16,17 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Create list with samples of interest",
+        description = "Get metadata",
     )
-    parser$add_argument("--sample_sheet", required = TRUE, help = "Path to sample sheet")
-    parser$add_argument("--sheet_name", required = TRUE, help = "Sheet name")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/000_misc_local")
-    args$sample_sheet <- glue("{here::here()}/000_misc_local/gbm_regional_study__20231115.xlsx")
-    args$sheet_name <- "CellClass_L4"
+    args$output_dir <- glue("{here::here()}/output/")
+    args$annot <- "CCI_CellClass_L2"
+    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+
 }
 
 # Set up logging
@@ -41,20 +40,9 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-pacman::p_load(readxl)
+interactions <- readRDS(args$input_file)
 
-log_info("Read sample sheet...")
-excel_file <- read_excel(args$sample_sheet, sheet = args$sheet_name)
+lenient_voting <- rownames(interactions)[interactions$lenient_voting]
+stringent_voting <- rownames(interactions)[interactions$stringent_voting]
 
-log_info("Filter...")
-excel_file_filtered <- excel_file %>% filter(`N cell types` >= 2, Region != "NC")
-
-log_info("Formatting...")
-out <- excel_file_filtered %>%
-    rownames_to_column() %>%
-    select(rowname, Sample)
-
-log_info("Save output...")
-write.table(out, file = glue("{args$output_dir}/samples_oi.txt"), row.names = FALSE, col.names = TRUE, quote = FALSE)
-
-log_info("COMPLETED!")
+100* length(setdiff(lenient_voting, stringent_voting)) / nrow(interactions)

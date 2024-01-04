@@ -16,9 +16,10 @@ source "${HOME}/miniforge3/bin/activate" "cci"
 
 work_dir="/cluster/projects/gaitigroup/Users/Joan/scrnaseq-cellcomm"
 input_file="${work_dir}/001_data/gbm_regional_study.rds"
+samples_oi="${work_dir}/000_misc/samples_oi.txt"
 output_dir="${work_dir}/output"
 
-
-Rscript "${work_dir}/scripts/000b_get_metadata.R" \
+Rscript "${work_dir}/scripts/000a_adapt_annot.R" \
     --input_file $input_file \
+    --samples_oi $samples_oi \
     --output_dir ${output_dir}

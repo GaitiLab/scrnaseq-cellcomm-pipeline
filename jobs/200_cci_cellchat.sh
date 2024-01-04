@@ -17,7 +17,7 @@ ident_col="CellClass_L4"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
 resource="${work_dir}/001_data/interactions_db_v3/cellchat_db.rds"

@@ -18,7 +18,7 @@ n_cores=8
 
 base_dir="${HOME}/Desktop/gaitigroup/Users"
 # base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 resource="${work_dir}/001_data_local/interactions_db_v2/cellchat_db.rds"
 
@@ -75,7 +75,7 @@ sample_id=$(sed -n ${SLURM_ARRAY_TASK_ID}p ${sample_ids})
 sample="${sample_dir}/${sample_id}"
 
 echo $sample > test.txt
-sample2="/Users/joankant/Desktop/gaitigroup/Users/Joan/h4h-cell-cell-interactions/output/CellClass_L4_min3_types_rerun/100_preprocessing/seurat/6234_2895153_B.rds"
+sample2="/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/CellClass_L4_min3_types_rerun/100_preprocessing/seurat/6234_2895153_B.rds"
 echo $sample > test2.txt
 
 if [ $sample == $sample2 ]; then 

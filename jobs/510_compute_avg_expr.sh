@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_400_consensus
+#SBATCH -J launch_510_compute_avg_expr
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --ntasks=1
@@ -11,19 +11,17 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 job_min=1
-run_name="CellClass_L4_min3_types"
+run_name="CCI_CellClass_L1"
 
+annot=$run_name
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
-work_dir=$base_dir/Joan/h4h-cell-cell-interactions
+work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-run_dir="${work_dir}/output/${run_name}"
-output_dir="${work_dir}/output/${run_name}/400_consensus"
-alpha=0.05
-is_stringent=1
+output_dir="${work_dir}/output/${run_name}/510_compute_avg_expr"
+sample_dir="${work_dir}/output/${run_name}/100_preprocessing/seurat"
+ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
 
-# sample_ids="${work_dir}/final_output/macrophage_tumor/samples_oi_min200.txt"
-sample_dir="${work_dir}/001_data/preprocessing/seurat"
 # Determine job array limits
 # A. Determine number of files
 job_max=$(ls -d -- $sample_dir/* | wc -l) 2>/dev/null
@@ -36,10 +34,9 @@ echo $job_max
 sbatch <<EOF
 #!/usr/bin/env bash
 
-#SBATCH -J 400_consensus
+#SBATCH -J 510_compute_avg_expr
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
-##SBATCH --partition=himem
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -50,7 +47,7 @@ sbatch <<EOF
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
 input_file=\$(ls -d -- $sample_dir/* | sed -n \${SLURM_ARRAY_TASK_ID}p)
 filename=\$(basename -- "\$input_file")
@@ -58,9 +55,10 @@ sample_id="\${filename%.*}"
 
 echo \$sample_id
 
-Rscript "$work_dir/scripts/400_consensus.R" \
-    --run_dir ${run_dir} \
-    --alpha ${alpha} \
+Rscript "$work_dir/scripts/510_compute_avg_expr.R" \
     --sample_id \${sample_id} \
-    --output_dir ${output_dir}
+    --output_dir ${output_dir} \
+    --gene_ex \${input_file} \
+    --annot ${annot} \
+    --ref_db ${ref_db}
 EOF

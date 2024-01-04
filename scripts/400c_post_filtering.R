@@ -43,12 +43,12 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_pipeline/400_consensus")
-    args$input_file <- glue("{here::here()}/output/test_pipeline/400_consensus/400_samples_interactions_mvoted.rds")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus/")
+    args$input_file <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus/400_samples_interactions_mvoted.rds")
     args$min_frac_samples <- 0.5
-    args$metadata <- glue("{here::here()}/output/test_pipeline/000_data/seurat_annot_adapted__metadata.rds")
+    args$metadata <- glue("{here::here()}/output/CCI_CellClass_L2/000_data/gbm_regional_study__metadata.rds")
     args$min_cells <- 100
-    args$annot <- "CellClass_L2"
+    args$annot <- "CCI_CellClass_L2"
 }
 
 # Set up logging
