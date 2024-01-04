@@ -7,6 +7,12 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 - Cell2cell (0.7.3)
 - CellChat v2 (2.1.1)
 
+## Quick start
+
+1. Fork or clone this repo
+2. Setup required conda environments with `setup_env.sh`
+3. Use `nf_template.sh` to run the pipeline.
+
 ## Workflow Schematic
 
 ![workflow](src/cci_workflow.png)
@@ -29,9 +35,7 @@ All other scripts can be used with the following environment:
 mamba env create --name cci --file env/cci.yml
 ```
 
-After creating this environment, please install the following R package3
-s manually using `devtools` (or your preferred package installer, e.g. `pak` or `pacman`):
-
+After creating this environment, please install the following R packages manually using `devtools` (or your preferred package installer, e.g. `pak` or `pacman`):
 ```R
 # Visualization
 devtools::install_github("jmw86069/colorjam")
@@ -43,6 +47,8 @@ devtools::install_github("jinworks/CellChat")
 # LIANA
 devtools::install_github("saezlab/liana")
 ```
+
+Alternatively, use the `setup_env.sh` to setup all required environments with a single bash script.
 
 ## Running the Nextflow pipeline
 
