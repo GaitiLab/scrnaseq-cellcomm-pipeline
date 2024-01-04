@@ -45,7 +45,7 @@ vignettes/*.pdf
 ._.*
 ._*
 .DS_Store
-.nextflow/*
+jobs/pipeline_runs/*/.nextflow/*
 
 # Python
 Python/__pycache__
@@ -68,3 +68,6 @@ slurm_out
 .nextflow.log*
 
 .fuse_hidden*
+**/.nextflow/
+
+
