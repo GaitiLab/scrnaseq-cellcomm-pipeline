@@ -272,10 +272,30 @@ liana_db_updated <- liana_db_updated %>%
     )
 log_info(glue("Number of interactions: {nrow(liana_db_updated)}"))
 # Expected to be the same number of interactions as previous check
-
 liana_db_updated <- liana_db_updated %>%
     separate(source_genesymbol, into = paste0("ligand_subunit_", seq_len(5)), remove = FALSE) %>%
     separate(target_genesymbol, into = paste0("receptor_subunit_", seq_len(5)), remove = FALSE)
+
+# ------ NEWLY ADDED 24/01/09 -----
+# With distinct first row will be preserved, favoring: (1) LIANA, (2) multi-subunit interaction
+liana_db_updated <- liana_db_updated %>%
+    rowwise() %>%
+    mutate(
+        simple_interaction_ordered = paste0(sort(c(ligand_subunit_1, receptor_subunit_1)), collapse = "__"),
+        is_multi_subunit = (!is.na(ligand_subunit_2) | !is.na(receptor_subunit_2)),
+        method_tmp = case_when(
+            method == "LIANA consensus" ~ 1,
+            method == "LIANA Ramilowski2015" ~ 2,
+            method == "CellphoneDB extracted" ~ 3,
+            method == "CellChat extracted" ~ 3
+        ),
+        n_proof = str_count(references, ";") + str_count(sources, ";")
+    ) %>%
+    arrange(method_tmp, desc(n_proof), desc(is_multi_subunit)) %>%
+    distinct(simple_interaction_ordered, .keep_all = TRUE) %>%
+    ungroup() %>%
+    select(-method_tmp, -simple_interaction_ordered)
+# ------ NEWLY ADDED 24/01/09 -----
 
 ref_db <- liana_db_updated %>% mutate(simple_interaction = paste0(ligand_subunit_1, "__", receptor_subunit_1))
 
