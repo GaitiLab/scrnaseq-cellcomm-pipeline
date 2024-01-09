@@ -38,17 +38,22 @@ if (!interactive()) {
         type = "character", default = "CellClass_L2",
         help = "Annotation to use for filtering"
     )
+    parser$add_argument("--min_celltypes",
+        type = "integer", default = 3,
+        help = "Minimum number of cell types for a sample to be retained"
+    )
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus/")
-    args$input_file <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus/400_samples_interactions_mvoted.rds")
-    args$min_frac_samples <- 0.5
-    args$metadata <- glue("{here::here()}/output/CCI_CellClass_L2/000_data/gbm_regional_study__metadata.rds")
-    args$min_cells <- 100
     args$annot <- "CCI_CellClass_L2"
+    args$output_dir <- glue("{here::here()}/output/{args$annot}/400_consensus/")
+    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted.rds")
+    args$min_frac_samples <- 0.5
+    args$metadata <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
+    args$min_cells <- 100
+    args$min_celltypes <- 3
 }
 
 # Set up logging
@@ -83,14 +88,33 @@ included_celltypes_per_sample <- metadata %>%
     select(all_of(cols_oi)) %>%
     group_by_at(vars(all_of(cols_oi))) %>%
     # group_by(all_of(cols_oi)) %>%
-    summarise(n = n() >= args$min_cells)
+    summarise(has_enough_cells = n() >= args$min_cells)
 
+# Number of cell types per sample (with at least args$min_cells)
+n_celltypes_per_sample <- included_celltypes_per_sample %>%
+    filter(has_enough_cells) %>%
+    group_by(Sample, Region_Grouped) %>%
+    summarise(n_celltypes = n()) %>%
+    filter(n_celltypes >= args$min_celltypes)
+
+included_samples <- n_celltypes_per_sample %>%
+    pull(Sample) %>%
+    unique()
+included_celltypes_per_sample <- included_celltypes_per_sample %>% filter(Sample %in% included_samples)
+log_info(glue("Number of samples with at least {args$min_celltypes} cell types: {length(included_samples)}"))
+
+# Potential source-targets based on presence of cell types in individual samples
 source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample %>% pull(Sample) %>% unique(), function(sample_name) {
     data.frame(Sample = sample_name, source_target = apply(expand.grid(
-        included_celltypes_per_sample %>% filter(n, Sample == sample_name) %>% pull(as.symbol(args$annot)),
-        included_celltypes_per_sample %>% filter(n, Sample == sample_name) %>% pull(as.symbol(args$annot))
+        included_celltypes_per_sample %>% filter(has_enough_cells, Sample == sample_name) %>% pull(as.symbol(args$annot)),
+        included_celltypes_per_sample %>% filter(has_enough_cells, Sample == sample_name) %>% pull(as.symbol(args$annot))
     ), 1, paste, collapse = "__"))
 }))
+
+n_samples <- input_file %>%
+    ungroup() %>%
+    select(Sample, Region_Grouped) %>%
+    distinct()
 
 # Determine number of available samples per region
 n_samples_by_region <- input_file %>%
@@ -119,9 +143,6 @@ write.xlsx(threshold_df,
     sheetName = "thresholds", append = FALSE
 )
 
-input_file_w_thresholds <- input_file %>%
-    left_join(threshold_df, by = c("Region_Grouped", "source_target"))
-
 # lenient voting
 input_file_lenient <- input_file %>%
     filter(lenient_voting) %>%
@@ -145,7 +166,27 @@ input_file_stringent <- input_file %>%
 # Combine lenient and stringent voting
 input_file_voted <- merge(input_file_lenient, input_file_stringent)
 cols_to_remove <- c("lenient_voting_n_samples", "stringent_voting_n_samples", "min_samples_by_region", "min_samples_by_region_pair", "total_samples_per_region", "total_samples_by_region_pair")
-input_file_w_filters <- merge(input_file_w_thresholds, input_file_voted, all.x = TRUE) %>%
+# input_file_w_filters <- merge(input_file_w_thresholds, input_file_voted, all.x = TRUE) %>%
+#     rowwise() %>%
+#     mutate(
+#         # TODO: should we enforce a min. of 2 samples?
+#         lenient_region = (lenient_voting_n_samples >= min_samples_by_region) && (lenient_voting_n_samples >= glob_min_samples),
+#         lenient_region_pair = (lenient_voting_n_samples >= min_samples_by_region_pair) && (lenient_voting_n_samples >= glob_min_samples),
+#         stringent_region = (stringent_voting_n_samples >= min_samples_by_region) && (stringent_voting_n_samples >= glob_min_samples),
+#         stringent_region_pair = (stringent_voting_n_samples >= min_samples_by_region_pair) && (stringent_voting_n_samples >= glob_min_samples),
+#         source = str_split(source_target, "__", simplify = TRUE)[, 1],
+#         target = str_split(source_target, "__", simplify = TRUE)[, 2],
+#         setname = case_when(
+#             str_detect(source, "Malignant") ~ "Malignant-Other",
+#             str_detect(target, "Malignant") ~ "Other-Malignant",
+#             TRUE ~ "default"
+#         ),
+#         Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC", "NC"))
+#     ) %>%
+#     select(-all_of(cols_to_remove))
+
+input_file_w_filters <- input_file_voted %>%
+    left_join(threshold_df) %>%
     rowwise() %>%
     mutate(
         # TODO: should we enforce a min. of 2 samples?
@@ -158,17 +199,19 @@ input_file_w_filters <- merge(input_file_w_thresholds, input_file_voted, all.x =
         setname = case_when(
             str_detect(source, "Malignant") ~ "Malignant-Other",
             str_detect(target, "Malignant") ~ "Other-Malignant",
+            str_detect(source, "_like") ~ "Malignant-Other",
+            str_detect(target, "_like") ~ "Other-Malignant",
             TRUE ~ "default"
         ),
         Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC", "NC"))
     ) %>%
     select(-all_of(cols_to_remove))
 
+
 log_info(glue("Number of interactions: {nrow(input_file)}"))
 log_info(glue("Number of interactions: {nrow(input_file_w_filters)}"))
 
 # Save in Excel file
-
 lenient_by_region <- input_file_w_filters %>%
     filter(lenient_region) %>%
     group_by(Region_Grouped, source, target) %>%

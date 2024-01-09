@@ -2,7 +2,7 @@
 mamba env create -f env/cpdb.yml
 
 # 2) create conda environment cell2cell
-mamba env create -f cell2cell.yml
+mamba env create -f env/cell2cell.yml
 
 # 3) create conda environment main scripts
 mamba env create -f env/cci.yml
