@@ -80,6 +80,10 @@ glob_min_samples <- 1
 log_info("Loading input file...")
 input_file <- readRDS(args$input_file)
 
+# COMMENT: Temporary fix, remove later, correction of interactions database from 7K to 5.4K interactions.
+ref_db <- readRDS("001_data_local/interactions_db_v2/ref_db.rds")
+input_file <- input_file %>% filter(complex_interaction %in% (ref_db %>% pull(complex_interaction)))
+
 log_info("Loading metadata...")
 metadata <- readRDS(args$metadata)
 cols_oi <- c("Sample", "Region_Grouped", args$annot)
@@ -111,10 +115,6 @@ source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample
     ), 1, paste, collapse = "__"))
 }))
 
-n_samples <- input_file %>%
-    ungroup() %>%
-    select(Sample, Region_Grouped) %>%
-    distinct()
 
 # Determine number of available samples per region
 n_samples_by_region <- input_file %>%

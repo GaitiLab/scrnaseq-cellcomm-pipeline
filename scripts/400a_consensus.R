@@ -48,9 +48,10 @@ if (!interactive()) {
         type = "character", default = "",
         help = "CPDB object"
     )
-    parser$add_argument("--run_dir", 
+    parser$add_argument("--run_dir",
         type = "character", default = "",
-        help = "Path to run directory")
+        help = "Path to run directory"
+    )
     args <- parser$parse_args()
 } else {
     run_dir <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun")
@@ -81,11 +82,12 @@ create_dir(output_dir)
 
 log_info("Load postprocessed objects from CCIs...")
 common_cols <- c("source_target", "complex_interaction", "pval", "method", "Sample")
-obj_cellchat <- readRDS(ifelse(file.exists(args$cellchat_obj), 
-                args$cellchat_obj, 
-                glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
-obj_liana <- readRDS(ifelse(file.exists(args$liana_obj), args$liana_obj, glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds") )) %>% select(all_of(common_cols))
-obj_cell2cell <- readRDS(ifelse(file.exists(args$cell2cell_obj), args$cell2cell_obj, glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds") )) %>% select(all_of(common_cols))
+obj_cellchat <- readRDS(ifelse(file.exists(args$cellchat_obj),
+    args$cellchat_obj,
+    glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
+)) %>% select(all_of(common_cols))
+obj_liana <- readRDS(ifelse(file.exists(args$liana_obj), args$liana_obj, glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
+obj_cell2cell <- readRDS(ifelse(file.exists(args$cell2cell_obj), args$cell2cell_obj, glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
 obj_cpdb <- readRDS(ifelse(file.exists(args$cpdb_obj), args$cpdb_obj, glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
 
 log_info(glue("Number of interactions in CellChat BEFORE filtering: {nrow(obj_cellchat)}"))
