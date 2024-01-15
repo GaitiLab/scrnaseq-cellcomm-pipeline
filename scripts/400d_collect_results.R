@@ -47,13 +47,13 @@ for (sheet_name in sheet_names) {
 
     log_info("Filtering data...")
     obj_filtered <- obj %>%
-        filter(lenient_region_pair) %>%
+        filter(lenient_condition_pair) %>%
         select(Region_Grouped, source_target, source, target, complex_interaction, lenient_voting_samples) %>%
         distinct() %>%
         as.data.frame()
 
     log_info("Write data to Excel...")
-    filename <- glue("{args$output_dir}/interactions_corrected.xlsx")
+    filename <- glue("{args$output_dir}/interactions_corrected_v2.xlsx")
     write.xlsx(obj_filtered, filename,
         sheetName = sheet_name,
         col.names = TRUE, row.names = FALSE, append = TRUE
