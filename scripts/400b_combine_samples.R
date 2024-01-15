@@ -137,7 +137,8 @@ metadata <- readRDS(args$metadata) %>%
 log_info("Add metadata...")
 # TODO: maybe make this optional?
 all_mvoted <- all_mvoted %>%
-    left_join(metadata, by = args$sample_varname) %>%
+    # All post-processed interaction results have the same column names, e.g. "Sample"
+    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
     ungroup()
 # r$> head(all_mvoted)
 # # A tibble: 6 × 11
@@ -151,7 +152,8 @@ all_mvoted <- all_mvoted %>%
 # 5 6234_2895153_A Malignant__Malignant ADAM10__GPNMB               1        0           0            1       0 FALSE          FALSE            TE
 # 6 6234_2895153_A Malignant__Malignant ADAM10__IL6R                1        0           0            1       0 FALSE          FALSE            TE
 all_sign_interactions <- all_sign_interactions %>%
-    left_join(metadata, by = args$sample_varname) %>%
+    # All post-processed interaction results have the same column names, e.g. "Sample"
+    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
     ungroup()
 # r$> head(all_sign_interactions)
 # # A tibble: 6 × 9

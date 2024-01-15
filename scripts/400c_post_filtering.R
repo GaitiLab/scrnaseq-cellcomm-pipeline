@@ -139,9 +139,7 @@ n_celltypes_per_sample <- included_celltypes_per_sample %>%
 # 6 6240_4964941_B TE                       3
 
 # Final list of samples to include, should be the same samples as listed in the preprocessing folder.
-included_samples <- n_celltypes_per_sample %>%
-    pull(Sample) %>%
-    unique()
+included_samples <- n_celltypes_per_sample %>% pull(as.symbol(args$sample_varname)) %>% unique()
 log_info(glue("Number of samples: {length(included_samples)}"))
 # r$> head(included_samples)
 # [1] "6234_2895153_A" "6234_2895153_B" "6237_2222190_A" "6237_2222190_C" "6237_2222190_D" "6240_4964941_B"
@@ -155,7 +153,7 @@ log_info(glue("Number of samples: {length(included_samples)}"))
 
 # Potential source-targets based on presence of cell types in individual samples
 # Based on the present cell types in each sample, we can determine the potential source-targets
-source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample %>% pull(Sample) %>% unique(), function(sample_name) {
+source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample %>% pull(as.symbol(args$sample_varname)) %>% unique(), function(sample_name) {
     data.frame(Sample = sample_name, source_target = apply(expand.grid(
         included_celltypes_per_sample %>% filter(has_enough_cells, Sample == sample_name) %>% pull(as.symbol(args$annot)),
         included_celltypes_per_sample %>% filter(has_enough_cells, Sample == sample_name) %>% pull(as.symbol(args$annot))
@@ -163,7 +161,7 @@ source_targets_per_sample <- do.call(rbind, lapply(included_celltypes_per_sample
 }))
 
 # Determine number of available samples per region
-cols_oi <- c(args$sample_varname, args$condition_varname)
+cols_oi <- c("Sample", args$condition_varname)
 n_samples_by_condition <- input_file %>%
     ungroup() %>%
     select(all_of(cols_oi)) %>%
@@ -186,7 +184,7 @@ n_samples_by_condition_pair <- input_file %>%
     ungroup() %>%
     select(all_of(cols_oi)) %>%
     distinct() %>%
-    left_join(source_targets_per_sample, by = args$sample_varname) %>%
+    left_join(source_targets_per_sample, by = "Sample") %>%
     distinct() %>%
     group_by_at(vars(all_of(groupby_cols))) %>%
     reframe(total_samples_by_condition_pair = n()) %>%
@@ -231,7 +229,7 @@ input_file_lenient <- input_file %>%
     group_by_at(vars(all_of(cols_oi))) %>%
     reframe(
         lenient_voting_n_samples = n(),
-        lenient_voting_samples = paste0(!!sym(args$sample_varname), collapse = ", "),
+        lenient_voting_samples = paste0(Sample, collapse = ", "),
         # pval_combined = get_p(pval)
     )
 # r$> head(input_file_lenient)
@@ -251,7 +249,7 @@ input_file_stringent <- input_file %>%
     group_by_at(vars(all_of(cols_oi))) %>%
     reframe(
         stringent_voting_n_samples = n(),
-        stringent_voting_samples = paste0(!!sym(args$sample_varname), collapse = ", "),
+        stringent_voting_samples = paste0(Sample, collapse = ", "),
         # pval_combined = get_p(pval)
     )
 # r$> head(input_file_stringent)
@@ -300,7 +298,8 @@ input_file_w_filters <- input_file_voted %>%
         ),
     ) %>%
     ungroup()
-input_file_w_filters[[args$condition_varname]] <- factor(input_file_w_filters[[args$condition_varname]], levels = c("PT", "TE", "SC", "NC"))
+# TODO only for GBM project 
+# input_file_w_filters[[args$condition_varname]] <- factor(input_file_w_filters[[args$condition_varname]], levels = c("PT", "TE", "SC", "NC"))
 
 # Check if condition_varname, i.e. region_varname they are ordered
 # r$> head(input_file_w_filters[[args$condition_varname]])
