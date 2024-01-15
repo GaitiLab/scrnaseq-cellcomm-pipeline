@@ -44,6 +44,7 @@ process COMBINE_SAMPLES {
     path "*__signif_interactions.rds"
     path metadata
     path meta_vars_oi
+    path condition_varname
 
     output:
     path "400_consensus/400_samples_interactions_mvoted.rds", emit: mvoted_interactions
@@ -58,7 +59,8 @@ process COMBINE_SAMPLES {
     --output_dir \$PWD/400_consensus \
     --input_dir \$PWD \
     --metadata \$PWD/${metadata} \
-    --meta_vars_oi \$PWD/${meta_vars_oi}
+    --meta_vars_oi \$PWD/${meta_vars_oi} \
+    --condition_varname ${condition_varname}
     """
 }
 
@@ -75,6 +77,7 @@ process POST_FILTERING {
     val min_cells
     val min_frac_samples
     val annot
+    val condition_varname
 
     output:
     path "400_consensus/number_of_interactions.xlsx"
@@ -91,6 +94,8 @@ process POST_FILTERING {
     --metadata \$PWD/${metadata} \
     --min_cells ${min_cells} \
     --min_frac_samples ${min_frac_samples} \
-    --annot ${annot}
+    --annot ${annot} \
+    --condition_varname ${condition_varname}
+
     """
 }

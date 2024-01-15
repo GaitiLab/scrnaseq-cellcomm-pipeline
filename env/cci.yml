@@ -54,3 +54,4 @@ dependencies:
     - r-magick
     - imagemagick
     - r-cairo
+    - r-ggalluvial

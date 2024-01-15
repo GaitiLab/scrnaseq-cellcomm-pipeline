@@ -69,13 +69,14 @@ workflow {
     Min. pct:           ${params.min_pct}
     Alpha (sign level): ${params.alpha}
     N permutations:     ${params.n_perm}
+    Condition:          ${params.condition_varname}
 
 
     """.stripIndent()
 
 
 
-    if(params.approach > 0) {
+    if(params.stop_at_module >= 1) {
         // OPTIONAL: Re-annotate / Annotate 
         // - input file provided
         // - do_annot = false    
@@ -106,7 +107,7 @@ workflow {
         preprocessing_seurat_obj = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/seurat/*.rds", type: 'file') : PREPROCESSING.out.seurat_obj.flatten()
     }
     // INFERRING INTERACTIONS
-    if (params.approach > 1 ) {
+    if (params.stop_at_module >= 2 ) {
         INFER_CELLCHAT(preprocessing_seurat_obj, interactions_db = cellchat_db, annot = params.annot, n_perm = params.n_perm)
 
         INFER_LIANA(preprocessing_seurat_obj, interactions_db = liana_db, annot = params.annot, n_perm = params.n_perm)
@@ -119,7 +120,7 @@ workflow {
 
     }
     // POST-PROCESSING INTERACTIONS
-    if (params.approach > 2) {
+    if (params.stop_at_module >= 3) {
         POSTPROCESSING_CELLCHAT(INFER_CELLCHAT.out.cellchat_obj, interactions_db = ref_db)
 
         POSTPROCESSING_LIANA(INFER_LIANA.out.liana_obj, ref_db = ref_db)
@@ -129,15 +130,15 @@ workflow {
         POSTPROCESSING_CPDB(INFER_CPDB.out.cpdb_obj, interactions_db = ref_db)
     }
     // MERGE INTERACTIONS based on sample id
-    if (params.approach > 3) {
-        combined_objects = POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
+    if (params.stop_at_module >= 4) {
+        combined_objects = params.start_at_module < 4 ? POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
         // // Take consensus - sample wise
         CONSENSUS(combined_objects, alpha = params.alpha)
     }
-    if (params.approach > 4) {
-        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi)
+    if (params.stop_at_module >= 5) {
+        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname)
     }
-    if (params.approach > 5) {
-        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot)
+    if (params.stop_at_module >= 6) {
+        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname)
     } 
 }

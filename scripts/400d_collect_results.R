@@ -16,7 +16,7 @@ devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Get metadata",
+        description = "Create ExcelSheet with interactions from post-filtered data",
     )
     args <- parser$parse_args()
 } else {
@@ -24,7 +24,6 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("/Users/joankant/Library/CloudStorage/OneDrive-SharedLibraries-UHN/Wu, Yiyan - Spatial_GBM/Analysis/CCI")
-    args$sheet_name <- "CCI_CellClass_L2"
 }
 
 # Set up logging
@@ -40,17 +39,23 @@ create_dir(args$output_dir)
 # Load additional libraries
 require(xlsx)
 
-log_info("Load data...")
-obj <- readRDS(glue("{here::here()}/output/{args$sheet_name}/400_consensus/400_samples_interactions_mvoted_w_filters.rds"))
+sheet_names <- c("CCI_CellClass_L1", "CCI_CellClass_L2")
+for (sheet_name in sheet_names) {
+    log_info(glue("Annotation: {sheet_name}..."))
+    log_info("Load data...")
+    obj <- readRDS(glue("{here::here()}/output/{sheet_name}/400_consensus/400_samples_interactions_mvoted_w_filters.rds"))
 
-obj_filtered <- obj %>%
-    filter(lenient_region_pair) %>%
-    select(Region_Grouped, source_target, source, target, complex_interaction, lenient_voting_samples) %>%
-    distinct() %>%
-    as.data.frame()
+    log_info("Filtering data...")
+    obj_filtered <- obj %>%
+        filter(lenient_condition_pair) %>%
+        select(Region_Grouped, source_target, source, target, complex_interaction, lenient_voting_samples) %>%
+        distinct() %>%
+        as.data.frame()
 
-filename <- glue("{args$output_dir}/interactions.xlsx")
-write.xlsx(obj_filtered, filename,
-    sheetName = args$sheet_name,
-    col.names = TRUE, row.names = FALSE, append = TRUE
-)
+    log_info("Write data to Excel...")
+    filename <- glue("{args$output_dir}/interactions_corrected_v2.xlsx")
+    write.xlsx(obj_filtered, filename,
+        sheetName = sheet_name,
+        col.names = TRUE, row.names = FALSE, append = TRUE
+    )
+}

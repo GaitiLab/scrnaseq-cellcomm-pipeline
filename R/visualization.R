@@ -3,9 +3,9 @@
 #' @param filename filename
 #' @return NA
 #' @export
-auto_crop <- function(filename) { 
+auto_crop <- function(filename) {
     knitr::plot_crop(filename)
-} 
+}
 
 #' Obtain optimal size of heatmap or list of heatmaps
 #'
@@ -259,6 +259,8 @@ create_venndiagram <- function(x, category.names, filename, main = "", ...) {
         main.cex = 0.3,
         main.fontface = "bold"
     )
+    # Remove log files that are created by Venndiagram
+    file.remove(list.files(path = dirname(filename), pattern = "*.log", full.names = TRUE))
 }
 
 #' Create lineplot of average expression for ligand-receptor pairs
@@ -351,4 +353,3 @@ plot_expr_hist_ccis <- function(avg_expr, annot, args) {
         list(p_hist, p_hist_log_transformed)
     )
 }
-

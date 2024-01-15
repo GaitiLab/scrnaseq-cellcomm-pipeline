@@ -25,13 +25,16 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L1"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/503_networks")
+    args$annot <- "CCI_CellClass_L2"
+    args$output_dir <- glue("{here::here()}/output/{args$annot}/500_networks")
     args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
     args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
     args$meta <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
     args$colors <- glue("{here::here()}/000_misc_local/{args$annot}_network_colors.rds")
     args$min_q <- 0.5
+    args$min_cells <- 100
+    args$min_celltypes <- 3
+    args$has_loops <- FALSE
 }
 
 # Set up logging
@@ -63,10 +66,26 @@ log_info("Load metadata...")
 meta <- readRDS(args$meta)
 
 log_info("Determine number of cells per cell type per region...")
-# Determine number of cells per cell type per sample
-included_samples <- interactions %>%
+cols_oi <- c("Sample", "Region_Grouped", args$annot)
+
+# Check per sample, the cell types that are included (n_cells >= args$min_cells)
+included_celltypes_per_sample <- meta %>%
+    select(all_of(cols_oi)) %>%
+    group_by_at(vars(all_of(cols_oi))) %>%
+    # group_by(all_of(cols_oi)) %>%
+    reframe(has_enough_cells = n() >= args$min_cells)
+
+# Number of cell types per sample (with at least args$min_cells)
+n_celltypes_per_sample <- included_celltypes_per_sample %>%
+    filter(has_enough_cells) %>%
+    group_by(Sample, Region_Grouped) %>%
+    summarise(n_celltypes = n()) %>%
+    filter(n_celltypes >= args$min_celltypes)
+
+included_samples <- n_celltypes_per_sample %>%
     pull(Sample) %>%
     unique()
+
 n_cells_per_type <- meta %>%
     filter(Sample %in% included_samples) %>%
     group_by_at(c("Region_Grouped", "Sample", args$annot)) %>%
@@ -96,10 +115,11 @@ colors <- readRDS(args$colors)
 # - lenient_region_pair (take into account both region and presence of pair in sample of that region)
 options <- c("stringent_region", "stringent_region_pair", "lenient_region", "lenient_region_pair")
 avail_regions <- interactions %>%
-        pull(Region_Grouped) %>%
-        unique()
+    pull(Region_Grouped) %>%
+    unique()
 for (option in options) {
-    interactions_filtered <- interactions %>% ungroup() %>% 
+    interactions_filtered <- interactions %>%
+        ungroup() %>%
         # TODO: filter based on one of the above options
         filter(!!sym(option), !is.na(!!sym(option))) %>%
         select(Region_Grouped, source_target, complex_interaction) %>%
@@ -117,21 +137,30 @@ for (option in options) {
             ungroup() %>%
             select(source, target, n)
 
+        if (!args$has_loops) {
+            log_info("Remove loops...")
+            df_subset <- df_subset %>% filter(source != target)
+        }
+
+        # if (args$only_malignant) {
+        #     df_subset <- df_subset %>%
+        #         rowwise() %>%
+        #         filter(source == "Malignant" || target == "Malignant") %>%
+        #         ungroup()
+        # }
+
         df_subset_wide <- df_subset %>% pivot_wider(names_from = target, values_from = n)
         print(df_subset_wide)
-
         log_info("Determine min and max number of interactions for min-max normalization...")
-        df_subset <- df_subset %>% mutate(n = sqrt(n))
-
         edge_list <- df_subset %>%
             # TODO: SQRT transformation - make smaller differences larger
-            # mutate(n = sqrt(n)) %>% 
-            # mutate(n = n**2) %>% 
+            mutate(n = sqrt(n)) %>%
+            # mutate(n = n**2) %>%
             # TODO: Min-max normalization within region
             mutate(n_normalized = (n - min(n)) / (max(n) - min(n))) %>%
-            mutate(n_normalized = n_normalized**2) %>% 
+            # mutate(n_normalized = n_normalized**2) %>%
             # TODO: Robust normalization within region
-            # mutate(n_normalized = (n - quantile(n, 0.25)) / (quantile(n, 0.75) - quantile(n, 0.25))) %>% 
+            # mutate(n_normalized = (n - quantile(n, 0.25)) / (quantile(n, 0.75) - quantile(n, 0.25))) %>%
             # Transform so that min. value is 0
             # mutate(n_normalized = n_normalized + abs(min(n_normalized))) %>%
             select(source, target, n_normalized) %>%
@@ -146,7 +175,7 @@ for (option in options) {
 
         print(adj_mat)
         log_info("Create igraph network...")
-        igraph_network <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "directed", weighted = TRUE, diag = TRUE)
+        igraph_network <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "directed", weighted = TRUE, diag = args$has_loops)
 
         log_info("Add node and edge attributes...")
         noc_subset <- n_cells_per_type %>%
@@ -197,9 +226,10 @@ for (option in options) {
         edge_color_adj <- sapply(seq_along(edge_colors), function(i) {
             if (!is.na(edge_width[i])) {
                 if (edge_width[i] > quantile(edge_width, args$min_q)) {
-                    adjustcolor(edge_colors[i], alpha.f = 1) } 
+                    adjustcolor(edge_colors[i], alpha.f = 1)
+                }
                 # if (edge_width[i] > mean(edge_width)) {
-                #     adjustcolor(edge_colors[i], alpha.f = 1) } 
+                #     adjustcolor(edge_colors[i], alpha.f = 1) }
                 else {
                     adjustcolor(edge_colors[i], alpha.f = 0.1)
                 }
@@ -208,17 +238,20 @@ for (option in options) {
             }
         })
 
-        plt_hist <- ggplot() + geom_histogram(aes(x = edge_width), bins = 10) + custom_theme() + 
-        geom_vline(xintercept = quantile(edge_width, .25), color = "red") + 
-        geom_vline(xintercept = mean(edge_width), color = "blue") + 
-        geom_vline(xintercept = quantile(edge_width, .50), color = "red") + 
-        geom_vline(xintercept = quantile(edge_width, .75), color = "red")
-        ggsave(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"), plt_hist, width = 10, height = 10, units = "in", dpi = 300)
-        auto_crop(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"))
+        # plt_hist <- ggplot() +
+        #     geom_histogram(aes(x = edge_width), bins = 10) +
+        #     custom_theme() +
+        #     geom_vline(xintercept = quantile(edge_width, .25), color = "red") +
+        #     geom_vline(xintercept = mean(edge_width), color = "blue") +
+        #     geom_vline(xintercept = quantile(edge_width, .50), color = "red") +
+        #     geom_vline(xintercept = quantile(edge_width, .75), color = "red")
+        # ggsave(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"), plt_hist, width = 10, height = 10, units = "in", dpi = 300)
+        # auto_crop(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"))
 
         log_info("Plot network...")
         graph_layout <- layout_in_circle(igraph_network)
-        plot_filename <- glue("{args$output_dir}/network_vis_{args$annot}_{option}_{current_region}.png")
+        has_loops <- ifelse(args$has_loops, "with_loops", "without_loops")
+        plot_filename <- glue("{args$output_dir}/network_vis_{args$annot}_{option}_{current_region}_{has_loops}.png")
         png(plot_filename, res = 300, width = 10, height = 10, units = "in")
         plot(igraph_network,
             layout = graph_layout,
@@ -233,5 +266,28 @@ for (option in options) {
         )
         dev.off()
         auto_crop(plot_filename)
+
+        # log_info("Create ggnetwork...")
+        # nw <- ggnetwork(igraph_network, layout = igraph::layout_in_circle(igraph_network), weights = "weight", niter = 1000, arrow.gap = 0)
+
+
+        # nw <- nw %>% mutate(name = factor(name), edge_color = factor(edge_color))
+        # pt <- nw %>%
+        #     ggplot(aes(x = x, y = y, xend = xend, yend = yend)) +
+        #     geom_edges(aes(linewidth = weight, color = name),
+        #         curvature = 0.2, arrow = arrow(length = unit(6, "pt"), type = "closed")
+        #     ) +
+        #     geom_nodes(aes(size = vertex_size, color = name)) +
+        #     custom_theme() +
+        #     theme_void() +
+        #     geom_nodetext_repel(
+        #         color = "black", aes(label = name),
+        #         fontface = "bold", size = rel(10)
+        #     ) +
+        #     theme(legend.position = "none") +
+        #     scale_radius(range = c(10, 20)) +
+        #     scale_linewidth(range = c(1, 10)) +
+        #     scale_colour_manual(values = colors)
+        # pt
     }
 }
