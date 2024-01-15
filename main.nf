@@ -136,9 +136,9 @@ workflow {
         CONSENSUS(combined_objects, alpha = params.alpha)
     }
     if (params.stop_at_module >= 5) {
-        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname)
+        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname, sample_varname = params.split_varname)
     }
     if (params.stop_at_module >= 6) {
-        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname)
+        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname, sample_varname = params.split_varname)
     } 
 }
