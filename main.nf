@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 include { ADAPT_ANNOTATION; GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
 include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB } from "./nf-modules/filtering.nf"
-include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT, AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
+include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT; AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
 
 workflow {
     // Convert string paths
