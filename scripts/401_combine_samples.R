@@ -22,20 +22,21 @@ if (!interactive()) {
     parser$add_argument("--celltype_oi", type = "character", help = "Celltype of interest", default = NULL)
     parser$add_argument("--metadata", type = "character", help = "Path to metadata", default = NULL)
     parser$add_argument("--meta_vars_oi", type = "character", help = "Path to metadata variables of interest", default = NULL)
-    parser$add_argument("--sample_varname", type = "character", help = "Name of sample variable", default = "Sample")
-    parser$add_argument("--condition_varname", type = "character", help = "Name of condition variable", default = "Region_Grouped")
+    parser$add_argument("--sample_varname", type = "character", help = "Name of sample variable", default = "")
+    parser$add_argument("--condition_varname", type = "character", help = "Name of condition variable", default = "")
+    parser$add_argument("--patient_varname", type = "character", help = "Name of patient variable", default = "")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
     args$input_dir <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus")
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2/401_combine_samples")
     args$celltype_oi <- NULL
     args$metadata <- glue("{here::here()}/output/CCI_CellClass_L2/000_data/gbm_regional_study__metadata.rds")
-    args$meta_vars_oi <- ""
+    args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
     args$sample_varname <- "Sample"
-    args$condition_varname <- "Region_Grouped"
+    # args$condition_varname <- "Region_Grouped"
 }
 
 # Set up logging
@@ -117,9 +118,13 @@ if (file.exists(args$meta_vars_oi) && !is.null(args$meta_vars_oi) && args$meta_v
         pull(V1)
 } else {
     log_info("No metadata variables of interest provided. Using default variables (Sample, Region_Grouped)...")
-    cols_oi <- c(args$sample_varname, args$condition_varname)
+    cols_oi <- unique(c(args$sample_varname, args$condition_varname, args$patient_varname))
+
 }
-metadata <- readRDS(args$metadata) %>%
+metadata <- readRDS(args$metadata) 
+cols <- colnames(metadata)
+cols_oi <- intersect(cols_oi, cols)
+metadata <- metadata %>%
     select(all_of(cols_oi)) %>%
     rownames_to_column("tmp") %>%
     select(-tmp) %>%
@@ -140,6 +145,11 @@ all_mvoted <- all_mvoted %>%
     # All post-processed interaction results have the same column names, e.g. "Sample"
     left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
     ungroup()
+
+if (args$sample_varname == args$patient_varname) {
+    all_mvoted <- all_mvoted %>% mutate(Patient = Sample)
+}
+
 # r$> head(all_mvoted)
 # # A tibble: 6 × 11
 # # Groups:   Sample, source_target, complex_interaction [6]
@@ -168,6 +178,6 @@ all_sign_interactions <- all_sign_interactions %>%
 # 6 6234_2895153_A Malignant__Malignant ADAM10__IL6R                1        0           0            1       0 TE
 
 log_info("Save...")
-saveRDS(all_mvoted, file = glue("{output_dir}/400_samples_interactions_mvoted.rds"))
-saveRDS(all_sign_interactions, file = glue("{output_dir}/400_samples_sign_interactions.rds"))
+saveRDS(all_mvoted, file = glue("{output_dir}/401_samples_interactions_mvoted.rds"))
+saveRDS(all_sign_interactions, file = glue("{output_dir}/401_samples_sign_interactions.rds"))
 log_info("COMPLETED!")

@@ -49,9 +49,9 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L2"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/400_consensus/")
-    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted.rds")
+    args$annot <- "CCI_CellClass_L1"
+    args$output_dir <- glue("{here::here()}/output/{args$annot}/402_aggregation/")
+    args$input_file <- glue("{here::here()}/output/{args$annot}/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$min_frac_samples <- 0.5
     args$metadata <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
     args$min_cells <- 100
@@ -70,7 +70,7 @@ log_info(ifelse(interactive(),
 log_info("Create output directory...")
 create_dir(args$output_dir)
 
-number_of_interactions_filename <- glue("{args$output_dir}/number_of_interactions.xlsx")
+number_of_interactions_filename <- glue("{args$output_dir}/402a_number_of_interactions.xlsx")
 if (file.exists(number_of_interactions_filename)) {
     file.remove(number_of_interactions_filename)
 }
@@ -93,11 +93,6 @@ input_file <- readRDS(args$input_file)
 # 4 6234_2895153_A Microglia__Microglia ADAM10__CADM1               1        0           0            1       0 FALSE          FALSE            TE
 # 5 6234_2895153_A Microglia__Microglia ADAM10__CD44                2        0           0            1       1 FALSE          FALSE            TE
 # 6 6234_2895153_A Microglia__Microglia ADAM10__GPNMB               4        1           1            1       1 TRUE           TRUE             TE
-
-
-# COMMENT: Temporary fix, remove later for fully new pipeline runs, correction of interactions database from 7K to 5.4K interactions.
-ref_db <- readRDS("001_data_local/interactions_db_v2/ref_db.rds")
-input_file <- input_file %>% filter(complex_interaction %in% (ref_db %>% pull(complex_interaction)))
 
 log_info("Loading metadata...")
 metadata <- readRDS(args$metadata)
@@ -357,6 +352,6 @@ write.xlsx(stringent_by_condition_pair,
 
 log_info("Save output...")
 saveRDS(input_file_w_filters,
-    file = glue("{args$output_dir}/400_samples_interactions_mvoted_w_filters.rds")
+    file = glue("{args$output_dir}/402a_samples_interactions_mvoted_w_filters.rds")
 )
 log_info("COMPLETED!")
