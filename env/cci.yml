@@ -55,3 +55,4 @@ dependencies:
     - imagemagick
     - r-cairo
     - r-ggalluvial
+    - r-signac
