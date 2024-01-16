@@ -26,7 +26,7 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-output_run_name="CCI_CellClass_L2"
+output_run_name="CCI_CellClass_L2_updated"
 approach=6
 
 # Inputs 
@@ -36,7 +36,7 @@ input_file="${project_dir}/001_data/gbm_regional_study.rds"
 split_varname="Sample"
 annot="CCI_CellClass_L2"
 min_cells=100
-min_cell_types=3
+min_cell_types=2
 
 # Cell-cell interactions
 n_perm=1000

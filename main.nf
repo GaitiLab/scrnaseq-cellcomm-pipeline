@@ -10,8 +10,7 @@ nextflow.enable.dsl=2
 include { ADAPT_ANNOTATION; GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
 include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB } from "./nf-modules/filtering.nf"
-include { CONSENSUS; COMBINE_SAMPLES; POST_FILTERING } from "./nf-modules/consensus.nf"
-
+include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT, AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
 
 workflow {
     // Convert string paths
@@ -70,13 +69,19 @@ workflow {
     Alpha (sign level): ${params.alpha}
     N permutations:     ${params.n_perm}
     Condition:          ${params.condition_varname}
+    Min.patients:       ${params.min_patients}
+    Patient varname:    ${params.patient_varname}
+
+    ---- AGGREGATION -----------------------------------------------------------------------------
+    Aggregate samples:  ${params.aggregate_samples}
+    Aggregate patients: ${params.aggregate_patients}
 
 
     """.stripIndent()
 
 
 
-    if(params.stop_at_module >= 1) {
+    if(params.approach >= 1) {
         // OPTIONAL: Re-annotate / Annotate 
         // - input file provided
         // - do_annot = false    
@@ -107,7 +112,7 @@ workflow {
         preprocessing_seurat_obj = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/seurat/*.rds", type: 'file') : PREPROCESSING.out.seurat_obj.flatten()
     }
     // INFERRING INTERACTIONS
-    if (params.stop_at_module >= 2 ) {
+    if (params.approach >= 2 ) {
         INFER_CELLCHAT(preprocessing_seurat_obj, interactions_db = cellchat_db, annot = params.annot, n_perm = params.n_perm)
 
         INFER_LIANA(preprocessing_seurat_obj, interactions_db = liana_db, annot = params.annot, n_perm = params.n_perm)
@@ -120,7 +125,7 @@ workflow {
 
     }
     // POST-PROCESSING INTERACTIONS
-    if (params.stop_at_module >= 3) {
+    if (params.approach >= 3) {
         POSTPROCESSING_CELLCHAT(INFER_CELLCHAT.out.cellchat_obj, interactions_db = ref_db)
 
         POSTPROCESSING_LIANA(INFER_LIANA.out.liana_obj, ref_db = ref_db)
@@ -130,15 +135,21 @@ workflow {
         POSTPROCESSING_CPDB(INFER_CPDB.out.cpdb_obj, interactions_db = ref_db)
     }
     // MERGE INTERACTIONS based on sample id
-    if (params.stop_at_module >= 4) {
-        combined_objects = params.start_at_module < 4 ? POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
+    if (params.approach >= 4) {
+        combined_objects = POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
         // // Take consensus - sample wise
         CONSENSUS(combined_objects, alpha = params.alpha)
     }
-    if (params.stop_at_module >= 5) {
-        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname, sample_varname = params.split_varname)
+    if (params.approach >= 5) {
+        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), 
+        metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname, sample_varname = params.split_varname, patient_varname = params.patient_varname)
     }
-    if (params.stop_at_module >= 6) {
-        POST_FILTERING(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname, sample_varname = params.split_varname)
+    if (params.approach >= 6) {
+        if(params.aggregate_samples) {
+            AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot)
+        }
+        if(params.aggregate_patients) {
+            AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, patient_varname = params.patient_varname, min_patients = params.min_patients)
+        }
     } 
 }

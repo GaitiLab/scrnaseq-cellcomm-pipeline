@@ -27,7 +27,7 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-output_run_name="CCI_CellClass_L1"
+output_run_name="CCI_CellClass_L1_updated"
 approach=6
 
 # Inputs 
@@ -36,8 +36,11 @@ input_file="${project_dir}/001_data/gbm_regional_study.rds"
 # Pre-processing
 split_varname="Sample"
 annot="CCI_CellClass_L1"
+condition_varname="Region_Grouped"
+patient_varname=2
+min_patients=2
 min_cells=100
-min_cell_types=3
+min_cell_types=2
 
 # Cell-cell interactions
 n_perm=1000
@@ -49,7 +52,7 @@ meta_vars_oi="${project_dir}/000_misc/meta_vars_oi.txt"
 
 # Databases of interactions
 interactions_db="${project_dir}/data/interactions_db"
-cellphone_db="${interactions_db}/cellphonedb_12_18_2023_120229.zip"
+cellphone_db="${interactions_db}/cellphonedb.zip"
 cellchat_db="${interactions_db}/cellchat_db.rds"
 liana_db="${interactions_db}/liana_db.rds"
 liana_db_csv="${interactions_db}/cell2cell_db.csv"
@@ -57,10 +60,11 @@ ref_db="${interactions_db}/ref_db.rds"
 
 # Create output directory if not existing
 mkdir -p "${project_dir}/output/${output_run_name}"
+mkdir -p "${project_dir}/nf-logs"
 
 echo "Running pipeline..."
 # # Start the pipeline
-${nf_exec} run ${project_dir} -with-report -with-trace -resume \
+${nf_exec} run ${project_dir} -with-report -with-trace \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
@@ -78,5 +82,8 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     --ref_db $ref_db \
     --alpha $alpha \
     --meta_vars_oi $meta_vars_oi \
-    --approach $approach
+    --approach $approach \
+    --condition_varname $condition_varname \
+    --aggregate_patients \ --patient_varname $patient_varname \
+    --min_patients $min_patients \
 echo "Done!"
