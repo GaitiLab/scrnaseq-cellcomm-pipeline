@@ -109,7 +109,7 @@ obj_cellchat <- obj_cellchat %>%
 obj_liana <- obj_liana %>%
     filter(pval < args$alpha) %>%
     select(-pval)
-r$> head(obj_liana)
+# r$> head(obj_liana)
 # # A tibble: 6 × 4
 #   source_target                    complex_interaction method Sample               
 #   <chr>                            <chr>               <chr>  <chr>                

@@ -46,6 +46,7 @@ process COMBINE_SAMPLES {
     path meta_vars_oi
     val condition_varname
     val sample_varname
+    val patient_varname
 
 
     output:

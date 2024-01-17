@@ -146,10 +146,10 @@ workflow {
     }
     if (params.approach >= 6) {
         if(params.aggregate_samples) {
-            AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot)
+            AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname, sample_varname = params.split_varname )
         }
         if(params.aggregate_patients) {
-            AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, patient_varname = params.patient_varname, min_patients = params.min_patients)
+            AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, min_patients = params.min_patients)
         }
     } 
 }
