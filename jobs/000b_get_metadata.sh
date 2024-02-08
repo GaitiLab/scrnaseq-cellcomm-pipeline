@@ -19,6 +19,6 @@ input_file="${work_dir}/001_data/gbm_regional_study.rds"
 output_dir="${work_dir}/output"
 
 
-Rscript "${work_dir}/scripts/000b_get_metadata.R" \
+Rscript "${work_dir}/scripts/000_get_metadata.R" \
     --input_file $input_file \
     --output_dir ${output_dir}

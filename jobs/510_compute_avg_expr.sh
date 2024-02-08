@@ -11,16 +11,16 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 job_min=1
-run_name="CCI_CellClass_L1"
+run_name="CCI_CellClass_L1_conf_malign"
 
-annot=$run_name
+annot="CCI_CellClass_L1"
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 output_dir="${work_dir}/output/${run_name}/510_compute_avg_expr"
 sample_dir="${work_dir}/output/${run_name}/100_preprocessing/seurat"
-ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
+ref_db="${work_dir}/data/interactions_db/ref_db.rds"
 
 # Determine job array limits
 # A. Determine number of files
@@ -29,7 +29,10 @@ job_max=$(ls -d -- $sample_dir/* | wc -l) 2>/dev/null
 # job_max=$(wc -l < "${sample_ids}")
 # job_max=1
 
-echo $job_max
+echo "Number of jobs to submit: ${job_max}"
+
+echo "Run name: ${run_name}"
+echo "Annotation: ${annot}"
 
 sbatch <<EOF
 #!/usr/bin/env bash

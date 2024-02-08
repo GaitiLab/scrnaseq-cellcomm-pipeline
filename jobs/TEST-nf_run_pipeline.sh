@@ -53,7 +53,7 @@ n_perm=5
 min_pct=0.10
 alpha=0.05
 
-output_run_name="test_pipeline"
+run_name="test_pipeline"
 
 # Databases of interactions
 interactions_db="${project_dir}/001_data/interactions_db_v2"
@@ -65,7 +65,7 @@ ref_db="${interactions_db}/ref_db.rds"
 # interactions_db="${interactions_db}/001_data/interactions_db/interactions_ref.rds"
 
 # Create output directory if not existing
-mkdir -p "${project_dir}/output/${output_run_name}"
+mkdir -p "${project_dir}/output/${run_name}"
 mkdir -p "${outdir}"
 
 # CellClass_L4_min3_types: -resume "e9fdd3d9-27c0-4eae-a15e-1950ddb86eb2" \
@@ -81,7 +81,7 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     --min_cell_types ${min_cell_types} \
     --n_perm ${n_perm} \
     --min_pct ${min_pct} \
-    --output_run_name ${output_run_name} \
+    --run_name ${run_name} \
     --cellphone_db ${cellphone_db} \
     --cellchat_db ${cellchat_db} \
     --liana_db ${liana_db} \
