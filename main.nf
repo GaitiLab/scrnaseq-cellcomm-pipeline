@@ -7,7 +7,7 @@ Workflow for cell-cell-interactions
 
 nextflow.enable.dsl=2
 
-include { ADAPT_ANNOTATION; GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT } from "./nf-modules/prep_data.nf"
+include { GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
 include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB } from "./nf-modules/filtering.nf"
 include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT; AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
@@ -29,7 +29,7 @@ workflow {
     println """\
     PIPELINE CONFIGURATION:
     ---- GENERAL ----------------------------------------------------------------------------------
-    Run name:           ${params.output_run_name}
+    Run name:           ${params.run_name}
     Approach:           ${params.approach}
 
     ---- SKIP OR EXECUTE STEPS --------------------------------------------------------------------
@@ -46,7 +46,7 @@ workflow {
     Samples oi:         ${samples_oi}
     
     ---- OUTPUTS ----------------------------------------------------------------------------------
-    Output dir:         "${projectDir}/${params.output_run_name}"
+    Output dir:         "${projectDir}/${params.run_name}"
 
     ---- PRE-PROCESSING --------------------------------------------------------------------------
     Annotation:         ${params.annot}
@@ -82,12 +82,6 @@ workflow {
 
 
     if(params.approach >= 1) {
-        // OPTIONAL: Re-annotate / Annotate 
-        // - input file provided
-        // - do_annot = false    
-        ADAPT_ANNOTATION(input_file = input_file, samples_oi = samples_oi)
-        input_file = (params.do_annot) ? ADAPT_ANNOTATION.out : input_file
-
         // Grabbing metadata from input file 
         // - if metadata files aren't provided
         GET_METADATA(input_file = input_file)
@@ -96,7 +90,7 @@ workflow {
         metadata_rds = metadata_rds.isFile() ? metadata_rds : GET_METADATA.out.metadata_rds
 
         // OPTIONAL: Reduce size of seurat object to reduce memory usage for inferring interactinos. 
-        REDUCE_SEURAT_OBJECT_SIZE(input_file = input_file)
+        REDUCE_SEURAT_OBJECT_SIZE(input_file = input_file, annot = params.annot)
         input_file2 = (params.skip_reduction) ? input_file : REDUCE_SEURAT_OBJECT_SIZE.out
 
         // Split seurat object into samples

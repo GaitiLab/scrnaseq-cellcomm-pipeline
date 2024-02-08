@@ -1,34 +1,7 @@
-process ADAPT_ANNOTATION {
-    label 'mem64'
-    label 'time_30m'
-
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
-
-    input:
-    path input_file
-    path samples_oi
-
-    output:
-    path "000_data/seurat_annot_adapted.rds"
-
-    when: params.do_annot
-
-    script:
-    def time_out_limit = (task.time).toSeconds() - 30
-
-    """
-    #!/usr/bin/env bash
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/000a_adapt_annot.R" \
-    --input_file "\$PWD/${input_file}" \
-    --output_dir "\$PWD/000_data" \
-    --samples_oi "\$PWD/${samples_oi}"
-    """
-}
-
 process GET_METADATA {
     label 'mem32'
     label 'time_10m'
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_file
@@ -44,7 +17,7 @@ process GET_METADATA {
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/000b_get_metadata.R" \
+    timeout ${time_out_limit} Rscript "${projectDir}/scripts/000_get_metadata.R" \
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data" \
     """
@@ -53,11 +26,12 @@ process GET_METADATA {
 process REDUCE_SEURAT_OBJECT_SIZE {
     label 'mem32'
     label 'time_15m'
-
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    // Commented, cause we probably do not need this object afterwards + takes a lot of space
+    // publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_file
+    val annot
 
     output:
     path "000_data/${input_file.simpleName}_reduced_size.rds"
@@ -70,7 +44,8 @@ process REDUCE_SEURAT_OBJECT_SIZE {
     #!/usr/bin/env bash
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/001_reduce_seurat_object_size.R" \
     --input_file "\$PWD/${input_file}" \
-    --output_dir "\$PWD/000_data"
+    --output_dir "\$PWD/000_data" \
+    --annot ${annot}
     """
 }
 
@@ -78,7 +53,7 @@ process SPLIT_SEURAT_OBJECT {
     label 'mem20'
     label 'time_15m'
 
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_file
@@ -108,7 +83,7 @@ process PREPROCESSING {
     label 'mem4'
     label 'time_15m'
 
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_file
@@ -121,7 +96,7 @@ process PREPROCESSING {
     path "100_preprocessing/seurat/*.rds", emit: seurat_obj, optional: true
     path "100_preprocessing/mtx/*", emit: mtx_dir, optional: true
 
-    when: (!params.skip_preprocessing) && (input_file.isFile()) && (interactions_db.isFile())
+    when: (!params.skip_preprocessing) && (input_file.isFile())
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30

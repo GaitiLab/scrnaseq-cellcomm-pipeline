@@ -9,9 +9,10 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 
 ## Quick start
 
-1. Fork or clone this repo
-2. Setup required conda environments with `setup_env.sh`
-3. Use `nf_template.sh` to run the pipeline.
+1. Fork this repo (then clone)
+2. Installing [Nextflow](https://github.com/nextflow-io/nextflow/releases/download/v23.04.3/nextflow-23.04.3-all), used version for testing: 23.04.3
+3. Setup required conda environments with `setup_env.sh`
+4. Use `nf_template.sh` to run the pipeline.
 
 ## Workflow Schematic
 

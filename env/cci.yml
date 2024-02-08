@@ -56,3 +56,5 @@ dependencies:
     - r-cairo
     - r-ggalluvial
     - r-signac
+    - r-ggtext
+    - pdfcrop
