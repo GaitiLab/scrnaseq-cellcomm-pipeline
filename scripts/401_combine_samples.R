@@ -30,13 +30,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$input_dir <- glue("{here::here()}/output/CCI_CellClass_L2/400_consensus")
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2/401_combine_samples")
+    args$input_dir <- glue("{here::here()}/output/CCI_CellClass_L1_updated/400_consensus")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1_updated/401_combine_samples")
     args$celltype_oi <- NULL
-    args$metadata <- glue("{here::here()}/output/CCI_CellClass_L2/000_data/gbm_regional_study__metadata.rds")
+    args$metadata <- glue("{here::here()}/output/CCI_CellClass_L1_updated/000_data/gbm_regional_study__metadata.rds")
     args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
     args$sample_varname <- "Sample"
     # args$condition_varname <- "Region_Grouped"
+    args$patient_varname  <- "Patient"
 }
 
 # Set up logging

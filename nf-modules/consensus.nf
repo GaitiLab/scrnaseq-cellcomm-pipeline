@@ -3,7 +3,7 @@ process CONSENSUS {
     label "mem4"
     label "time_15m"
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     tuple val(sample_id), path(cellchat_obj), path(liana_obj), path(cell2cell_obj), path(cpdb_obj)
@@ -21,7 +21,7 @@ process CONSENSUS {
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/400a_consensus.R" \
+    timeout ${time_out_limit} Rscript "${projectDir}/scripts/400_consensus.R" \
     --output_dir "\$PWD/400_consensus" \
     --sample_id ${sample_id} \
     --alpha ${alpha} \
@@ -37,7 +37,7 @@ process COMBINE_SAMPLES {
     label "mem2"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     path "*__interactions_mvoted.rds"
@@ -74,7 +74,7 @@ process AGGREGATION_SAMPLE {
     label "mem2"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     path input_file
@@ -86,8 +86,8 @@ process AGGREGATION_SAMPLE {
     val sample_varname
 
     output:
-    path "402_aggregation/402a_number_of_interactions.xlsx"
-    path "402_aggregation/402a_samples_interactions_mvoted_w_filters.rds"
+    path "402_aggregation/402_number_of_interactions.xlsx"
+    path "402_aggregation/402_sample_interactions_mvoted_w_filters.rds"
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30
@@ -110,7 +110,7 @@ process AGGREGATION_PATIENT {
     label "mem2"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     path input_file
@@ -119,7 +119,7 @@ process AGGREGATION_PATIENT {
     val min_patients
 
     output:
-    path "402_aggregation/402b_patient_interactions_mvoted_w_filters.rds"
+    path "402_aggregation/402_patient_interactions_mvoted_w_filters.rds"
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30

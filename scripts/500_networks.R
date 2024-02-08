@@ -20,21 +20,28 @@ if (!interactive()) {
     )
     parser$add_argument("--input_file", type = "character", help = "Input file")
     parser$add_argument("--interactions_db", type = "character", help = "Interactions database")
+    parser$add_argument("--agg_level", type = "character", help = "Level of aggregation: sample or patient")
+    parser$add_argument("--meta", type = "character", help = "Path to metadata")
+    parser$add_argument("--min_q", type = "numeric", default = 0.5, help = "Threshold for visibility (transparency)")
+    parser$add_argument("--min_cells", type = "numeric", default = 100, help = "Min. cells for a celltype to be included")
+    parser$add_argument("--has_loops", type = "numeric", default = 1, help = "Include self-loops")
+    parser$add_argument("--annot", type = "character", default = "CCI_CellClass_L1", help = "Annotation variable")
+    parser$add_argument("--min_celltypes", type = "numeric", default = 2, help = "Number of min. cell types for a sample to be included")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L2"
+    args$annot <- "CCI_CellClass_L1"
     args$output_dir <- glue("{here::here()}/output/{args$annot}/500_networks")
-    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
-    args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
+    args$agg_level <- "patient"
+    args$input_file <- glue("{here::here()}/output/{args$annot}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
+    args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
     args$meta <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
-    args$colors <- glue("{here::here()}/000_misc_local/{args$annot}_network_colors.rds")
     args$min_q <- 0.5
     args$min_cells <- 100
-    args$min_celltypes <- 3
-    args$has_loops <- FALSE
+    args$min_celltypes <- 2
+    args$has_loops <- TRUE
 }
 
 # Set up logging
@@ -45,12 +52,13 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-create_dir(args$output_dir)
+output_dir <- glue("{args$output_dir}/{args$agg_level}")
+create_dir(output_dir)
 
 # Load additional libraries
 log_info("Load additional libraries...")
 pacman::p_load_gh("jokergoo/ComplexHeatmap")
-pacman::p_load(randomcoloR, igraph, ggplot2)
+pacman::p_load(igraph, ggplot2)
 
 
 log_info("Load interactions...")
@@ -98,29 +106,20 @@ n_cells_per_type <- meta %>%
     # Determine average proportion of cells per cell type per region
     summarise(avg_prop = mean(prop), avg_pct = 100 * mean(prop))
 
-# TODO, comment after generating colors - DONE (DO NOT TOUCH)
-# celltypes <- n_cells_per_type[args$annot] %>%
-#     unique() %>% pull()
-# celltypes <- celltypes[order(celltypes)]
-# colors <- distinctColorPalette(length(celltypes))
-# names(colors) <- celltypes
-# saveRDS(colors, glue("{here::here()}/000_misc_local/{args$annot}_network_colors.rds"))
-colors <- readRDS(args$colors)
+log_info("Load color dictionary...")
 
-# Count the number of interactions between cell type groups
-# Types of filters:
-# - stringent_region (voting method based stringent + take into account only region)
-# - stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
-# - lenient_region (take into account only region)
-# - lenient_region_pair (take into account both region and presence of pair in sample of that region)
-options <- c("stringent_region", "stringent_region_pair", "lenient_region", "lenient_region_pair")
-avail_regions <- interactions %>%
-    pull(Region_Grouped) %>%
-    unique()
-for (option in options) {
+# Setting up colors
+colors <- CELLTYPES_COLOR_PALETTE[[args$annot]]
+
+for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
+    if (!option %in% colnames(interactions)) {
+        next
+    }
+    # TODO comment when in use, just for testing
+    option <- INTERACTIONS_POST_FILTERING_OPTIONS[3]
     interactions_filtered <- interactions %>%
         ungroup() %>%
-        # TODO: filter based on one of the above options
+        # TODO: filter based on one of the above INTERACTIONS_POST_FILTERING_OPTIONS
         filter(!!sym(option), !is.na(!!sym(option))) %>%
         select(Region_Grouped, source_target, complex_interaction) %>%
         group_by(Region_Grouped, source_target) %>%
@@ -128,14 +127,38 @@ for (option in options) {
         group_by(Region_Grouped, source, target) %>%
         summarise(n = n()) %>%
         ungroup()
+    # head(interactions_filtered)
+    #     # A tibble: 6 × 4
+    #   Region_Grouped source    target              n
+    #   <chr>          <chr>     <chr>           <int>
+    # 1 PT             Astrocyte Astrocyte          68
+    # 2 PT             Astrocyte Malignant          17
+    # 3 PT             Astrocyte Microglia          33
+    # 4 PT             Astrocyte Neuron             49
+    # 5 PT             Astrocyte OPC                34
+    # 6 PT             Astrocyte Oligodendrocyte    22
 
-    for (current_region in avail_regions) {
+    for (current_region in REGION_GROUPED_LEVELS) {
+        # TODO comment when in use, just for testing
         # current_region <- "PT"
         log_info("Current selection...")
         df_subset <- interactions_filtered %>%
             filter(Region_Grouped == current_region) %>%
             ungroup() %>%
             select(source, target, n)
+        if (nrow(df_subset) < 1) {
+            next
+        }
+        # head(df_subset)
+        # # A tibble: 6 × 3
+        #   source    target              n
+        #   <chr>     <chr>           <int>
+        # 1 Astrocyte Astrocyte          68
+        # 2 Astrocyte Malignant          17
+        # 3 Astrocyte Microglia          33
+        # 4 Astrocyte Neuron             49
+        # 5 Astrocyte OPC                34
+        # 6 Astrocyte Oligodendrocyte    22
 
         if (!args$has_loops) {
             log_info("Remove loops...")
@@ -148,9 +171,19 @@ for (option in options) {
         #         filter(source == "Malignant" || target == "Malignant") %>%
         #         ungroup()
         # }
-
+        log_info("Convert to wide format...")
         df_subset_wide <- df_subset %>% pivot_wider(names_from = target, values_from = n)
-        print(df_subset_wide)
+        # print(df_subset_wide)
+        #         # A tibble: 6 × 7
+        #   source          Astrocyte Malignant Microglia Neuron   OPC Oligodendrocyte
+        #   <chr>               <int>     <int>     <int>  <int> <int>           <int>
+        # 1 Astrocyte              68        17        33     49    34              22
+        # 2 Malignant              14        89        59     83    26              48
+        # 3 Microglia              52        70       151     66    47              51
+        # 4 Neuron                 52        69        50    185    58              64
+        # 5 OPC                    55        25        18     77    56              39
+        # 6 Oligodendrocyte        45        51        62     72    34              50
+
         log_info("Determine min and max number of interactions for min-max normalization...")
         edge_list <- df_subset %>%
             # TODO: SQRT transformation - make smaller differences larger
@@ -165,6 +198,16 @@ for (option in options) {
             # mutate(n_normalized = n_normalized + abs(min(n_normalized))) %>%
             select(source, target, n_normalized) %>%
             ungroup()
+        # r$> head(edge_list)
+        # # A tibble: 6 × 3
+        #   source    target          n_normalized
+        #   <chr>     <chr>                  <dbl>
+        # 1 Astrocyte Astrocyte             0.457
+        # 2 Astrocyte Malignant             0.0387
+        # 3 Astrocyte Microglia             0.203
+        # 4 Astrocyte Neuron                0.330
+        # 5 Astrocyte OPC                   0.212
+        # 6 Astrocyte Oligodendrocyte       0.0962
 
         log_info("Create weighted adjacency matrix...")
         adj_mat <- edge_list %>%
@@ -172,10 +215,16 @@ for (option in options) {
             column_to_rownames("source") %>%
             as.matrix()
         adj_mat <- adj_mat[order(rownames(adj_mat)), order(colnames(adj_mat))]
-
-        print(adj_mat)
+        # r$> head(adj_mat)
+        #                 Astrocyte  Malignant  Microglia    Neuron Oligodendrocyte       OPC
+        # Astrocyte       0.4568600 0.03868717 0.20313826 0.3304670      0.09622478 0.2119000
+        # Malignant       0.0000000 0.57732572 0.39955000 0.5445109      0.32318522 0.1376661
+        # Microglia       0.3518774 0.46907003 0.86680632 0.4444690      0.34481090 0.3158272
+        # Neuron          0.3518774 0.46298712 0.33767480 1.0000000      0.43188878 0.3929198
+        # Oligodendrocyte 0.3008725 0.34481090 0.41911043 0.4811069      0.33767480 0.2119000
+        # OPC             0.3726786 0.12762337 0.05081063 0.5104871      0.25389331 0.3794856
         log_info("Create igraph network...")
-        igraph_network <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "directed", weighted = TRUE, diag = args$has_loops)
+        igraph_network <- igraph::graph_from_adjacency_matrix(adj_mat, mode = "directed", weighted = TRUE, diag = as.logical(args$has_loops))
 
         log_info("Add node and edge attributes...")
         noc_subset <- n_cells_per_type %>%
@@ -186,7 +235,17 @@ for (option in options) {
         colnames(vertices) <- c("vertex")
         colnames(edges) <- c("sender", "receiver")
         colors_df <- data.frame(colors) %>% rownames_to_column("cell_type")
-
+        #          cell_type  colors
+        # 1        Astrocyte #D78BC2
+        # 2      Endothelial #846FD9
+        # 3       Macrophage #D6C9D2
+        # 4        Malignant #CDD39C
+        # 5        Microglia #D34FD7
+        # 6           Neuron #81DCC4
+        # 7  Oligodendrocyte #76A9D6
+        # 8              OPC #D7D755
+        # 9         Pericyte #D87F60
+        # 10          T_cell #85E672
         edge_colors <- edges %>%
             left_join(colors_df, by = c("sender" = "cell_type")) %>%
             select(colors) %>%
@@ -238,20 +297,10 @@ for (option in options) {
             }
         })
 
-        # plt_hist <- ggplot() +
-        #     geom_histogram(aes(x = edge_width), bins = 10) +
-        #     custom_theme() +
-        #     geom_vline(xintercept = quantile(edge_width, .25), color = "red") +
-        #     geom_vline(xintercept = mean(edge_width), color = "blue") +
-        #     geom_vline(xintercept = quantile(edge_width, .50), color = "red") +
-        #     geom_vline(xintercept = quantile(edge_width, .75), color = "red")
-        # ggsave(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"), plt_hist, width = 10, height = 10, units = "in", dpi = 300)
-        # auto_crop(glue("{args$output_dir}/hist_{args$annot}_{option}_{current_region}.png"))
-
         log_info("Plot network...")
         graph_layout <- layout_in_circle(igraph_network)
         has_loops <- ifelse(args$has_loops, "with_loops", "without_loops")
-        plot_filename <- glue("{args$output_dir}/network_vis_{args$annot}_{option}_{current_region}_{has_loops}.png")
+        plot_filename <- glue("{output_dir}/network_vis_{args$annot}_{option}_{current_region}_{has_loops}.png")
         png(plot_filename, res = 300, width = 10, height = 10, units = "in")
         plot(igraph_network,
             layout = graph_layout,
@@ -265,7 +314,7 @@ for (option in options) {
             rescale = TRUE,
         )
         dev.off()
-        auto_crop(plot_filename)
+        # auto_crop(plot_filename)
 
         # log_info("Create ggnetwork...")
         # nw <- ggnetwork(igraph_network, layout = igraph::layout_in_circle(igraph_network), weights = "weight", niter = 1000, arrow.gap = 0)

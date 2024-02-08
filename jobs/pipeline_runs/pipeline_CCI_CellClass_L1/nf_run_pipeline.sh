@@ -27,17 +27,17 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-output_run_name="CCI_CellClass_L1_updated"
+run_name="CCI_CellClass_L1_conf_malign"
 approach=6
 
 # Inputs 
-input_file="${project_dir}/001_data/gbm_regional_study.rds"
+input_file="/cluster/projects/gaitigroup/Users/Benson/Parsebio/seuratobjects/bw_gbm_regional_study.rds"
 
 # Pre-processing
 split_varname="Sample"
 annot="CCI_CellClass_L1"
 condition_varname="Region_Grouped"
-patient_varname=2
+patient_varname="Patient"
 min_patients=2
 min_cells=100
 min_cell_types=2
@@ -59,7 +59,7 @@ liana_db_csv="${interactions_db}/cell2cell_db.csv"
 ref_db="${interactions_db}/ref_db.rds"
 
 # Create output directory if not existing
-mkdir -p "${project_dir}/output/${output_run_name}"
+mkdir -p "${project_dir}/output/${run_name}"
 mkdir -p "${project_dir}/nf-logs"
 
 echo "Running pipeline..."
@@ -74,7 +74,7 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --min_cell_types ${min_cell_types} \
     --n_perm ${n_perm} \
     --min_pct ${min_pct} \
-    --output_run_name ${output_run_name} \
+    --run_name ${run_name} \
     --cellphone_db ${cellphone_db} \
     --cellchat_db ${cellchat_db} \
     --liana_db ${liana_db} \
@@ -84,6 +84,7 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --meta_vars_oi $meta_vars_oi \
     --approach $approach \
     --condition_varname $condition_varname \
-    --aggregate_patients \ --patient_varname $patient_varname \
+    --aggregate_patients \
+    --patient_varname $patient_varname \
     --min_patients $min_patients \
 echo "Done!"

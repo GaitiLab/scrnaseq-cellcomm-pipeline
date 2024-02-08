@@ -34,8 +34,9 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$annot <- "CCI_CellClass_L1"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/402_aggregation/")
-    args$input_file <- glue("{here::here()}/output/{args$annot}/401_combine_samples/401_samples_interactions_mvoted.rds")
+    run_name <- "CCI_CellClass_L1_updated"
+    args$output_dir <- glue("{here::here()}/output/{run_name}/402_aggregation/")
+    args$input_file <- glue("{here::here()}/output/{run_name}/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$condition_varname <- "Region_Grouped"
     args$min_patients <- 2
 
@@ -204,4 +205,4 @@ combined_voting <- merge(lenient_voting_by_region, stringent_voting_by_region, b
 # 5                            NA                                                            <NA>
 # 6                             2                                     6237_2222190_A, 6419_cortex
 log_info("Save results...")
-saveRDS(combined_voting, glue("{args$output_dir}/402b_patient_interactions_mvoted_w_filters.rds"))
+saveRDS(combined_voting, glue("{args$output_dir}/402_patient_interactions_mvoted_w_filters.rds"))

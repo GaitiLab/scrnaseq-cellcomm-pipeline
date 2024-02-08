@@ -13,7 +13,7 @@
 
 module load java/18
 
-output_run_name="test_pipeline"
+run_name="test_pipeline"
 
 # Setting up Nextflow
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
@@ -48,7 +48,7 @@ ref_db="${interactions_db}/ref_db.rds"
 echo "Create work directory if not existing..."
 mkdir -p $work_dir
 mkdir -p $project_dir/$outdir
-mkdir -p "${project_dir}/output/${output_run_name}"
+mkdir -p "${project_dir}/output/${run_name}"
 
 echo "Running pipeline..."
 # # Start the pipeline
@@ -62,7 +62,7 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --min_cell_types ${min_cell_types} \
     --n_perm ${n_perm} \
     --min_pct ${min_pct} \
-    --output_run_name ${output_run_name} \
+    --run_name ${run_name} \
     --cellphone_db ${cellphone_db} \
     --cellchat_db ${cellchat_db} \
     --liana_db ${liana_db} \

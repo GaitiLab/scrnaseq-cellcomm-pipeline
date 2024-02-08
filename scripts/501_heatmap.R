@@ -18,14 +18,22 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Simple heatmaps representing number of interactions between cell type groups"
     )
+    parser$add_argument("--condition_varname", type = "character", default = "Region_Grouped")
+    parser$add_argument("--annot", type = "character", default = "CCI_CellClass_L1")
+    parser$add_argument("--input_file", type = "character", help = "Aggregated interactions dataframe (RDS file)")
+    parser$add_argument("--agg_level", type = "character", help = "Level of aggregation: sample or patient")
+
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
+    run_name <- "CCI_CellClass_L2"
     args$annot <- "CCI_CellClass_L2"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/501_heatmap")
-    args$input_file <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+    args$agg_level <- "patient"
+    args$output_dir <- glue("{here::here()}/output/{run_name}/501_heatmap_n_interactions")
+    args$input_file <- glue("{here::here()}/output/{run_name}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
+    args$condition_varname <- "Region_Grouped"
 }
 
 # Set up logging
@@ -36,7 +44,8 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-create_dir(args$output_dir)
+output_dir <- glue("{args$output_dir}/{args$agg_level}")
+create_dir(output_dir)
 
 # Load additional libraries
 
@@ -49,29 +58,32 @@ interactions <- readRDS(args$input_file)
 # - stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
 # - lenient_region (take into account only region)
 # - lenient_region_pair (take into account both region and presence of pair in sample of that region)
-options <- c("stringent_region", "lenient_region", "lenient_region_pair", "stringent_region_pair")
+# INTERACTIONS_POST_FILTERING_OPTIONS <- c("stringent_condition", "stringent_condition_pair", "lenient_condition", "lenient_condition_pair")
 avail_regions <- interactions %>%
-    pull(Region_Grouped) %>%
+    pull(!!sym(args$condition_varname)) %>%
     unique()
-for (option in options) {
+
+for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
+    if (!option %in% colnames(interactions)) {
+        next
+    }
     for (current_region in avail_regions) {
         # option <- "lenient_region"
         # current_region <- "PT"
 
         interactions_filtered <- interactions %>%
             ungroup() %>%
-            # TODO: filter based on one of the above options
             filter(!!sym(option), !is.na(!!sym(option))) %>%
-            select(Region_Grouped, source_target, complex_interaction) %>%
-            group_by(Region_Grouped, source_target) %>%
+            select(!!sym(args$condition_varname), source_target, complex_interaction) %>%
+            group_by(!!sym(args$condition_varname), source_target) %>%
             separate(source_target, c("source", "target"), sep = "__") %>%
-            group_by(Region_Grouped, source, target) %>%
+            group_by(!!sym(args$condition_varname), source, target) %>%
             summarise(n = n()) %>%
             ungroup()
 
         log_info("Current selection...")
         interactions_subset_long <- interactions_filtered %>%
-            filter(Region_Grouped == current_region) %>%
+            filter(!!sym(args$condition_varname) == current_region) %>%
             ungroup() %>%
             select(source, target, n) %>%
             # mutate(n = n**2) %>%
@@ -91,7 +103,7 @@ for (option in options) {
 
         create_hm(
             mat = mat, col_fun = circlize::colorRamp2(c(0, legend_max), c("white", "red")),
-            output_file = glue("{args$output_dir}/heatmap__{option}__{current_region}.pdf"),
+            output_file = glue("{output_dir}/heatmap__{option}__{current_region}.pdf"),
             legend_title = "Interactions", save_plot = TRUE,
             custom_cell_fun = custom_cell_function,
             column_title = "Receiver", row_title = "Sender",

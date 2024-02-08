@@ -1,8 +1,8 @@
 process INFER_CELLCHAT {
     label 'mem64'
-    label 'time_4h'
+    label 'time_6h'
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     path input_file
@@ -33,7 +33,7 @@ process INFER_LIANA {
     label 'mem4'
     label 'time_15m'
 
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_file
@@ -63,7 +63,7 @@ process INFER_CELL2CELL {
     label 'mem16'
     label 'time_2h'
 
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_dir
@@ -98,7 +98,7 @@ process INFER_CPDB {
     label 'mem16'
     label 'time_1h'
 
-    publishDir "${projectDir}/output/${params.output_run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
     input:
     path input_dir

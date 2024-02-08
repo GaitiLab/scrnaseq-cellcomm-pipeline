@@ -26,10 +26,10 @@ if (!interactive()) {
         type = "numeric", default = 10,
         help = "Minimum percentage of cells expressing a gene"
     )
-    parser$add_argument("--res_threshold",
-        type = "numeric", default = 1.96,
-        help = "Residual threshold for labeling"
-    )
+    # parser$add_argument("--res_threshold",
+    #     type = "numeric", default = 1.96,
+    #     help = "Residual threshold for labeling"
+    # )
     parser$add_argument("--gene_exp_dir",
         type = "character", default = NULL,
         help = "Path to gene expression directory"
@@ -42,20 +42,21 @@ if (!interactive()) {
         type = "character", default = NULL,
         help = "Path to interactions file"
     )
+    parser$add_argument("--annot", type = "character", default = "CCI_CellClass_L1", help = "Annotation to use")
 
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L2"
+    args$annot <- "CCI_CellClass_L1"
     args$output_dir <- glue("{here::here()}/output/{args$annot}/511_gene_exp_scatter")
-    args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
+    args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
     args$min_pct_exp <- 10
-    args$res_threshold <- 1.96
+    # args$res_threshold <- 1.96
     args$gene_exp_dir <- glue("{here::here()}/output/{args$annot}/510_compute_avg_expr")
     args$meta <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
-    args$interactions <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+    args$interactions <- glue("{here::here()}/output/{args$annot}/402_aggregation/402_sample_interactions_mvoted_w_filters.rds")
 }
 
 # Set up logging
@@ -70,9 +71,12 @@ create_dir(args$output_dir)
 options(ggrepel.max.overlaps = Inf)
 
 # Load additional libraries
-pacman::p_load(Seurat, ggplot2, ggrepel, ggpubr)
+pacman::p_load(Seurat, ggplot2, ggrepel, ggpubr, ggtext)
 
-colors <- c("sender" = "#0043fc", "receiver" = "#FF3333", "background" = "grey", "sender/receiver" = "green")
+colors <- c("sender" = "#0043fc", 
+"receiver" = "#FF3333", 
+"background" = "darkgrey", 
+"sender/receiver" = "green")
 
 malignant_id <- ifelse(args$annot == "CCI_CellClass_L1", "Malignant", "_like")
 
@@ -90,9 +94,14 @@ head(meta)
 # 5 6234_2895153_A             TE
 # 6 6234_2895153_B             PT
 
+
 log_info("Load detected interactions...")
-interactions <- readRDS(args$interactions) %>%
-    filter(lenient_region_pair) %>%
+interactions <- readRDS(args$interactions)
+
+# options <- intersect(INTERACTIONS_POST_FILTERING_OPTIONS, colnames(interactions))
+# option <- options[1]
+interactions <- interactions %>%
+    # filter(!!as.symbol(option)) %>%
     separate(source_target, into = c("source", "target"), sep = "__", remove = FALSE) %>%
     separate(complex_interaction, into = c("ligand_complex", "receptor_complex"), sep = "__", remove = FALSE) %>%
     rowwise() %>%
@@ -153,10 +162,10 @@ head(avg_gene_exp)
 # 5  1.0427285 11.7903930          TGFA Progenitor_like    -0.42494779 6234_2895153_A
 # 6  0.1827182  0.8733624         ANXA1 Progenitor_like    -0.07388671 6234_2895153_A
 
-
 log_info("Update metadata + filtering on min. pct. cells...")
 avg_gene_exp <- avg_gene_exp %>%
     rename(gene = features.plot, cell_type = id) %>%
+    # Only take int account expression if gene is expressed in at least X%.
     filter(pct.exp >= args$min_pct_exp) %>%
     left_join(meta, by = "Sample")
 head(avg_gene_exp)
@@ -169,6 +178,7 @@ head(avg_gene_exp)
 # 6  3.443178 36.68122  L1CAM Progenitor_like     -0.2384047 6234_2895153_A             TE
 
 # Average samples per region
+log_info("Compute average expression across samples")
 overall_avg_gene_exp <- avg_gene_exp %>%
     group_by(Region_Grouped, cell_type, gene) %>%
     summarise(sd = sd(avg.exp), mean = mean(avg.exp)) %>%
@@ -185,34 +195,34 @@ head(overall_avg_gene_exp)
 # 5 PT             Microglia ANXA1  NA      6.99
 # 6 PT             Microglia ICAM1   8.80  12.6
 
-
-
-all_regions <- interactions %>%
-    filter(stringent_region_pair) %>%
-    pull(Region_Grouped) %>%
-    unique()
-
-# Count the number of interactions between cell type groups
-# Types of filters:
-# - stringent_region (voting method based stringent + take into account only region)
-# - stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
-# - lenient_region (take into account only region)
-# - lenient_region_pair (take into account both region and presence of pair in sample of that region)
-options <- c("stringent_region", "stringent_region_pair", "lenient_region", "lenient_region_pair")
-for (option in options) {
+for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
+    if (!option %in% colnames(interactions)) { 
+        next
+    }
     output_dir <- glue("{args$output_dir}/{option}")
     create_dir(output_dir)
-    for (region_oi in all_regions) {
+    for (region_oi in REGION_GROUPED_LEVELS) {
         # TODO uncomment for testing
-        # option <- options[1]
-        # region_oi <- all_regions[1]
+        # region_oi <- REGION_GROUPED_LEVELS[1]
         # i <- 1
 
-        # Only plot the interactions that are detected along the malignant-other axis (or the other way around)
-        available_sender_receiver_pairs <- interactions %>%
-            filter(Region_Grouped == region_oi, str_detect(setname, "Malignant"), !!sym(option)) %>%
+        # Only plot the interactions that are detected along the malignant-TME axis (or the other way around)
+        available_sender_receiver_pairs <- interactions %>% rowwise() %>% 
+            filter(Region_Grouped == region_oi, !!sym(option), str_detect(source_target, malignant_id)) %>%
             select(source_target, source, target) %>%
             distinct()
+        #         # A tibble: 6 × 3
+        #   source_target              source    target
+        #   <chr>                      <chr>     <chr>
+        # 1 Astrocyte__Malignant       Astrocyte Malignant
+        # 2 Malignant__Astrocyte       Malignant Astrocyte
+        # 3 Malignant__Malignant       Malignant Malignant
+        # 4 Malignant__Microglia       Malignant Microglia
+        # 5 Malignant__Neuron          Malignant Neuron
+        # 6 Malignant__Oligodendrocyte Malignant Oligodendrocyte
+        if (length(available_sender_receiver_pairs) < 1) {
+            next
+        }
 
         for (i in seq_len(nrow(available_sender_receiver_pairs))) {
             # region_oi <- "PT"
@@ -224,17 +234,28 @@ for (option in options) {
             log_info("Select ligands/receptors from detected interactions...")
             interactions_subset <- interactions %>%
                 filter(
-                    stringent_region_pair,
+                    !!sym(option),
                     Region_Grouped == region_oi, source == source_oi,
                     target == target_oi
                 ) %>%
                 select(ligand, receptor, source, target, Region_Grouped)
+            # # A tibble: 6 × 5
+            #   ligand receptor source    target    Region_Grouped
+            #   <chr>  <chr>    <chr>     <chr>     <chr>
+            # 1 CNTN1  NRCAM    Astrocyte Malignant PT
+            # 2 CNTN1  PTPRZ1   Astrocyte Malignant PT
+            # 3 FLRT2  ADGRL3   Astrocyte Malignant PT
+            # 4 LAMA1  ITGB8    Astrocyte Malignant PT
+            # 5 LRIG1  EGFR     Astrocyte Malignant PT
+            # 6 NCAM1  PTPRZ1   Astrocyte Malignant PT
+
             ligands_oi <- interactions_subset %>%
                 pull(ligand) %>%
                 unique()
             receptors_oi <- interactions_subset %>%
                 pull(receptor) %>%
                 unique()
+
             log_info(glue("Number of ligands: {length(ligands_oi)}"))
             log_info(glue("Number of receptors: {length(receptors_oi)}"))
 
@@ -261,7 +282,18 @@ for (option in options) {
                             TRUE ~ "background"
                         )),
                     cell_type = ifelse(cell_type == source_oi, "sender", "receiver")
-                )
+                ) %>%
+                ungroup()
+            # # A tibble: 6 × 7
+            #   Region_Grouped cell_type gene      sd  mean group           exp_by_type
+            #   <fct>          <chr>     <fct>  <dbl> <dbl> <chr>           <fct>
+            # 1 PT             receiver  NRG2    9.25 13.4  ligand          background
+            # 2 PT             receiver  SEMA7A NA     1.94 ligand          background
+            # 3 PT             receiver  NFASC  17.1  21.8  ligand          background
+            # 4 PT             receiver  ANXA1  NA    18.7  ligand          background
+            # 5 PT             receiver  THY1    2.09  4.08 ligand/receptor background
+            # 6 PT             receiver  HLA-E  NA     8.54 NA              background
+
             if (avg_gene_expr_subset %>% pull(cell_type) %>% unique() %>% length() != 2) {
                 log_info("Not enough cell types, skipping...")
                 next
@@ -277,21 +309,41 @@ for (option in options) {
                         case_when(
                             exp_by_type == "sender" ~ sd_sender,
                             exp_by_type == "receiver" ~ sd_receiver,
+                            # If a SD couldn't be computed, use size 1 (otherwise point won't be drawn)
                             TRUE ~ 1
                         )
                 ) %>%
                 filter(Region_Grouped == region_oi) %>%
                 ungroup() %>%
                 select(-Region_Grouped)
+            # # A tibble: 6 × 8
+            #   group           exp_by_type gene   mean_receiver mean_sender sd_receiver sd_sender    sd
+            #   <chr>           <fct>       <fct>          <dbl>       <dbl>       <dbl>     <dbl> <dbl>
+            # 1 ligand          background  NRG2           13.4         9.84        9.25      4.98     1
+            # 2 ligand          background  SEMA7A          1.94       NA          NA        NA        1
+            # 3 ligand          background  NFASC          21.8         7.09       17.1       1.98     1
+            # 4 ligand          background  ANXA1          18.7         3.19       NA        NA        1
+            # 5 ligand/receptor background  THY1            4.08       NA           2.09     NA        1
+            # 6 ligand/receptor background  L1CAM           1.59       NA          NA        NA        1
+
+            # Modelling LOESS based on sender/receiver expression
             loess_fit <- loess(avg_gene_expr_subset_wide$mean_sender ~ avg_gene_expr_subset_wide$mean_receiver)
+
             # # Take residuals
             resid <- scale(residuals(loess_fit), scale = TRUE, center = TRUE)
-            # his <- hist(resid)
 
             avg_gene_expr_subset_wide[!(is.na(avg_gene_expr_subset_wide$mean_sender) | is.na(avg_gene_expr_subset_wide$mean_receiver)), "resid"] <- resid
             avg_gene_expr_subset_wide[!(is.na(avg_gene_expr_subset_wide$mean_sender) | is.na(avg_gene_expr_subset_wide$mean_receiver)), "fitted"] <- loess_fit$fitted
+            # # A tibble: 6 × 10
+            #   group           exp_by_type gene   mean_receiver mean_sender sd_receiver sd_sender    sd   resid fitted
+            #   <chr>           <fct>       <fct>          <dbl>       <dbl>       <dbl>     <dbl> <dbl>   <dbl>  <dbl>
+            # 1 ligand          background  NRG2           13.4         9.84        9.25      4.98     1 -0.0907   14.1
+            # 2 ligand          background  SEMA7A          1.94       NA          NA        NA        1 NA        NA
+            # 3 ligand          background  NFASC          21.8         7.09       17.1       1.98     1 -0.353    22.0
+            # 4 ligand          background  ANXA1          18.7         3.19       NA        NA        1 -0.404    20.1
+            # 5 ligand/receptor background  THY1            4.08       NA           2.09     NA        1 NA        NA
+            # 6 ligand/receptor background  L1CAM           1.59       NA          NA        NA        1 NA        NA
 
-            # print(his)
             log_info("Adding labels...")
             avg_gene_expr_subset_wide <- avg_gene_expr_subset_wide %>% mutate(add_label = case_when(
                 exp_by_type == "background" ~ NA,
@@ -300,6 +352,15 @@ for (option in options) {
                 exp_by_type != "background" ~ as.character(gene),
                 TRUE ~ NA
             ))
+            # # A tibble: 6 × 11
+            #   group    exp_by_type gene  mean_receiver mean_sender sd_receiver sd_sender    sd   resid fitted add_label
+            #   <chr>    <fct>       <fct>         <dbl>       <dbl>       <dbl>     <dbl> <dbl>   <dbl>  <dbl> <chr>
+            # 1 ligand   background  NRG2          13.4         9.84        9.25      4.98     1 -0.0907   14.1 NA
+            # 2 ligand   background  SEMA…          1.94       NA          NA        NA        1 NA        NA   NA
+            # 3 ligand   background  NFASC         21.8         7.09       17.1       1.98     1 -0.353    22.0 NA
+            # 4 ligand   background  ANXA1         18.7         3.19       NA        NA        1 -0.404    20.1 NA
+            # 5 ligand/… background  THY1           4.08       NA           2.09     NA        1 NA        NA   NA
+            # 6 ligand/… background  L1CAM          1.59       NA          NA        NA        1 NA        NA   NA
 
             log_info("Plotting...")
             plt_all <- ggplot(data = avg_gene_expr_subset_wide) +
@@ -307,6 +368,8 @@ for (option in options) {
                     se = TRUE, color = "black", linetype = "dashed", method = "loess"
                 ) +
                 geom_point(aes(
+                    # Shape = ligand/receptor based on database
+                    # Color = expressed by sender or receiver cell type
                     x = mean_sender, y = mean_receiver, shape = group, color = exp_by_type,
                     size = sd,
                 )) +
@@ -315,8 +378,8 @@ for (option in options) {
                 labs(
                     title = "Expression of ligands & receptors",
                     subtitle = glue("Coloring/labeling based on interactions found between {source_oi} - {target_oi} in {region_oi}"),
-                    x = glue("log10(Average expression in {source_oi} [sender])"),
-                    y = glue("log10(Average expression in {target_oi} [receiver])")
+                    x = glue("Average expression of {source_oi} (log<sub>10</sub>)"),
+                    y = glue("Average expression of {target_oi} (log<sub>10</sub>)")
                 ) +
                 guides(
                     color = guide_legend(title = ""), shape = guide_legend(title = ""),
@@ -327,16 +390,23 @@ for (option in options) {
                         label = add_label, color = exp_by_type
                     )
                 ) +
-                scale_x_log10() +
-                scale_y_log10()
-            # facet_wrap(~Region_Grouped, ncol = 3)
+                scale_x_log10(
+                    breaks = scales::trans_breaks("log10", function(x) 10^x),
+                    labels = scales::trans_format("log10", scales::math_format(10^.x))
+                ) +
+                scale_y_log10(
+                    breaks = scales::trans_breaks("log10", function(x) 10^x),
+                    labels = scales::trans_format("log10", scales::math_format(10^.x))
+                )
+
             plt_all
             log_info("Saving...")
             ggsave(
                 plot = plt_all,
                 filename = glue("{output_dir}/scatter_{source_oi}_{target_oi}_{region_oi}.pdf"),
-                width = 8, height = 7
+                width = 10, height = 10
             )
+            auto_crop(glue("{output_dir}/scatter_{source_oi}_{target_oi}_{region_oi}.pdf"))
         }
     }
 }

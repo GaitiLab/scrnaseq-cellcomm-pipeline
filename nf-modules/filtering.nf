@@ -2,7 +2,7 @@ process POSTPROCESSING_CELLCHAT {
     label 'time_10m'
     label 'mem2'
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     tuple val(sample_id), path(input_interactions)
@@ -31,7 +31,7 @@ process POSTPROCESSING_LIANA {
     label 'time_10m'
     label 'mem2'
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     tuple val(sample_id), path(input_interactions)
@@ -59,7 +59,7 @@ process POSTPROCESSING_CELL2CELL {
     label 'time_10m'
     label 'mem2'
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     tuple val(sample_id), path(input_interactions)
@@ -86,7 +86,7 @@ process POSTPROCESSING_CPDB {
     label 'time_10m'
     label 'mem2'
 
-    publishDir "${projectDir}/output/${params.output_run_name}", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
     input:
     tuple val(sample_id), path(interaction_scores), 
