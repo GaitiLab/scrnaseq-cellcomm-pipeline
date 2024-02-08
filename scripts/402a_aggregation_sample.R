@@ -50,12 +50,13 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$annot <- "CCI_CellClass_L1"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/402_aggregation/")
-    args$input_file <- glue("{here::here()}/output/{args$annot}/401_combine_samples/401_samples_interactions_mvoted.rds")
+    run_name <- "CCI_CellClass_L1_updated"
+    args$output_dir <- glue("{here::here()}/output/{run_name}/402_aggregation/")
+    args$input_file <- glue("{here::here()}/output/{run_name}/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$min_frac_samples <- 0.5
-    args$metadata <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
+    args$metadata <- glue("{here::here()}/output/{run_name}/000_data/gbm_regional_study__metadata.rds")
     args$min_cells <- 100
-    args$min_celltypes <- 3
+    args$min_celltypes <- 2
     args$sample_varname <- "Sample"
     args$condition_varname <- "Region_Grouped"
 }
@@ -70,7 +71,7 @@ log_info(ifelse(interactive(),
 log_info("Create output directory...")
 create_dir(args$output_dir)
 
-number_of_interactions_filename <- glue("{args$output_dir}/402a_number_of_interactions.xlsx")
+number_of_interactions_filename <- glue("{args$output_dir}/402_number_of_interactions.xlsx")
 if (file.exists(number_of_interactions_filename)) {
     file.remove(number_of_interactions_filename)
 }
@@ -352,6 +353,6 @@ write.xlsx(stringent_by_condition_pair,
 
 log_info("Save output...")
 saveRDS(input_file_w_filters,
-    file = glue("{args$output_dir}/402a_samples_interactions_mvoted_w_filters.rds")
+    file = glue("{args$output_dir}/402_sample_interactions_mvoted_w_filters.rds")
 )
 log_info("COMPLETED!")

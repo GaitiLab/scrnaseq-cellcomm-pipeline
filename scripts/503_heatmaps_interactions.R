@@ -20,16 +20,17 @@ if (!interactive()) {
     )
     parser$add_argument("--annot", type = "character", help = "Annotation")
     parser$add_argument("--interactions", type = "character", help = "Interactions")
-    parser$add_argument("--colors", type = "character", help = "Colors")
-
+    parser$add_argument("--agg_level", type = "character", help = "Level of aggregation used: sample or patient")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L2"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/503_heatmaps_interactions")
-    args$interactions <- glue("{here::here()}/output/{args$annot}/400_consensus/400_samples_interactions_mvoted_w_filters.rds")
+    args$annot <- "CCI_CellClass_L1"
+    run_name <- "CCI_CellClass_L1"
+    args$agg_level <- "sample"
+    args$output_dir <- glue("{here::here()}/output/{run_name}/503_heatmaps_interactions")
+    args$interactions <- glue("{here::here()}/output/{run_name}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
     args$colors <- glue("{here::here()}/000_misc_local/{args$annot}_network_colors.rds")
 }
 
@@ -41,7 +42,8 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-create_dir(args$output_dir)
+output_dir <- glue("{args$output_dir}/{args$agg_level}")
+create_dir(output_dir)
 
 # Load additional libraries
 pacman::p_load_gh("jokergoo/ComplexHeatmap")
@@ -49,27 +51,11 @@ pacman::p_load_gh("jokergoo/ComplexHeatmap")
 log_info("Load interactions")
 interactions <- readRDS(args$interactions)
 
-# TODO save this or put somewhere for reusability
-abbrev_dict <- c(
-    "Macrophage" = "M",
-    "Microglia" = "MG",
-    "Oligodendrocyte" = "Oligo",
-    "Astrocyte" = "Astro",
-    "Neuron" = "N",
-    "OPC" = "OPC",
-    "Endothelial" = "Endo",
-    malign_id = "Mal",
-    "Progenitor_like" = "PL",
-    "Differentiated_like" = "DL"
-)
-avail_regions <- c("PT", "TE", "SC")
-options <- c("stringent_region", "stringent_region_pair", "lenient_region", "lenient_region_pair")
-
 log_info("Load color dictionary for cell types...")
-celltype_colors <- readRDS(args$colors)
+celltype_colors <- CELLTYPES_COLOR_PALETTE[[args$annot]]
+
 
 malignant_is_sender <- TRUE
-option <- "lenient_region"
 
 # How to recognize malignant cells
 if (args$annot == "CCI_CellClass_L1") {
@@ -78,18 +64,25 @@ if (args$annot == "CCI_CellClass_L1") {
     malign_id <- "_like"
 }
 
+# Titles for heatmap
+legend_title <- glue("{str_to_title(args$agg_level)}s")
+interaction_axis_title <- "Interaction"
+
 for (malignant_is_sender in c(TRUE, FALSE)) {
-    for (option in options) {
+    for (option in c("lenient_condition", "lenient_condition_pair")) {
+        if (!option %in% colnames(interactions)) {
+            next
+        }
+        # TODO comment later this is only for testing
+        # malignant_is_send <- TRUE
+        # option <- INTERACTIONS_POST_FILTERING_OPTIONS[1]
         # Set variables
         suffix <- ifelse(malignant_is_sender, "malignant_tme", "tme_malignant")
         malign_function <- ifelse(malignant_is_sender, "source", "target")
         tme_index <- ifelse(malignant_is_sender, 2, 1)
         malign_idx <- ifelse(malignant_is_sender, 1, 2)
 
-        # Titles
-        legend_title <- "Samples"
-        interaction_axis_title <- "Interaction"
-
+        # Pre-filtering based on option
         interactions_filtered <- interactions %>%
             filter(!!sym(option)) %>%
             separate(source_target, c("source", "target"), sep = "__", remove = FALSE) %>%
@@ -100,28 +93,41 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
                 str_detect(!!sym(malign_function), malign_id),
                 # No malignant-malignant interactions
                 !(str_detect(source, malign_id) && str_detect(target, malign_id))
-            ) %>%
-            mutate(
-                n_detected = str_count(lenient_voting_samples, ",") + 1,
-            ) %>%
-            # Make sure only interactions that have at least 2 samples are included
-            filter(n_detected >= 2) %>%
-            select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), n_detected)
-        log_info(interactions_filtered %>% pull(complex_interaction) %>% unique() %>% length())
-        head(interactions_filtered)
-        # # A tibble: 6 × 6
-        # # Rowwise:
-        #   complex_interaction Region_Grouped source          target    source_target              n_detected
-        #   <chr>               <fct>          <chr>           <chr>     <chr>                           <dbl>
-        # 1 A2M__LRP1           PT             Microglia       Malignant Microglia__Malignant                6
-        # 2 A2M__LRP1           TE             Microglia       Malignant Microglia__Malignant                2
-        # 3 ADAM10__NRCAM       SC             Oligodendrocyte Malignant Oligodendrocyte__Malignant          3
-        # 4 ADAM10__NRCAM       TE             Oligodendrocyte Malignant Oligodendrocyte__Malignant          2
-        # 5 AFDN__EPHA7         PT             Malignant       Neuron    Malignant__Neuron                   4
-        # 6 AFDN__NRXN3         TE             Malignant       Neuron    Malignant__Neuron                   2
+            )
 
+        # TODO Currently only lenient-voting (based on methods) is implemented
+        if (args$agg_level == "sample") {
+            interactions_filtered <- interactions_filtered %>%
+                mutate(
+                    n_detected = str_count(lenient_voting_samples, ",") + 1
+                ) %>%
+                # Make sure only interactions that have at least 2 samples are included
+                filter(n_detected >= 2) %>%
+                select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), n_detected)
+            head(interactions_filtered)
+            # # A tibble: 6 × 6
+            # # Rowwise:
+            #   complex_interaction Region_Grouped source          target    source_target              n_detected
+            #   <chr>               <fct>          <chr>           <chr>     <chr>                           <dbl>
+            # 1 A2M__LRP1           PT             Microglia       Malignant Microglia__Malignant                6
+            # 2 A2M__LRP1           TE             Microglia       Malignant Microglia__Malignant                2
+            # 3 ADAM10__NRCAM       SC             Oligodendrocyte Malignant Oligodendrocyte__Malignant          3
+            # 4 ADAM10__NRCAM       TE             Oligodendrocyte Malignant Oligodendrocyte__Malignant          2
+            # 5 AFDN__EPHA7         PT             Malignant       Neuron    Malignant__Neuron                   4
+            # 6 AFDN__NRXN3         TE             Malignant       Neuron    Malignant__Neuron                   2
+        } else if (args$agg_level == "patient") {
+            interactions_filtered <- interactions_filtered %>%
+                # Make sure only interactions that have at least 2 samples or patients are included
+                filter(lenient_condition_n_patients >= 2) %>%
+                select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), lenient_condition_n_patients) %>%
+                rename(n_detected = lenient_condition_n_patients)
+        }
+
+        log_info(interactions_filtered %>% pull(complex_interaction) %>% unique() %>% length())
+
+        # Preparing
         df <- interactions_filtered %>%
-            mutate(Region_Grouped = factor(Region_Grouped, levels = avail_regions), source_target = factor(source_target), ) %>%
+            mutate(Region_Grouped = factor(Region_Grouped, levels = REGION_GROUPED_LEVELS), source_target = factor(source_target), ) %>%
             arrange(Region_Grouped, !!sym(malign_function), source_target) %>%
             ungroup() %>%
             select(-!!sym(malign_function)) %>%
@@ -133,7 +139,7 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
             column_to_rownames("complex_interaction") %>%
             data.matrix()
         annot_regions <- factor(str_split(colnames(mat), ":", simplify = TRUE)[, 1],
-            levels = avail_regions
+            levels = REGION_GROUPED_LEVELS
         )
         # Annotation for cell types
         celltypes <- str_split(colnames(mat), ":", simplify = TRUE)[, 2]
@@ -145,7 +151,7 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
         # split source_target into (1) source - (2) target, keep either 1 or 2
         colnames(mat) <- str_split(colnames(mat), "__", simplify = TRUE)[, tme_index]
         # Use abbreviations
-        colnames(mat) <- str_replace_all(colnames(mat), abbrev_dict)
+        colnames(mat) <- str_replace_all(colnames(mat), CELLTYPE_ANNOT_ABBREV_DICT)
         # Replace "__" with " - " in interactions (only for visualization purposes)
         rownames(mat) <- str_replace_all(rownames(mat), "__", " - ")
 
@@ -214,7 +220,7 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
 
         hm <- draw(hm)
         hm_size <- get_optimal_output_size(hm)
-        output_file <- glue("{args$output_dir}/503_heatmaps_interactions_{option}_{suffix}.pdf")
+        output_file <- glue("{output_dir}/503_heatmaps_interactions_{option}_{suffix}.pdf")
         pdf(output_file, width = hm_size$width, height = hm_size$height)
         draw(hm)
         dev.off()
@@ -297,7 +303,7 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
 
         hm <- draw(hm, heatmap_legend_side = "bottom", annotation_legend_side = "bottom", merge_legend = TRUE)
         hm_size <- get_optimal_output_size(hm)
-        output_file <- glue("{args$output_dir}/503_heatmaps_interactions_{option}_{suffix}_flipped.pdf")
+        output_file <- glue("{output_dir}/503_heatmaps_interactions_{option}_{suffix}_flipped.pdf")
         pdf(output_file, width = hm_size$width, height = hm_size$height)
         draw(hm)
         dev.off()

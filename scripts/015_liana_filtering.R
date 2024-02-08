@@ -154,13 +154,13 @@ log_info(glue("Number of ligand units not found in reference: {nrow(ligand_units
 print(head(ligand_units_not_found))
 
 # Clean up
-db_tmp_clean1 <- db_tmp %>%
+db_tmp_clean1 <- db_tmp %>% rowwise() %>% 
     mutate(
-        source_genesymbol = ifelse(is.na(lc_components_genesymbols) | lc_components_genesymbols == "", source_genesymbol, lc_components_genesymbols),
-        target_genesymbol = ifelse(is.na(rc_components_genesymbols) | rc_components_genesymbols == "", target_genesymbol, rc_components_genesymbols),
+        source_genesymbol = ifelse(is.na(lc_components_genesymbols) || lc_components_genesymbols == "", source_genesymbol, lc_components_genesymbols),
+        target_genesymbol = ifelse(is.na(rc_components_genesymbols) || rc_components_genesymbols == "", target_genesymbol, rc_components_genesymbols),
     ) %>%
     rename(source_protein = lc_components, target_protein = rc_components) %>%
-    select(-rc_components_genesymbols, -lc_components_genesymbols, -lc_identifiers, -rc_identifiers, -lc_name, -rc_name)
+    select(-rc_components_genesymbols, -lc_components_genesymbols, -lc_identifiers, -rc_identifiers, -lc_name, -rc_name) %>% ungroup() 
 
 missing_protein_links <- db_tmp_clean1 %>% filter(
     is.na(source_protein) | is.na(target_protein)
@@ -174,30 +174,30 @@ db_tmp_clean2 <- db_tmp_clean1 %>%
     left_join(gene_protein_ref, by = c(source_genesymbol = "hgnc_symbol")) %>%
     rename(source_tmp_protein_name = uniprot) %>%
     left_join(gene_protein_ref, by = c(target_genesymbol = "hgnc_symbol"), suffix = c("_lc", "_rc")) %>%
-    rename(target_tmp_protein_name = uniprot) %>%
+    rename(target_tmp_protein_name = uniprot) %>% rowwise() %>% 
     mutate(
-        source_protein = ifelse(is.na(source_protein) | source_protein == "", source_tmp_protein_name, source_protein),
-        target_protein = ifelse(is.na(target_protein) | target_protein == "", target_tmp_protein_name, target_protein)
+        source_protein = ifelse(is.na(source_protein) || source_protein == "", source_tmp_protein_name, source_protein),
+        target_protein = ifelse(is.na(target_protein) || target_protein == "", target_tmp_protein_name, target_protein)
     ) %>%
-    select(-source_tmp_protein_name, -target_tmp_protein_name)
+    select(-source_tmp_protein_name, -target_tmp_protein_name) %>% ungroup()
 
-missing_protein_links2 <- db_tmp_clean2 %>% filter(
-    is.na(source_protein) | is.na(target_protein)
+missing_protein_links2 <- db_tmp_clean2 %>% rowwise() %>% filter(
+    is.na(source_protein) || is.na(target_protein)
 )
 log_info(glue("Number of missing protein links: {nrow(missing_protein_links2)}"))
 
 #  Check CPDB complexes
 db_tmp_clean3 <- db_tmp_clean2 %>%
-    left_join(cpdb_complex_protein_to_symbol, by = c("source_genesymbol" = "complex_gene_name")) %>%
-    mutate(source_protein = ifelse(is.na(source_protein) | source_protein == "", complex_protein, source_protein)) %>%
-    select(-complex_protein) %>%
-    left_join(cpdb_complex_protein_to_symbol, by = c("target_genesymbol" = "complex_gene_name")) %>%
-    mutate(target_protein = ifelse(is.na(target_protein) | target_protein == "", complex_protein, target_protein)) %>%
-    select(-complex_protein)
+    left_join(cpdb_complex_protein_to_symbol, by = c("source_genesymbol" = "complex_gene_name")) %>% rowwise() %>% 
+    mutate(source_protein = ifelse(is.na(source_protein) || source_protein == "", complex_protein, source_protein)) %>% ungroup() %>% 
+    select(-complex_protein) %>% 
+    left_join(cpdb_complex_protein_to_symbol, by = c("target_genesymbol" = "complex_gene_name")) %>% rowwise() %>% 
+    mutate(target_protein = ifelse(is.na(target_protein) || target_protein == "", complex_protein, target_protein)) %>%
+    select(-complex_protein) %>% ungroup()
 
 
-missing_protein_links3 <- db_tmp_clean3 %>% filter(
-    is.na(source_protein) | is.na(target_protein)
+missing_protein_links3 <- db_tmp_clean3 %>% rowwise() %>%  filter(
+    is.na(source_protein) || is.na(target_protein)
 )
 log_info(glue("Number of missing protein links: {nrow(missing_protein_links3)}"))
 uniprot_proteins <- direct_uniprot %>%
@@ -206,18 +206,18 @@ uniprot_proteins <- direct_uniprot %>%
     distinct()
 
 db_tmp_clean4 <- db_tmp_clean3 %>%
-    left_join(uniprot_proteins, by = c("source_genesymbol" = "gene_name")) %>%
-    mutate(source_protein = ifelse((is.na(source_protein)) | (source_protein == ""), uniprot, source_protein)) %>%
+    left_join(uniprot_proteins, by = c("source_genesymbol" = "gene_name")) %>% rowwise() %>% 
+    mutate(source_protein = ifelse((is.na(source_protein)) || (source_protein == ""), uniprot, source_protein)) %>% ungroup() %>% 
     select(-uniprot) %>%
-    left_join(uniprot_proteins, by = c("target_genesymbol" = "gene_name")) %>%
-    mutate(target_protein = ifelse(is.na(target_protein) | target_protein == "", uniprot, target_protein)) %>%
+    left_join(uniprot_proteins, by = c("target_genesymbol" = "gene_name")) %>% rowwise() %>% 
+    mutate(target_protein = ifelse(is.na(target_protein) || target_protein == "", uniprot, target_protein)) %>% ungroup() %>% 
     select(-uniprot) %>%
     rowwise() %>%
     mutate(
-        source_protein = ifelse(source_protein == "" | is.na(source_protein),
+        source_protein = ifelse(source_protein == "" || is.na(source_protein),
             direct_uniprot[(str_detect(direct_uniprot$Gene.Names, source_genesymbol)), "uniprot"], source_protein
         ),
-        target_protein = ifelse(target_protein == "" | is.na(target_protein),
+        target_protein = ifelse(target_protein == "" || is.na(target_protein),
             direct_uniprot[(str_detect(direct_uniprot$Gene.Names, target_genesymbol)), "uniprot"], target_protein
         )
     ) %>%
@@ -230,10 +230,10 @@ missing_links4 <- db_tmp_clean4 %>% filter(
 log_info(glue("Number of missing protein links: {nrow(missing_links4)}"))
 log_info(glue("Number of interactions: {nrow(db_tmp_clean4)}"))
 
-liana_db_updated <- db_tmp_clean4 %>%
+liana_db_updated <- db_tmp_clean4 %>% rowwise() %>% 
     filter(
-        !(is.na(source_protein) | is.na(target_protein)), source_protein != "", target_protein != ""
-    ) %>%
+        !(is.na(source_protein) || is.na(target_protein)), source_protein != "", target_protein != ""
+    ) %>% ungroup() %>% 
     distinct(source_genesymbol, target_genesymbol, .keep_all = TRUE)
 log_info(glue("Number of interactions: {nrow(liana_db_updated)}"))
 
@@ -265,37 +265,37 @@ liana_db_updated <- liana_db_updated %>%
 log_info(glue("Number of interactions: {nrow(liana_db_updated)}"))
 
 log_info("Removing interactions with missing symbols or proteins...")
-liana_db_updated <- liana_db_updated %>%
+liana_db_updated <- liana_db_updated %>% rowwise() %>% 
     filter(
-        !(source_genesymbol == "" | is.na(source_genesymbol) | target_genesymbol == "" | is.na(target_genesymbol) |
-            source_protein == "" | is.na(source_protein) | target_protein == "" | is.na(target_protein))
-    )
+        !(source_genesymbol == "" || is.na(source_genesymbol) | target_genesymbol == "" || is.na(target_genesymbol) ||
+            source_protein == "" || is.na(source_protein) | target_protein == "" || is.na(target_protein)) 
+    ) %>% ungroup()
 log_info(glue("Number of interactions: {nrow(liana_db_updated)}"))
 # Expected to be the same number of interactions as previous check
 liana_db_updated <- liana_db_updated %>%
     separate(source_genesymbol, into = paste0("ligand_subunit_", seq_len(5)), remove = FALSE) %>%
     separate(target_genesymbol, into = paste0("receptor_subunit_", seq_len(5)), remove = FALSE)
 
-# ------ NEWLY ADDED 24/01/09 -----
-# With distinct first row will be preserved, favoring: (1) LIANA, (2) multi-subunit interaction
-liana_db_updated <- liana_db_updated %>%
-    rowwise() %>%
-    mutate(
-        simple_interaction_ordered = paste0(sort(c(ligand_subunit_1, receptor_subunit_1)), collapse = "__"),
-        is_multi_subunit = (!is.na(ligand_subunit_2) | !is.na(receptor_subunit_2)),
-        method_tmp = case_when(
-            method == "LIANA consensus" ~ 1,
-            method == "LIANA Ramilowski2015" ~ 2,
-            method == "CellphoneDB extracted" ~ 3,
-            method == "CellChat extracted" ~ 3
-        ),
-        n_proof = str_count(references, ";") + str_count(sources, ";")
-    ) %>%
-    arrange(method_tmp, desc(n_proof), desc(is_multi_subunit)) %>%
-    distinct(simple_interaction_ordered, .keep_all = TRUE) %>%
-    ungroup() %>%
-    select(-method_tmp, -simple_interaction_ordered)
-# ------ NEWLY ADDED 24/01/09 -----
+# # ------ NEWLY ADDED 24/01/09 -----
+# # With distinct first row will be preserved, favoring: (1) LIANA, (2) multi-subunit interaction
+# liana_db_updated <- liana_db_updated %>%
+#     rowwise() %>%
+#     mutate(
+#         simple_interaction_ordered = paste0(sort(c(ligand_subunit_1, receptor_subunit_1)), collapse = "__"),
+#         is_multi_subunit = (!is.na(ligand_subunit_2) | !is.na(receptor_subunit_2)),
+#         method_tmp = case_when(
+#             method == "LIANA consensus" ~ 1,
+#             method == "LIANA Ramilowski2015" ~ 2,
+#             method == "CellphoneDB extracted" ~ 3,
+#             method == "CellChat extracted" ~ 3
+#         ),
+#         n_proof = str_count(references, ";") + str_count(sources, ";")
+#     ) %>%
+#     arrange(method_tmp, desc(n_proof), desc(is_multi_subunit)) %>%
+#     distinct(simple_interaction_ordered, .keep_all = TRUE) %>%
+#     ungroup() %>%
+#     select(-method_tmp, -simple_interaction_ordered)
+# # ------ NEWLY ADDED 24/01/09 -----
 
 ref_db <- liana_db_updated %>% mutate(simple_interaction = paste0(ligand_subunit_1, "__", receptor_subunit_1))
 
