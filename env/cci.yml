@@ -57,4 +57,3 @@ dependencies:
     - r-ggalluvial
     - r-signac
     - r-ggtext
-    - pdfcrop

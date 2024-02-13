@@ -33,7 +33,6 @@ workflow {
     Approach:           ${params.approach}
 
     ---- SKIP OR EXECUTE STEPS --------------------------------------------------------------------
-    Do annot:           ${params.do_annot}
     Skip reduction:     ${params.skip_reduction}
     Skip preprocessing: ${params.skip_preprocessing}
 

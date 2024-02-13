@@ -28,8 +28,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- "5"
-    args$input_file <- glue("{here::here()}/test_output/001_prep_split_samples/6419_cortex.rds")
-    args$output_dir <- glue("{here::here()}/test_output/002_prep_sample")
+    args$input_file <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/000_data/split_by_Sample/6234_2895153_A.rds")
+    args$output_dir <- glue("{here::here()}/output")
     args$annot <- "CCI_CellClass_L1"
 }
 
@@ -61,24 +61,15 @@ for (assay_name in names(seurat_obj)) {
     }
 }
 
+# REMARK: Only relevant for GBM project.
+# log_info(glue("Number of cells in object, BEFORE: {ncol(seurat_obj)}"))
+# seurat_obj <- subset(seurat_obj, subset = Confident_Annotation == TRUE)
+# log_info(glue("Number of cells in object, After: {ncol(seurat_obj)}"))
+
 log_info("Saving Seurat object...")
 output_name <- str_split(get_name(args$input_file), "__", simplify = TRUE)[1]
 
-# # TODO Only keep confident malignant cells (REMOVE LATER)
-# log_info("For the malignant cells only keep the confident ones...")
-# log_info(glue("Number of cells before filtering: {length(colnames(seurat_obj))}"))
-# malign_conf <- colnames(seurat_obj)[seurat_obj@meta.data[["is_malignant_confident"]]]
 
-# if (args$annot == "CCI_CellClass_L1") {
-#     non_malign <- colnames(seurat_obj)[seurat_obj@meta.data[args$annot] %>% pull() != "Malignant"]
-# } else {
-#     non_malign <- colnames(seurat_obj)[!str_detect(seurat_obj@meta.data[args$annot] %>% pull(), "_like")]
-# }
-# cells_to_keep <- union(malign_conf, non_malign)
-# seurat_obj <- subset(seurat_obj,
-#     cells = cells_to_keep
-# )
-# log_info(glue("Number of cells to keep: {length(cells_to_keep)}"))
 
 saveRDS(seurat_obj, glue("{args$output_dir}/{get_name(output_name)}_reduced_size.rds"))
 
