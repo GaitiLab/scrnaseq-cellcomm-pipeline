@@ -5,8 +5,4 @@ mamba env create -f cpdb.yml
 mamba env create -f cell2cell.yml
 
 # 3) create conda environment main scripts
-mamba env create -f cci.yml
-
-source "$HOME/miniforge3/bin/activate" "cci"
-
-Rscript "install.R"
+mamba env create -f cci.yml && source "$HOME/miniforge3/bin/activate" "cci" && Rscript "install.R"
