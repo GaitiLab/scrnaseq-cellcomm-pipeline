@@ -35,7 +35,7 @@ custom_theme <- function(base_size = 14, base_family = "Helvetica") {
             legend.spacing = unit(0, "cm"),
             legend.title = element_text(face = "italic"),
             plot.margin = unit(c(10, 5, 5, 5), "mm"),
-            strip.background = element_rect(colour = "#f0f0f0", fill = "#f0f0f0"),
-            strip.text = element_text(face = "bold")
+            strip.background = element_rect(colour = "#ffffff", fill = "#ffffff"),
+            strip.text = element_text(face = "bold", size = rel(1.1))
         ))
 }
