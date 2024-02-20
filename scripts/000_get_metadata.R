@@ -48,6 +48,11 @@ pacman::p_load(Seurat)
 log_info("Load seurat_object")
 seurat_obj <- readRDS(args$input_file)
 
+# REMARK: Only relevant for GBM project.
+# log_info(glue("Number of cells in object, BEFORE: {ncol(seurat_obj)}"))
+# seurat_obj <- subset(seurat_obj, subset = Confident_Annotation == TRUE)
+# log_info(glue("Number of cells in object, After: {ncol(seurat_obj)}"))
+
 log_info("Saving metadata...")
 saveRDS(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__metadata.rds"))
 write.csv(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__metadata.csv"))

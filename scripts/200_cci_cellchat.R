@@ -37,10 +37,6 @@ if (!interactive()) {
         type = "character",
         default = NULL, help = "Name of RDS file"
     )
-    parser$add_argument("-s", "--sampling_grid",
-        type = "character",
-        default = NULL, help = "Name of RDS file, only required when doing downsampling"
-    )
     parser$add_argument("--n_cores",
         default = 1, type = "integer",
         help = "Number of cores to use for parallelization"
@@ -50,13 +46,11 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test")
-    args$ident_col <- "CellClass_L4"
-    args$n_perm <- 100
-    args$resource <- glue("{here::here()}/001_data/interactions_db_v2/cellchat_db.rds")
-    args$gene_expr <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/100_preprocessing/seurat/6234_2895153_B.rds")
-    args$sampling_grid <- NULL
-    args$id <- NULL
+    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/")
+    args$ident_col <- "CellClass_L1"
+    args$n_perm <- 3
+    args$resource <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
+    args$gene_expr <- glue("{here::here()}/output/test_dowsampling_implementation/100_preprocessing/seurat/6419_cortex__run__1.rds")
     args$n_cores <- 1
 }
 
@@ -78,26 +72,56 @@ options(stringsAsFactors = FALSE)
 
 log_info("Load data...")
 seurat_obj <- readRDS(args$gene_expr)
+log_info("Extract gene expression and convert to matrix...")
+mat <- as.matrix(seurat_obj@assays$RNA@data)
+meta <- seurat_obj@meta.data
 
-# ---- Run CellChat ----
-if (is.null(args$sampling_grid)) {
-    log_info("Single run...")
-    infer_cellchat(seurat_obj = seurat_obj, output_dir = output_dir, args = args)
-} else {
-    log_info("Load sampling grid...")
-    sampling_grid <- readRDS(args$sampling_grid)
+log_info("Create CellChat object...")
+cellchat <- createCellChat(object = mat, meta = meta, group.by = args$ident_col)
+cellchat <- addMeta(cellchat, meta = meta)
+cellchat <- setIdent(cellchat, ident.use = args$ident_col) # set 'labels' as default cell identity
 
-    log_info("Sampling cells...")
-    # Subset to sampling grid
-    cell_ids <- sampling_grid %>%
-        filter(run == args$id) %>%
-        select(-run) %>%
-        as.matrix() %>%
-        as.vector()
-    seurat_obj_subset <- subset(seurat_obj, cells = cell_ids)
-    log_info("Infer interactions...")
-    infer_cellchat(i = args$id, seurat_obj = seurat_obj_subset, output_dir = output_dir, args = args)
-}
-log_info("COMPLETED!")
+log_info("Load custom database with interactions...")
+cellchat@DB <- readRDS(args$resource)
+
+log_info("Preprocessing the expression data...")
+cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
+
+future::plan("multisession", workers = args$n_cores)
+
+cellchat <- identifyOverExpressedGenes(cellchat)
+cellchat <- identifyOverExpressedInteractions(cellchat)
+
+log_info("Infer cell-cell interactions...")
+cellchat <- computeCommunProb(cellchat, nboot = args$n_perm, population.size = TRUE)
+cellchat <- filterCommunication(cellchat)
+# a. signaling pathway level cellchat <- computeCommunProbPathway(cellchat)
+
+# b. aggregated cell-cell communication network
+cellchat <- aggregateNet(cellchat)
+saveRDS(cellchat, file = glue("{output_dir}/cellchat__{get_name(args$gene_expr)}__raw_obj.rds"))
+
+log_info("Post-processing...")
+interactions <- names(cellchat@net$prob[1, 1, ])
+res <- pblapply(interactions, function(interaction) {
+    # Handle probabilities
+    cci <- melt(cellchat@net$prob[, , interaction], )
+    colnames(cci) <- c("source", "target", "proba")
+    cci["interaction"] <- interaction
+
+    # Handle pvalues
+    pval_long <- melt(cellchat@net$pval[, , interaction])
+    colnames(pval_long) <- c("source", "target", "pval")
+    cci["pval"] <- pval_long$pval
+    return(cci)
+})
+log_info("Concatenate results...")
+res_concat <- do.call("rbind", res)
+
+log_info("Save CellChat results...")
+saveRDS(
+    res_concat,
+    glue("{output_dir}/cellchat__{get_name(args$gene_expr)}.rds"),
+)
 
 devtools::session_info()

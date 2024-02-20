@@ -25,6 +25,7 @@ workflow {
     ref_db = file(params.ref_db)
     meta_vars_oi = file(params.meta_vars_oi)
     samples_oi = file(params.samples_oi)
+    downsampling_sheet = file(params.downsampling_sheet)
 
     println """\
     PIPELINE CONFIGURATION:
@@ -43,6 +44,7 @@ workflow {
     Metadata rds:       ${metadata_rds}
     Meta vars oi:       ${meta_vars_oi}
     Samples oi:         ${samples_oi}
+    Downsampling_sheet  ${downsampling_sheet}
     
     ---- OUTPUTS ----------------------------------------------------------------------------------
     Output dir:         "${projectDir}/${params.run_name}"
@@ -78,8 +80,6 @@ workflow {
 
     """.stripIndent()
 
-
-
     if(params.approach >= 1) {
         // Grabbing metadata from input file 
         // - if metadata files aren't provided
@@ -93,13 +93,13 @@ workflow {
         input_file2 = (params.skip_reduction) ? input_file : REDUCE_SEURAT_OBJECT_SIZE.out
 
         // Split seurat object into samples
-        SPLIT_SEURAT_OBJECT(input_file = input_file2, split_varname = params.split_varname)
+        SPLIT_SEURAT_OBJECT(input_file = input_file2, split_varname = params.split_varname, downsampling_sheet = downsampling_sheet)
         samples = (file(params.sample_dir).isDirectory() && !file(input_file2).isFile()) ? Channel.fromPath("${sample_dir}/*.rds", type: 'file') : SPLIT_SEURAT_OBJECT.out.flatten()
         
         PREPROCESSING(input_file = samples, interactions_db = liana_db,
         annot = params.annot,
         min_cells = params.min_cells,
-        min_cell_types = params.min_cell_types)
+        min_cell_types = params.min_cell_type, downsampling_sheet = downsampling_sheet)
 
         preprocessing_mtx_dir = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/mtx/*", type: 'dir') : PREPROCESSING.out.mtx_dir.flatten()
         preprocessing_seurat_obj = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/seurat/*.rds", type: 'file') : PREPROCESSING.out.seurat_obj.flatten()

@@ -40,20 +40,23 @@ if (!interactive()) {
     )
     parser$add_argument("-fn", "--first_n", type = "numeric", default = 0, help = "First N cell types that have to be present from given celltypes_oi file")
     parser$add_argument("--min_cell_types", type = "numeric", default = 2, help = "Minimum number of cell types to be present after filtering")
+    parser$add_argument("--downsampling_sheet", type = "character", default = "", help = "Path to RDS file with the cell ids for downsampling")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/CellClass_L1/100_preprocessing")
-    args$interactions_db <- glue("{here::here()}/data/interactions_db/interactions_ref.rds")
-    args$input_file <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/001_data/GBM/split_by_Sample/6237_2222190_F.rds"
+    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/100_preprocessing")
+    args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    args$input_file <- glue("{here::here()}/output/test_dowsampling_implementation/split_by_Sample/6419_cortex__run__1.rds")
     args$annot <- "CellClass_L1"
-    args$min_cells <- 200
+    args$min_cells <- 5
     # args$celltypes_oi <- glue("{here::here()}/data/celltypes_oi.txt")
+    args$celltypes_oi <- NULL
     args$celltypes_oi <- ""
     args$first_n <- 0
-    args$min_cell_types <- 3
+    args$min_cell_types <- 2
+    args$downsampling_sheet <- glue("{here::here()}/output/downsampling_info.rds")
 }
 
 # Set up logging
@@ -79,6 +82,10 @@ pacman::p_load(Seurat, DropletUtils)
 # ---- Constants ----
 # Need at least 2 cell types for communication
 min_cells <- 5
+
+log_info("Check if this is a run with downsampling...")
+is_downsampling_run <- file.exists(args$downsampling_sheet)
+log_info(glue("Downsampling run: {is_downsampling_run}"))
 
 log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$input_file)
@@ -148,7 +155,13 @@ if (check_first_n && length(common_cell_types) >= args$min_cell_types) {
         "Check number of cell types after filtering (>= {args$min_cell_types})..."
     ))
     n_cell_types <- length(unique(seurat_obj@meta.data[[args$annot]]))
-    output_name <- str_split(get_name(args$input_file), "__", simplify = TRUE)[1]
+
+    log_info("Create name dependent on downsampling...")
+    if (is_downsampling_run) {
+        output_name <- get_name(args$input_file)
+    } else {
+        output_name <- str_split(get_name(args$input_file), "__", simplify = TRUE)[1]
+    }
     if (n_cell_types >= args$min_cell_types) {
         log_info("Normalizing data...")
         seurat_obj <- NormalizeData(seurat_obj)
