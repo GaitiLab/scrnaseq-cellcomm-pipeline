@@ -27,19 +27,20 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "Setting user parameters..."
 input_file="${project_dir}/001_data/test_data/example_data.rds"
+downsampling_sheet=""
 
-approach=5
+approach=2
 split_varname="Sample"
 annot="CellClass_L2"
 min_cells=100
-min_cell_types=3
+min_cell_types=2
 n_perm=5
 min_pct=0.10
 alpha=0.05
 
 # Databases of interactions (GitHub)
 interactions_db="${project_dir}/data/interactions_db"
-cellphone_db="${interactions_db}/cellphonedb_12_18_2023_120229.zip"
+cellphone_db="${interactions_db}/cellphonedb.zip"
 cellchat_db="${interactions_db}/cellchat_db.rds"
 liana_db="${interactions_db}/liana_db.rds"
 liana_db_csv="${interactions_db}/cell2cell_db.csv"
@@ -69,5 +70,6 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --liana_db_csv ${liana_db_csv} \
     --ref_db $ref_db \
     --outdir ${outdir} \
-    --alpha $alpha 
+    --alpha $alpha \
+    --downsampling_sheet $downsampling_sheet
 echo "Done!"
