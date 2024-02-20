@@ -21,7 +21,7 @@ echo "Activating conda environment..."
 source "$HOME/miniforge3/bin/activate" "cci"
 
 annot="CCI_CellClass_L2"
-run_name="${annot}_conf_malign"
+run_name="${annot}_conf_min50"
 
 # Set output folder
 output_dir="${work_dir}/output/${run_name}/502_alluvial"
