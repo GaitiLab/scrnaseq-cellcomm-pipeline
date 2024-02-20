@@ -17,7 +17,7 @@ work_dir=${base_dir}/Joan/scrnaseq-cellcomm
 
 interactions_db="${work_dir}/data/interactions_db/ref_db.rds"
 min_q=0.5
-min_cells=100
+min_cells=50
 has_loops=1
 min_celltypes=2
 
@@ -27,10 +27,10 @@ source "$HOME/miniforge3/bin/activate" "cci"
 for annot in "CCI_CellClass_L1" "CCI_CellClass_L2"
 do 
     # Set output folder
-    run_name="${annot}_conf_malign"
+    run_name="${annot}_conf_min50"
     output_dir="${work_dir}/output/${run_name}/500_networks"
     colors="${work_dir}/000_misc_local/${run_name}_network_colors.rds"
-    meta="${work_dir}/output/${run_name}/000_data/bw_gbm_regional_study__metadata.rds"
+    meta="${work_dir}/output/${run_name}/000_data/gbm_regional_study__metadata.rds"
 
     for agg_level in "sample" "patient"
     do 

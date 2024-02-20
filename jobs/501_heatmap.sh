@@ -21,7 +21,7 @@ source "$HOME/miniforge3/bin/activate" "cci"
 
 for annot in "CCI_CellClass_L1" "CCI_CellClass_L2"
 do 
-    run_name="${annot}_conf_malign"
+    run_name="${annot}_conf_min50"
 
     # Set output folder
     output_dir="${work_dir}/output/${run_name}/501_heatmap_n_interactions"

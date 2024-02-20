@@ -53,10 +53,11 @@ process SPLIT_SEURAT_OBJECT {
     label 'mem20'
     label 'time_15m'
 
-    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "symlink"
 
     input:
     path input_file
+    path downsampling_sheet
     val split_varname
 
     output:
@@ -73,7 +74,8 @@ process SPLIT_SEURAT_OBJECT {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/002_split_seurat_object.R" \
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data/split_by_${split_varname}" \
-    --split_varname ${split_varname}
+    --split_varname ${split_varname} \
+    --downsampling_sheet ${downsampling_sheet}
 
     """
 

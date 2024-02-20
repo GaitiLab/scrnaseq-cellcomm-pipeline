@@ -23,7 +23,7 @@ source "$HOME/miniforge3/bin/activate" "cci"
 annot="CCI_CellClass_L1"
 
 # Set output folder
-run_name="${annot}_conf_malign"
+run_name="${annot}_conf_min50"
 output_dir="${work_dir}/output/${run_name}/502_alluvial"
 for agg_level in "sample" "patient"
 do 
