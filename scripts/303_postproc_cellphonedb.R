@@ -48,13 +48,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/303_postproc_cpdbv5")
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/303_postproc_cpdb")
     args$sample_id <- "6234_2895153_A"
-    args$interaction_scores <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5/statistical_analysis_interaction_scores__{args$sample_id}.txt")
-    args$pval <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5/statistical_analysis_pvalues__{args$sample_id}.txt")
-    args$sign_means <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5/statistical_analysis_significant_means__{args$sample_id}.txt")
-    args$means <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5/statistical_analysis_means__{args$sample_id}.txt")
-    args$ref_db <- glue("{here::here()}/001_data_local/interactions_db_v2/ref_db.rds")
+    args$interaction_scores <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_interaction_scores__{args$sample_id}.txt")
+    args$pval <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_pvalues__{args$sample_id}.txt")
+    args$sign_means <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_significant_means__{args$sample_id}.txt")
+    args$means <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_means__{args$sample_id}.txt")
+    args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    args$sample_id <- "6234_2895153_A__run__3"
 }
 
 # Set up logging
@@ -69,6 +70,14 @@ create_dir(args$output_dir)
 
 log_info("Load reference database...")
 ref_db <- readRDS(args$ref_db) %>% select(interaction, simple_interaction, complex_interaction, interaction)
+
+# Setting sample + run id depending on downsampling or not
+split_sample_id <- str_split(args$sample_id, "__", simplify = TRUE)
+sample_id <- split_sample_id[1]
+run_id <- NA
+if (length(split_sample_id) > 2) {
+    run_id <- split_sample_id[3]
+}
 
 log_info("Load CellPhoneDB output...")
 pval <- read.table(args$pval, sep = "\t", header = TRUE, check.names = FALSE)
@@ -112,7 +121,14 @@ interactions <- pval %>%
         by = c("interacting_pair", "source_target")
     ) %>%
     left_join(ref_db, by = c("interacting_pair" = "interaction")) %>%
-    mutate(method = "CellPhoneDBv5", Sample = args$sample_id)
+    mutate(method = "CellPhoneDBv5", Sample = sample_id, run_id = run_id)
+#   interacting_pair        source_target pval  rank sign_mean      mean interaction_score simple_interaction complex_interaction        method         Sample run_id
+# 1         NRG2_MOG Malignant__Malignant    1 1.889        NA 0.7974264                 0          NRG2__MOG           NRG2__MOG CellPhoneDBv5 6234_2895153_A      1
+# 2        NRG2_NRP2 Malignant__Malignant    1 0.222        NA 0.7786296                 0         NRG2__NRP2          NRG2__NRP2 CellPhoneDBv5 6234_2895153_A      1
+# 3       VEGFD_NRP2 Malignant__Malignant    1 1.889        NA 0.0150624                 0        VEGFD__NRP2         VEGFD__NRP2 CellPhoneDBv5 6234_2895153_A      1
+# 4       VEGFA_NRP2 Malignant__Malignant    1 0.222        NA 0.1537503                 0        VEGFA__NRP2         VEGFA__NRP2 CellPhoneDBv5 6234_2895153_A      1
+# 5         PGF_NRP2 Malignant__Malignant    1 1.889        NA 0.0295120                 0          PGF__NRP2           PGF__NRP2 CellPhoneDBv5 6234_2895153_A      1
+# 6       VEGFC_NRP2 Malignant__Malignant    1 1.889        NA 0.0000000                 0        VEGFC__NRP2         VEGFC__NRP2 CellPhoneDBv5 6234_2895153_A      1
 
 log_info("Save output...")
 saveRDS(interactions, glue("{args$output_dir}/cpdb__{args$sample_id}__postproc.rds"))

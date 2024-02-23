@@ -7,9 +7,9 @@ Workflow for cell-cell-interactions
 
 nextflow.enable.dsl=2
 
-include { GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT } from "./nf-modules/prep_data.nf"
+include { GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT; DOWNSAMPLING } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
-include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB } from "./nf-modules/filtering.nf"
+include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB; COMBINING_CELL2CELL_RUNS; COMBINING_LIANA_RUNS; COMBINING_CELLCHAT_RUNS; COMBINING_CPDB_RUNS } from "./nf-modules/filtering.nf"
 include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT; AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
 
 workflow {
@@ -36,6 +36,7 @@ workflow {
     ---- SKIP OR EXECUTE STEPS --------------------------------------------------------------------
     Skip reduction:     ${params.skip_reduction}
     Skip preprocessing: ${params.skip_preprocessing}
+    Skip downsampling:  ${params.skip_downsampling}
 
     ---- INPUTS -----------------------------------------------------------------------------------
     Input file:         ${input_file}
@@ -45,6 +46,7 @@ workflow {
     Meta vars oi:       ${meta_vars_oi}
     Samples oi:         ${samples_oi}
     Downsampling_sheet  ${downsampling_sheet}
+
     
     ---- OUTPUTS ----------------------------------------------------------------------------------
     Output dir:         "${projectDir}/${params.run_name}"
@@ -56,6 +58,10 @@ workflow {
     Split varname:      ${params.split_varname}
     Samples of interest:${samples_oi}
     Min. cell types:    ${params.min_cell_types}
+
+    ---- DOWNSAMPLING --------------------------------------------------------------------------
+    Number of cells     ${params.num_cells}
+    Number of repeats   ${params.num_repeats}
 
     ---- DATABASES --------------------------------------------------------------------------------
     CellphoneDB:        ${cellphone_db}
@@ -88,18 +94,24 @@ workflow {
         metadata_csv = metadata_csv.isFile() ? metadata_csv : GET_METADATA.out.metadata_csv
         metadata_rds = metadata_rds.isFile() ? metadata_rds : GET_METADATA.out.metadata_rds
 
+        // In case of downsampling, either check for available file or generate downsampling runs
+        if (!params.skip_downsampling && !downsampling_sheet.isFile()) {
+            DOWNSAMPLING(split_varname = params.split_varname, num_cells = params.num_cells, num_repeats = params.num_repeats, meta = metadata_rds)
+            downsampling_sheet = downsampling_sheet.isFile() ? downsampling_sheet : DOWNSAMPLING.out.downsampling_info
+        }
+
         // OPTIONAL: Reduce size of seurat object to reduce memory usage for inferring interactinos. 
         REDUCE_SEURAT_OBJECT_SIZE(input_file = input_file, annot = params.annot)
         input_file2 = (params.skip_reduction) ? input_file : REDUCE_SEURAT_OBJECT_SIZE.out
 
         // Split seurat object into samples
-        SPLIT_SEURAT_OBJECT(input_file = input_file2, split_varname = params.split_varname, downsampling_sheet = downsampling_sheet)
+        SPLIT_SEURAT_OBJECT(input_file = input_file2, downsampling_sheet = downsampling_sheet, split_varname = params.split_varname)
         samples = (file(params.sample_dir).isDirectory() && !file(input_file2).isFile()) ? Channel.fromPath("${sample_dir}/*.rds", type: 'file') : SPLIT_SEURAT_OBJECT.out.flatten()
         
         PREPROCESSING(input_file = samples, interactions_db = liana_db,
         annot = params.annot,
         min_cells = params.min_cells,
-        min_cell_types = params.min_cell_type, downsampling_sheet = downsampling_sheet)
+        min_cell_types = params.min_cell_types, downsampling_sheet = downsampling_sheet)
 
         preprocessing_mtx_dir = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/mtx/*", type: 'dir') : PREPROCESSING.out.mtx_dir.flatten()
         preprocessing_seurat_obj = params.skip_preprocessing ? Channel.fromPath("${sample_dir}/seurat/*.rds", type: 'file') : PREPROCESSING.out.seurat_obj.flatten()
@@ -126,10 +138,30 @@ workflow {
         POSTPROCESSING_CELL2CELL(INFER_CELL2CELL.out.cell2cell_obj, ref_db = ref_db)
 
         POSTPROCESSING_CPDB(INFER_CPDB.out.cpdb_obj, interactions_db = ref_db)
+
+        // In case of downsampling, process all runs per sample together for 
+        // combining p-values (Fisher) and if applicable interaction scores (mean)
+        if (downsampling_sheet.isFile()) {
+            POSTPROCESSING_CELLCHAT.out 
+                | groupTuple 
+                | COMBINING_CELLCHAT_RUNS
+
+            POSTPROCESSING_LIANA.out
+                | groupTuple
+                | COMBINING_LIANA_RUNS
+
+            POSTPROCESSING_CELL2CELL.out 
+                | groupTuple
+                | COMBINING_CELL2CELL_RUNS
+            
+            POSTPROCESSING_CPDB.out 
+                | groupTuple 
+                | COMBINING_CPDB_RUNS
+        }
     }
     // MERGE INTERACTIONS based on sample id
     if (params.approach >= 4) {
-        combined_objects = POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
+        combined_objects = downsampling_sheet.isFile() ? COMBINING_CELLCHAT_RUNS.out.join(POSTPROCESSING_LIANA.out, by: 0).join(COMBINING_CELL2CELL_RUNS.out, by: 0).join(COMBINING_CPDB_RUNS.out, by: 0) : POSTPROCESSING_CELLCHAT.out.join(POSTPROCESSING_LIANA.out, by: 0).join(POSTPROCESSING_CELL2CELL.out, by: 0).join(POSTPROCESSING_CPDB.out, by: 0)
         // // Take consensus - sample wise
         CONSENSUS(combined_objects, alpha = params.alpha)
     }

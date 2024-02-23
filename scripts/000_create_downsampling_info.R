@@ -21,15 +21,16 @@ if (!interactive()) {
     parser$add_argument("--split_varname", type = "character", default = "Sample", help = "Variable for splitting object")
     parser$add_argument("--num_cells", type = "numeric", default = 2500, help = "Number of cells to sample")
     parser$add_argument("--num_repeats", type = "numeric", default = 5, help = "Number of times to sample")
+    parser$add_argument("--meta", type = "character", default = "", help = "path to metadata")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("{here::here()}/output/")
-    args$meta <- glue("{here::here()}/output/CCI_CellClass_L1_conf_min50/000_data/gbm_regional_study__metadata.rds")
+    args$meta <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/000_data/gbm_regional_study__metadata.rds")
     args$split_varname <- "Sample"
-    args$num_cells <- 100
+    args$num_cells <- 2500
     args$num_repeats <- 3
 }
 
@@ -46,12 +47,19 @@ create_dir(args$output_dir)
 # Load additional libraries
 meta <- readRDS(args$meta)
 
+# TODO remove later, temporary for testing
+samples_oi <- meta %>%
+    count(Sample) %>%
+    filter(n > 3000) %>%
+    pull(Sample) %>%
+    unique()
+meta <- meta %>% filter(Sample %in% samples_oi)
+
 log_info("Number of samples...")
 unique_labels <- meta %>%
     pull(!!sym(args$split_varname)) %>%
     unique()
 log_info(glue("N = {length(unique_labels)}"))
-
 
 sampling_cells <- function(meta, split_varname, label, num_cells) {
     cell_ids <- meta %>%
@@ -67,10 +75,10 @@ run_ids <- lapply(unique_labels, function(current_label, num_repeats) {
 }, num_repeats = args$num_repeats) %>% unlist()
 
 log_info(glue("Sampling {args$num_cells} cells for each sample object and do this {args$num_repeats} times..."))
-grid <- lapply(run_ids, function(run_id, meta, num_cells, split_varname) {
+grid <- pbapply::pblapply(run_ids, function(run_id, metadata, num_cells, split_varname) {
     sample_id <- str_split(run_id, "__", simplify = TRUE)[1]
-    return(sampling_cells(meta = meta, label = sample_id, num_cells = num_cells, split_varname))
-}, meta = meta, num_cells = args$num_cells, split_varname = args$split_varname)
+    return(sampling_cells(meta = metadata, label = sample_id, num_cells = num_cells, split_varname))
+}, metadata = meta, num_cells = args$num_cells, split_varname = args$split_varname)
 names(grid) <- run_ids
 
 log_info("Save object...")

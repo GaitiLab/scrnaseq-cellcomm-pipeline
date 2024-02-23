@@ -26,10 +26,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test/301_postproc_liana")
-    args$input_interactions <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/201_cci_liana/liana__6234_2895153_A.rds")
-    args$ref_db <- glue("{here::here()}/001_data_local/interactions_db_v2/ref_db.rds")
-    args$sample_id <- "6234_2895153_A"
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/301_postproc_liana")
+    args$input_interactions <- glue("{here::here()}/output/test_pipeline/201_cci_liana/liana__6419_cortex__run__1.rds")
+    args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    args$sample_id <- "6419_cortex__run__1"
 }
 
 # Set up logging
@@ -56,16 +56,38 @@ ref_db <- readRDS(args$ref_db) %>%
         complex_interaction, interaction
     )
 
+# Setting sample + run id depending on downsampling or not
+split_sample_id <- str_split(args$sample_id, "__", simplify = TRUE)
+sample_id <- split_sample_id[1]
+run_id <- NA
+if (length(split_sample_id) > 2) {
+    run_id <- split_sample_id[3]
+}
+
+
+
 log_info(glue("Processing sample={args$sample_id}..."))
 interactions <- interactions %>%
-    liana_aggregate() %>%
-    dplyr::rename(pval = aggregate_rank) %>%
-    select(source, target, ligand.complex, receptor.complex, pval) %>%
+    liana::liana_aggregate() %>%
+    dplyr::rename(
+        pval = aggregate_rank,
+        interaction_score = sca.LRscore
+    ) %>%
+    select(source, target, ligand.complex, receptor.complex, pval, interaction_score) %>%
     unite(interaction, ligand.complex, receptor.complex, sep = "_") %>%
     left_join(ref_db, by = "interaction") %>%
     select(-interaction) %>%
     unite(source_target, source, target, sep = "__") %>%
-    mutate(method = "LIANA", Sample = args$sample_id)
+    mutate(method = "LIANA", Sample = sample_id, run_id = run_id)
+# # A tibble: 6 × 8
+#   source_target                 pval interaction_score simple_interaction complex_interaction method Sample         run_id
+#   <chr>                        <dbl>             <dbl> <chr>              <chr>               <chr>  <chr>          <chr>
+# 1 Microglia__Microglia 0.00000000723             0.901 C3__ITGAX          C3__ITGAX           LIANA  6234_2895153_A 3
+# 2 Microglia__Microglia 0.0000000387              0.890 C3__ITGAX          C3__ITGAX:ITGB2     LIANA  6234_2895153_A 3
+# 3 Microglia__Microglia 0.0000000433              0.873 C3__ITGB2          C3__ITGB2           LIANA  6234_2895153_A 3
+# 4 Microglia__Microglia 0.000000106               0.833 PECAM1__PECAM1     PECAM1__PECAM1      LIANA  6234_2895153_A 3
+# 5 Microglia__Microglia 0.000000121               0.893 C3__NRP1           C3__NRP1            LIANA  6234_2895153_A 3
+# 6 Microglia__Microglia 0.000000137               0.785 ICAM1__ITGAX       ICAM1__ITGAX        LIANA  6234_2895153_A 3
 
 log_info("Save output...")
 saveRDS(interactions, glue("{args$output_dir}/liana__{args$sample_id}__postproc.rds"))
