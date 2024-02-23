@@ -81,6 +81,9 @@ Python/
 !Python/202_cci_cell2cell.py
 !Python/203_cci_cpdb.py
 
-
+# Development scripts
 **/TEST-*
 **/DEV-*
+
+# Nextflow (containing symlinks)
+nf-config-local/*
