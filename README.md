@@ -16,7 +16,7 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 
 ## Workflow Schematic
 
-![workflow](src/cci_workflow.png)
+![workflow](src/cci_workflow_v2.png)
 
 ## Running the Nextflow pipeline
 
