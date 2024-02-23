@@ -43,11 +43,11 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/")
-    args$ident_col <- "CellClass_L1"
+    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/201_cci_liana")
+    args$ident_col <- "CCI_CellClass_L1"
     args$n_perm <- 10
     args$resource <- glue("{here::here()}/data/interactions_db/liana_db.rds")
-    args$gene_expr <- glue("{here::here()}/output/test_dowsampling_implementation/100_preprocessing/seurat/6419_cortex__run__1.rds")
+    args$gene_expr <- glue("{here::here()}/output/test_pipeline/100_preprocessing/seurat/6419_cortex__run__1.rds")
 }
 
 # Set up logging

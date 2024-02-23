@@ -46,14 +46,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/100_preprocessing")
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/100_preprocessing")
     args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$input_file <- glue("{here::here()}/output/test_dowsampling_implementation/split_by_Sample/6419_cortex__run__1.rds")
+    args$input_file <- glue("{here::here()}/output/test_downsampling_implementation/split_by_Sample/6419_cortex__run__3.rds")
     args$annot <- "CellClass_L1"
     args$min_cells <- 5
     # args$celltypes_oi <- glue("{here::here()}/data/celltypes_oi.txt")
     args$celltypes_oi <- NULL
-    args$celltypes_oi <- ""
+    # args$celltypes_oi <- ""
     args$first_n <- 0
     args$min_cell_types <- 2
     args$downsampling_sheet <- glue("{here::here()}/output/downsampling_info.rds")

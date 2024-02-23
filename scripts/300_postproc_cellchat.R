@@ -26,10 +26,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/300_postproc_cellchat")
-    args$input_interactions <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/200_cci_cellchat/cellchat__6514_enhancing_border.rds")
-    args$ref_db <- glue("{here::here()}/001_data_local/interactions_db_v2/ref_db.rds")
-    args$sample_id <- "6514_enhancing_border"
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/300_postproc_cellchat")
+    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/200_cci_cellchat/cellchat__6234_2895153_A.rds")
+    args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    args$sample_id <- "6234_2895153_A__run__1"
 }
 
 # Set up logging
@@ -52,13 +52,21 @@ ref_db <- readRDS(args$ref_db) %>%
         complex_interaction, interaction
     )
 
+# Setting sample + run id depending on downsampling or not
+split_sample_id <- str_split(args$sample_id, "__", simplify = TRUE)
+sample_id <- split_sample_id[1]
+run_id <- NA
+if (length(split_sample_id) > 2) {
+    run_id <- split_sample_id[3]
+}
+
 log_info("Load data...")
 interactions <- readRDS(args$input_interactions) %>%
+    dplyr::rename(interaction_score = proba) %>%
     left_join(ref_db, by = "interaction") %>%
     select(-interaction) %>%
     unite(source_target, source, target, sep = "__") %>%
-    rename(proba_score = proba) %>%
-    mutate(method = "CellChatv2", Sample = args$sample_id)
+    mutate(method = "CellChatv2", Sample = sample_id, run_id = run_id)
 
 log_info("Save output...")
 saveRDS(interactions, glue("{args$output_dir}/cellchat__{args$sample_id}__postproc.rds"))

@@ -36,10 +36,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CellClass_L4_min3_types/302_postproc_cell2cell")
-    args$input_interactions <- glue("{here::here()}/output/CellClass_L4_min3_types_rerun/202_cci_cell2cell/cell2cell__6234_2895153_A.csv")
-    args$sample_id <- "6234_2895153_A"
-    args$ref_db <- glue("{here::here()}/001_data_local/interactions_db_v2/ref_db.rds")
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/302_postproc_cell2cell")
+    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/202_cci_cell2cell/cell2cell__6234_2895153_A.csv")
+    args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    args$sample_id <- "6234_2895153_A__run__3"
 }
 
 # Set up logging
@@ -59,6 +59,14 @@ log_info("Load reference database...")
 ref_db <- readRDS(args$ref_db) %>%
     select(interaction, simple_interaction, complex_interaction)
 
+# Setting sample + run id depending on downsampling or not
+split_sample_id <- str_split(args$sample_id, "__", simplify = TRUE)
+sample_id <- split_sample_id[1]
+run_id <- NA
+if (length(split_sample_id) > 2) {
+    run_id <- split_sample_id[3]
+}
+
 log_info("Load Cell2Cell output...")
 interactions <- data.frame(fread(args$input_interactions, header = TRUE, sep = "\t"),
     check.names = FALSE
@@ -71,10 +79,17 @@ interactions <- interactions %>%
     ungroup() %>%
     select(-V1) %>%
     reshape2::melt(id.vars = c("interaction"), variable.name = "source_target", value.name = "pval") %>%
-    mutate(source_target = str_replace_all(source_target, ";", "__"), method = "Cell2Cell", Sample = args$sample_id) %>%
+    mutate(source_target = str_replace_all(source_target, ";", "__"), method = "Cell2Cell", Sample = sample_id, run_id = run_id) %>%
     left_join(ref_db, by = "interaction") %>%
     select(-interaction)
 
+#       source_target        pval    method         Sample run_id simple_interaction  complex_interaction
+# 1 Neuron__Microglia 0.461141321 Cell2Cell 6234_2895153_A      1        NRG2__ERBB2    NRG2__ERBB2:ERBB3
+# 2 Neuron__Microglia 0.461141321 Cell2Cell 6234_2895153_A      1        NRG2__ERBB2    NRG2__ERBB2:ERBB4
+# 3 Neuron__Microglia 0.999083070 Cell2Cell 6234_2895153_A      1         EREG__EGFR     EREG__EGFR:ERBB2
+# 4 Neuron__Microglia 0.999083070 Cell2Cell 6234_2895153_A      1        EREG__ERBB2    EREG__ERBB2:ERBB4
+# 5 Neuron__Microglia 0.177891249 Cell2Cell 6234_2895153_A      1      SEMA7A__ITGA1  SEMA7A__ITGA1:ITGB1
+# 6 Neuron__Microglia 0.008461169 Cell2Cell 6234_2895153_A      1       NFASC__CNTN1 NFASC__CNTN1:CNTNAP1
 
 log_info("Save output...")
 saveRDS(interactions,

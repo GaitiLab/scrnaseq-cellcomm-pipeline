@@ -52,8 +52,8 @@ interactions <- cellchat_db_interaction %>%
         target_genesymbol = str_replace_all(receptor.symbol, ", ", "_")
     ) %>%
     mutate(
-        source_genesymbol = ifelse(source_genesymbol == "", ligand, source_genesymbol),
-        target_genesymbol = ifelse(target_genesymbol == "", receptor, target_genesymbol)
+        source_genesymbol = ifelse(source_genesymbol == "", toupper(ligand), source_genesymbol),
+        target_genesymbol = ifelse(target_genesymbol == "", toupper(receptor), target_genesymbol)
     ) %>%
     select(source_genesymbol, target_genesymbol)
 

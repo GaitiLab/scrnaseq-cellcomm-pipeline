@@ -7,3 +7,6 @@ devtools::install_github("jinworks/CellChat", upgrade = "never")
 
 # LIANA
 devtools::install_github("saezlab/liana", updgrade = "never")
+
+# For combining p-values developed by BHK
+pak::pkg_install("survcomp")
