@@ -86,4 +86,4 @@ Python/
 **/DEV-*
 
 # Nextflow (containing symlinks)
-nf-config-local/*
+nf-config-local
