@@ -11,11 +11,19 @@ process INFER_CELLCHAT {
     val n_perm
 
     output:
-    tuple val(input_file.simpleName), path("200_cci_cellchat/cellchat__${input_file.simpleName}.rds"), emit: cellchat_obj
+    tuple val(sample_id), val(input_file.simpleName), path("200_cci_cellchat/cellchat__${input_file.simpleName}.rds"), emit: cellchat_obj
     path "200_cci_cellchat/cellchat__${input_file.simpleName}__raw_obj.rds"
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30
+    def filename_without_ext = input_file.simpleName
+    def chunks = filename_without_ext.split( '__' )
+    sample_id=chunks[0]
+    // if (chunks.size() > 2) {
+    //     run_id=chunks[2]
+    // } else {
+    //     run_id="1"
+    // }
     """
     #!/usr/bin/env bash
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/200_cci_cellchat.R" \
@@ -43,10 +51,18 @@ process INFER_LIANA {
 
     output:
 
-    tuple val(input_file.simpleName), path("201_cci_liana/liana__${input_file.simpleName}.rds"), emit: liana_obj
+    tuple val(sample_id), val(input_file.simpleName), path("201_cci_liana/liana__${input_file.simpleName}.rds"), emit: liana_obj
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30
+    def filename_without_ext = input_file.simpleName
+    def chunks = filename_without_ext.split( '__' )
+    sample_id=chunks[0]
+    // if (chunks.size() > 2) {
+    //     run_id=chunks[2]
+    // } else {
+    //     run_id="1"
+    // }
     """
     #!/usr/bin/env bash
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/201_cci_liana.R" \
@@ -74,10 +90,18 @@ process INFER_CELL2CELL {
 
     output:
     path "202_cci_cell2cell/cell2cell__${input_dir.simpleName}.pickle"
-    tuple val(input_dir.simpleName), path("202_cci_cell2cell/cell2cell__${input_dir.simpleName}.csv"), emit: cell2cell_obj
+    tuple val(sample_id), val(input_dir.simpleName), path("202_cci_cell2cell/cell2cell__${input_dir.simpleName}.csv"), emit: cell2cell_obj
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30
+    def filename_without_ext = input_dir.simpleName
+    def chunks = filename_without_ext.split( '__' )
+    sample_id=chunks[0]
+    // if (chunks.size() > 2) {
+    //     run_id=chunks[2]
+    // } else {
+    //     run_id="1"
+    // }
     """
     #!/usr/bin/env bash
 
@@ -111,7 +135,7 @@ process INFER_CPDB {
 
     output:
 
-    tuple val(input_dir.simpleName), 
+    tuple val(sample_id), val(input_dir.simpleName), 
     path("203_cci_cpdb/statistical_analysis_interaction_scores__${input_dir.simpleName}.txt"), 
     path("203_cci_cpdb/statistical_analysis_pvalues__${input_dir.simpleName}.txt"), 
     path("203_cci_cpdb/statistical_analysis_significant_means__${input_dir.simpleName}.txt"), 
@@ -123,6 +147,14 @@ process INFER_CPDB {
 
     script:
     def time_out_limit = (task.time).toSeconds() - 30
+    def filename_without_ext = input_dir.simpleName
+    def chunks = filename_without_ext.split( '__' )
+    sample_id=chunks[0]
+    // if (chunks.size() > 2) {
+    //     run_id=chunks[2]
+    // } else {
+    //     run_id="1"
+    // }
     """
     #!/usr/bin/env bash
     timeout ${time_out_limit} python3 "${projectDir}/Python/203_cci_cpdb.py" \

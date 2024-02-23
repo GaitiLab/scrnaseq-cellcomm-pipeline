@@ -1,3 +1,33 @@
+process DOWNSAMPLING { 
+    label 'mem16'
+    label 'time_15m'
+
+    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
+
+    input: 
+    val split_varname
+    val num_cells
+    val num_repeats
+    path meta
+
+    output:
+    path "000_data/downsampling_info.rds", emit: downsampling_info
+
+    script: 
+    """
+    #!/usr/bin/env bash
+
+    Rscript "${projectDir}/scripts/000_create_downsampling_info.R" \
+    --split_varname ${split_varname} \
+    --num_cells ${num_cells} \
+    --num_repeats ${num_repeats} \
+    --meta "\$PWD/${meta}" \
+    --output_dir "\$PWD/000_data"
+
+    """
+
+}
+
 process GET_METADATA {
     label 'mem32'
     label 'time_10m'
@@ -75,7 +105,7 @@ process SPLIT_SEURAT_OBJECT {
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data/split_by_${split_varname}" \
     --split_varname ${split_varname} \
-    --downsampling_sheet ${downsampling_sheet}
+    --downsampling_sheet "\$PWD/${downsampling_sheet}"
 
     """
 
@@ -93,6 +123,7 @@ process PREPROCESSING {
     val annot
     val min_cells
     val min_cell_types
+    path downsampling_sheet
 
     output:
     path "100_preprocessing/seurat/*.rds", emit: seurat_obj, optional: true
@@ -112,5 +143,6 @@ process PREPROCESSING {
     --min_cells ${min_cells} \
     --interactions_db \$PWD/${interactions_db} \
     --min_cell_types ${min_cell_types} \
+    --downsampling_sheet \$PWD/${downsampling_sheet}
     """
 }
