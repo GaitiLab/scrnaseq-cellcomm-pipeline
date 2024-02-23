@@ -24,3 +24,12 @@ for current_path in $source_dir/*; do
         gcp -f --preserve --remove-destination "${abs_path}" "${target_dir}/${filename}"
     fi 
 done 
+
+
+if [ -e .commit ]
+    then
+    rm .commit
+    git add "${target_dir}"
+    git commit --amend -C HEAD --no-verify
+fi
+exit
