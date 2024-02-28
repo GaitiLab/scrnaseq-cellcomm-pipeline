@@ -39,7 +39,6 @@ if (!interactive()) {
     args$input_file <- glue("{here::here()}/output/{run_name}/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$condition_varname <- "Region_Grouped"
     args$min_patients <- 2
-
 }
 
 # Set up logging
@@ -100,34 +99,36 @@ head(lenient_voting %>% arrange(desc(lenient_N_samples_same_patient)))
 
 lenient_voting_by_region <- lenient_voting %>%
     group_by_at(vars((c(args$condition_varname, "source_target", "complex_interaction")))) %>%
-    reframe(lenient_condition_patients = paste0(Patient, collapse = ", "), lenient_condition_n_patients = n(), 
-    lenient_condition_n_samples = sum(lenient_N_samples_same_patient), 
-    lenient_condition_samples = paste0(lenient_detected_same_patient, collapse = ", "))
+    reframe(
+        lenient_condition_patients = paste0(Patient, collapse = ", "), lenient_condition_n_patients = n(),
+        lenient_condition_n_samples = sum(lenient_N_samples_same_patient),
+        lenient_condition_samples = paste0(lenient_detected_same_patient, collapse = ", ")
+    )
 # r$> head(lenient_voting_by_region)
 # # A tibble: 6 × 7
-#   Region_Grouped source_target        complex_interaction lenient_condition lenient_condition_n_patients lenient_condition_n_samples lenient_condition_samples                                                
-#   <chr>          <chr>                <chr>               <chr>                                    <int>                       <int> <chr>                                                          
+#   Region_Grouped source_target        complex_interaction lenient_condition lenient_condition_n_patients lenient_condition_n_samples lenient_condition_samples
+#   <chr>          <chr>                <chr>               <chr>                                    <int>                       <int> <chr>
 # 1 PT             Astrocyte__Astrocyte ALDH1A1__RORB       6237, 6419, 6509                             3                           4 6237_2222190_A, 6419_cortex, 6419_enhancing_border, 6509_cortex
-# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                         1                           2 6419_cortex, 6419_enhancing_border                             
-# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                         1                           2 6419_cortex, 6419_enhancing_border                             
-# 4 PT             Astrocyte__Astrocyte ANOS1__SDC2         6237                                         1                           1 6237_2222190_A                                                 
-# 5 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                   2                           2 6419_cortex, 6509_cortex                                       
-# 6 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                   2                           2 6419_cortex, 6509_cortex   
+# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                         1                           2 6419_cortex, 6419_enhancing_border
+# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                         1                           2 6419_cortex, 6419_enhancing_border
+# 4 PT             Astrocyte__Astrocyte ANOS1__SDC2         6237                                         1                           1 6237_2222190_A
+# 5 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                   2                           2 6419_cortex, 6509_cortex
+# 6 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                   2                           2 6419_cortex, 6509_cortex
 n_before <- nrow(lenient_voting_by_region)
 
 log_info(glue("Only keep interactions that are found in at least {args$min_patients} patients..."))
-lenient_voting_by_region <- lenient_voting_by_region %>% filter(lenient_condition_n_patients >= args$min_patients) 
+lenient_voting_by_region <- lenient_voting_by_region %>% filter(lenient_condition_n_patients >= args$min_patients)
 n_after <- nrow(lenient_voting_by_region)
 # r$> head(lenient_voting_by_region)
 # # A tibble: 6 × 7
-#   Region_Grouped source_target        complex_interaction lenient_condition_patients lenient_condition_n_patients lenient_condition_n_samples lenient_condition_samples                                                
-#   <chr>          <chr>                <chr>               <chr>                                    <int>                       <int> <chr>                                                          
+#   Region_Grouped source_target        complex_interaction lenient_condition_patients lenient_condition_n_patients lenient_condition_n_samples lenient_condition_samples
+#   <chr>          <chr>                <chr>               <chr>                                    <int>                       <int> <chr>
 # 1 PT             Astrocyte__Astrocyte ALDH1A1__RORB       6237, 6419, 6509                             3                           4 6237_2222190_A, 6419_cortex, 6419_enhancing_border, 6509_cortex
-# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                         1                           2 6419_cortex, 6419_enhancing_border                             
-# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                         1                           2 6419_cortex, 6419_enhancing_border                             
-# 4 PT             Astrocyte__Astrocyte ANOS1__SDC2         6237                                         1                           1 6237_2222190_A                                                 
-# 5 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                   2                           2 6419_cortex, 6509_cortex                                       
-# 6 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                   2                           2 6419_cortex, 6509_cortex   
+# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                         1                           2 6419_cortex, 6419_enhancing_border
+# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                         1                           2 6419_cortex, 6419_enhancing_border
+# 4 PT             Astrocyte__Astrocyte ANOS1__SDC2         6237                                         1                           1 6237_2222190_A
+# 5 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                   2                           2 6419_cortex, 6509_cortex
+# 6 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                   2                           2 6419_cortex, 6509_cortex
 
 log_info(glue("Before filtering: {n_before}"))
 log_info(glue("After filtering: {n_after}"))
@@ -153,14 +154,14 @@ stringent_voting_by_region <- stringent_voting %>%
     reframe(stringent_condition_patients = paste0(Patient, collapse = ", "), stringent_condition_n_patients = n(), stringent_condition_n_samples = sum(stringent_N_samples_same_patient), stringent_condition_samples = paste0(stringent_detected_same_patient, collapse = ", "))
 # r$> head(stringent_voting_by_region)
 # # A tibble: 6 × 7
-#   Region_Grouped source_target        complex_interaction stringent_condition_patients stringent_condition_n_patients stringent_condition_n_samples stringent_condition_samples                                              
-#   <chr>          <chr>                <chr>               <chr>                                        <int>                         <int> <chr>                                                          
+#   Region_Grouped source_target        complex_interaction stringent_condition_patients stringent_condition_n_patients stringent_condition_n_samples stringent_condition_samples
+#   <chr>          <chr>                <chr>               <chr>                                        <int>                         <int> <chr>
 # 1 PT             Astrocyte__Astrocyte ALDH1A1__RORB       6237, 6419, 6509                                 3                             4 6237_2222190_A, 6419_cortex, 6419_enhancing_border, 6509_cortex
-# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                             1                             1 6419_enhancing_border                                          
-# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                             1                             1 6419_enhancing_border                                          
-# 4 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                       2                             2 6419_cortex, 6509_cortex                                       
-# 5 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                       2                             2 6419_cortex, 6509_cortex                                       
-# 6 PT             Astrocyte__Astrocyte APOE__LRP4          6419, 6509                                       2                             2 6419_cortex, 6509_cortex     
+# 2 PT             Astrocyte__Astrocyte ANGPTL4__SDC2       6419                                             1                             1 6419_enhancing_border
+# 3 PT             Astrocyte__Astrocyte ANGPTL4__SDC4       6419                                             1                             1 6419_enhancing_border
+# 4 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                       2                             2 6419_cortex, 6509_cortex
+# 5 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                       2                             2 6419_cortex, 6509_cortex
+# 6 PT             Astrocyte__Astrocyte APOE__LRP4          6419, 6509                                       2                             2 6419_cortex, 6509_cortex
 
 n_before <- nrow(stringent_voting_by_region)
 
@@ -169,13 +170,13 @@ stringent_voting_by_region <- stringent_voting_by_region %>% filter(stringent_co
 # r$> head(stringent_voting_by_region)
 # # A tibble: 6 × 7
 #   Region_Grouped source_target        complex_interaction stringent_condition_patients stringent_condition_n_patients stringent_condition_n_samples stringent_samples
-#   <chr>          <chr>                <chr>               <chr>                                        <int>                         <int> <chr>                                                          
+#   <chr>          <chr>                <chr>               <chr>                                        <int>                         <int> <chr>
 # 1 PT             Astrocyte__Astrocyte ALDH1A1__RORB       6237, 6419, 6509                                 3                             4 6237_2222190_A, 6419_cortex, 6419_enhancing_border, 6509_cortex
-# 2 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                       2                             2 6419_cortex, 6509_cortex                                       
-# 3 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                       2                             2 6419_cortex, 6509_cortex                                       
-# 4 PT             Astrocyte__Astrocyte APOE__LRP4          6419, 6509                                       2                             2 6419_cortex, 6509_cortex                                       
-# 5 PT             Astrocyte__Astrocyte BMP7__BMPR1A        6237, 6419                                       2                             2 6237_2222190_A, 6419_cortex                                    
-# 6 PT             Astrocyte__Astrocyte BMP7__BMPR1B        6237, 6419, 6509                                 3                             3 6237_2222190_A, 6419_cortex, 6509_cortex 
+# 2 PT             Astrocyte__Astrocyte APOE__ABCA1         6419, 6509                                       2                             2 6419_cortex, 6509_cortex
+# 3 PT             Astrocyte__Astrocyte APOE__LRP1          6419, 6509                                       2                             2 6419_cortex, 6509_cortex
+# 4 PT             Astrocyte__Astrocyte APOE__LRP4          6419, 6509                                       2                             2 6419_cortex, 6509_cortex
+# 5 PT             Astrocyte__Astrocyte BMP7__BMPR1A        6237, 6419                                       2                             2 6237_2222190_A, 6419_cortex
+# 6 PT             Astrocyte__Astrocyte BMP7__BMPR1B        6237, 6419, 6509                                 3                             3 6237_2222190_A, 6419_cortex, 6509_cortex
 
 n_after <- nrow(stringent_voting_by_region)
 

@@ -126,6 +126,7 @@ process COMBINING_CELLCHAT_RUNS {
 
     input:
     tuple val(sample_id), path(postprocessed_file)
+    val n_repeats
 
     output:
     tuple val(sample_id), path("300_postproc_cellchat/cellchat__${sample_id}__postproc.rds")
@@ -139,7 +140,8 @@ process COMBINING_CELLCHAT_RUNS {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/304_combine_cellchat.R" \
     --output_dir "\$PWD/300_postproc_cellchat" \
     --sample_id ${sample_id} \
-    --input_dir "\$PWD"
+    --input_dir "\$PWD" \
+    --n_repeats ${n_repeats}
 
     """
 }
@@ -152,6 +154,7 @@ process COMBINING_LIANA_RUNS {
 
     input:
     tuple val(sample_id), path(postprocessed_file)
+    val n_repeats
 
     output:
     tuple val(sample_id), path("301_postproc_liana/liana__${sample_id}__postproc.rds")
@@ -165,7 +168,9 @@ process COMBINING_LIANA_RUNS {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/305_combine_liana.R" \
     --output_dir "\$PWD/301_postproc_liana" \
     --sample_id ${sample_id} \
-    --input_dir "\$PWD"
+    --input_dir "\$PWD" \
+    --n_repeats ${n_repeats}
+
 
     """
 }
@@ -178,6 +183,7 @@ process COMBINING_CPDB_RUNS {
 
     input:
     tuple val(sample_id), path(postprocessed_file)
+    val n_repeats 
 
     output:
     tuple val(sample_id), path("303_postproc_cpdb/cpdb__${sample_id}__postproc.rds")
@@ -191,7 +197,8 @@ process COMBINING_CPDB_RUNS {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/307_combine_cpdb.R" \
     --output_dir "\$PWD/303_postproc_cpdb" \
     --sample_id ${sample_id} \
-    --input_dir "\$PWD"
+    --input_dir "\$PWD" \
+    --n_repeats ${n_repeats}
 
     """
 }
@@ -205,6 +212,7 @@ process COMBINING_CELL2CELL_RUNS {
 
     input:
     tuple val(sample_id), path(postprocessed_file)
+    val n_repeats
 
     output:
     tuple val(sample_id), path("302_postproc_cell2cell/cell2cell__${sample_id}__postproc.rds")
@@ -218,7 +226,9 @@ process COMBINING_CELL2CELL_RUNS {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/306_combine_cell2cell.R" \
     --output_dir "\$PWD/302_postproc_cell2cell" \
     --sample_id ${sample_id} \
-    --input_dir "\$PWD"
+    --input_dir "\$PWD" \
+    --n_repeats ${n_repeats}
+
 
     """
 }

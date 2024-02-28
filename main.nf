@@ -142,21 +142,18 @@ workflow {
         // In case of downsampling, process all runs per sample together for 
         // combining p-values (Fisher) and if applicable interaction scores (mean)
         if (downsampling_sheet.isFile()) {
-            POSTPROCESSING_CELLCHAT.out 
-                | groupTuple 
-                | COMBINING_CELLCHAT_RUNS
+            COMBINING_CELLCHAT_RUNS(POSTPROCESSING_CELLCHAT.out 
+                | groupTuple, n_repeats = params.num_repeats)
 
-            POSTPROCESSING_LIANA.out
-                | groupTuple
-                | COMBINING_LIANA_RUNS
-
-            POSTPROCESSING_CELL2CELL.out 
-                | groupTuple
-                | COMBINING_CELL2CELL_RUNS
             
-            POSTPROCESSING_CPDB.out 
-                | groupTuple 
-                | COMBINING_CPDB_RUNS
+            COMBINING_LIANA_RUNS(POSTPROCESSING_LIANA.out
+                | groupTuple, n_repeats = params.num_repeats)
+
+            COMBINING_CELL2CELL_RUNS(POSTPROCESSING_CELL2CELL.out 
+                | groupTuple, n_repeats = params.num_repeats)
+            
+            COMBINING_CPDB_RUNS(POSTPROCESSING_CPDB.out 
+                | groupTuple , n_repeats = params.num_repeats)
         }
     }
     // MERGE INTERACTIONS based on sample id
