@@ -54,18 +54,18 @@ if (!interactive()) {
     )
     args <- parser$parse_args()
 } else {
-    run_dir <- glue("{here::here()}/output/CCI_CellClass_L1")
+    run_dir <- glue("{here::here()}/output/test_downsampling_implementation")
 
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/tmp/")
-    args$Sample <- "6514_enhancing_border"
+    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/")
+    args$sample_id <- "6234_2895153_A"
     args$alpha <- 0.05
-    args$cellchat_obj <- glue("{run_dir}/300_postproc_cellchat/cellchat__{args$Sample}__postproc.rds")
-    args$liana_obj <- glue("{run_dir}/301_postproc_liana/liana__{args$Sample}__postproc.rds")
-    args$cell2cell_obj <- glue("{run_dir}/302_postproc_cell2cell/cell2cell__{args$Sample}__postproc.rds")
-    args$cpdb_obj <- glue("{run_dir}/303_postproc_cpdb/cpdb__{args$Sample}__postproc.rds")
+    args$cellchat_obj <- glue("{run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
+    args$liana_obj <- glue("{run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds")
+    args$cell2cell_obj <- glue("{run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds")
+    args$cpdb_obj <- glue("{run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds")
 }
 
 # Set up logging
@@ -81,13 +81,22 @@ create_dir(output_dir)
 
 log_info("Load postprocessed objects from CCIs...")
 common_cols <- c("source_target", "complex_interaction", "pval", "method", "Sample")
+# Pre-filtering on p-value, only impacts when downsampling is done (pval == NA, if interaction not detected in each downsampling run)
 obj_cellchat <- readRDS(ifelse(file.exists(args$cellchat_obj),
     args$cellchat_obj,
-    glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
-)) %>% select(all_of(common_cols))
-obj_liana <- readRDS(ifelse(file.exists(args$liana_obj), args$liana_obj, glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
-obj_cell2cell <- readRDS(ifelse(file.exists(args$cell2cell_obj), args$cell2cell_obj, glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
-obj_cpdb <- readRDS(ifelse(file.exists(args$cpdb_obj), args$cpdb_obj, glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds"))) %>% select(all_of(common_cols))
+    glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id_id}__postproc.rds")
+)) %>%
+    select(all_of(common_cols)) %>%
+    filter(!is.na(pval))
+obj_liana <- readRDS(ifelse(file.exists(args$liana_obj), args$liana_obj, glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id_id}__postproc.rds"))) %>%
+    select(all_of(common_cols)) %>%
+    filter(!is.na(pval))
+obj_cell2cell <- readRDS(ifelse(file.exists(args$cell2cell_obj), args$cell2cell_obj, glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id_id}__postproc.rds"))) %>%
+    select(all_of(common_cols)) %>%
+    filter(!is.na(pval))
+obj_cpdb <- readRDS(ifelse(file.exists(args$cpdb_obj), args$cpdb_obj, glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id_id}__postproc.rds"))) %>%
+    select(all_of(common_cols)) %>%
+    filter(!is.na(pval))
 
 log_info(glue("Number of interactions in CellChat BEFORE filtering: {nrow(obj_cellchat)}"))
 log_info(glue("Number of interactions in LIANA BEFORE filtering: {nrow(obj_liana)}"))
@@ -111,8 +120,8 @@ obj_liana <- obj_liana %>%
     select(-pval)
 # r$> head(obj_liana)
 # # A tibble: 6 × 4
-#   source_target                    complex_interaction method Sample               
-#   <chr>                            <chr>               <chr>  <chr>                
+#   source_target                    complex_interaction method Sample
+#   <chr>                            <chr>               <chr>  <chr>
 # 1 Oligodendrocyte__Oligodendrocyte CNTN2__CNTN2        LIANA  6514_enhancing_border
 # 2 Malignant__Malignant             BCAN__EGFR          LIANA  6514_enhancing_border
 # 3 Oligodendrocyte__Oligodendrocyte CLDN11__CLDN11      LIANA  6514_enhancing_border
@@ -204,13 +213,13 @@ interactions_mvoted <- all_votes %>%
 # # A tibble: 6 × 10
 # # Groups:   Sample, source_target, complex_interaction [6]
 #   Sample                source_target          complex_interaction n_methods in_liana in_cellchat in_cell2cell in_cpdb lenient_voting stringent_voting
-#   <chr>                 <chr>                  <chr>                   <int>    <dbl>       <dbl>        <dbl>   <dbl> <lgl>          <lgl>           
-# 1 6514_enhancing_border Macrophage__Macrophage A2M__LRP1                   3        0           1            1       1 FALSE          FALSE           
-# 2 6514_enhancing_border Macrophage__Macrophage ACTR2__ADRB2                1        0           0            1       0 FALSE          FALSE           
-# 3 6514_enhancing_border Macrophage__Macrophage ADAM10__AXL                 1        0           0            1       0 FALSE          FALSE           
-# 4 6514_enhancing_border Macrophage__Macrophage ADAM10__CADM1               1        0           0            1       0 FALSE          FALSE           
-# 5 6514_enhancing_border Macrophage__Macrophage ADAM10__CD44                2        0           0            1       1 FALSE          FALSE           
-# 6 6514_enhancing_border Macrophage__Macrophage ADAM10__GPNMB               3        1           0            1       1 TRUE           FALSE           
+#   <chr>                 <chr>                  <chr>                   <int>    <dbl>       <dbl>        <dbl>   <dbl> <lgl>          <lgl>
+# 1 6514_enhancing_border Macrophage__Macrophage A2M__LRP1                   3        0           1            1       1 FALSE          FALSE
+# 2 6514_enhancing_border Macrophage__Macrophage ACTR2__ADRB2                1        0           0            1       0 FALSE          FALSE
+# 3 6514_enhancing_border Macrophage__Macrophage ADAM10__AXL                 1        0           0            1       0 FALSE          FALSE
+# 4 6514_enhancing_border Macrophage__Macrophage ADAM10__CADM1               1        0           0            1       0 FALSE          FALSE
+# 5 6514_enhancing_border Macrophage__Macrophage ADAM10__CD44                2        0           0            1       1 FALSE          FALSE
+# 6 6514_enhancing_border Macrophage__Macrophage ADAM10__GPNMB               3        1           0            1       1 TRUE           FALSE
 
 log_info(glue("Number of interactions after consensus: {nrow(interactions_mvoted)}"))
 
