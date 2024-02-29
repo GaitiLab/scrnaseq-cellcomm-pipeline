@@ -39,7 +39,7 @@ create_dir(args$output_dir)
 # Load additional libraries
 require(xlsx)
 
-sheet_names <- c("CCI_CellClass_L1_conf_malign", "CCI_CellClass_L2_conf_malign")
+sheet_names <- c("CCI_CellClass_L1_conf_min50", "CCI_CellClass_L2_conf_min50")
 for (sheet_name in sheet_names) {
     log_info(glue("Annotation: {sheet_name}..."))
     log_info("Load data...")
@@ -53,7 +53,7 @@ for (sheet_name in sheet_names) {
         as.data.frame()
 
     log_info("Write data to Excel...")
-    filename <- glue("{args$output_dir}/interactions_conf_malign.xlsx")
+    filename <- glue("{args$output_dir}/interactions_conf_malign_min50.xlsx")
     write.xlsx(obj_filtered, filename,
         sheetName = sheet_name,
         col.names = TRUE, row.names = FALSE, append = TRUE

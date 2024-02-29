@@ -19,7 +19,6 @@ ident_col="CellClass_L4"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-
 resource="${work_dir}/001_data/interactions_db_v3/cellchat_db.rds"
 sample="${work_dir}/output/CellClass_L4_min3_types/100_preprocessing/seurat/6419_cortex.rds"
 output_dir="${work_dir}/output/test/"

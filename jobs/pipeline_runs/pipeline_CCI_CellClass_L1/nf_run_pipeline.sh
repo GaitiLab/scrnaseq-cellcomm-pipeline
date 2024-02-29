@@ -27,11 +27,11 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-run_name="CCI_CellClass_L1_conf_malign"
+run_name="CCI_CellClass_L1_conf_min50"
 approach=6
 
 # Inputs 
-input_file="/cluster/projects/gaitigroup/Users/Benson/Parsebio/seuratobjects/bw_gbm_regional_study.rds"
+input_file="/cluster/projects/gaitigroup/Data/GBM/processed_data/gbm_regional_study.rds"
 
 # Pre-processing
 split_varname="Sample"
@@ -39,7 +39,7 @@ annot="CCI_CellClass_L1"
 condition_varname="Region_Grouped"
 patient_varname="Patient"
 min_patients=2
-min_cells=100
+min_cells=50
 min_cell_types=2
 
 # Cell-cell interactions
