@@ -69,43 +69,6 @@ process COMBINE_SAMPLES {
     """
 }
 
-
-process AGGREGATION_SAMPLE {
-    label "mem2"
-    label "time_10m"
-
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
-
-    input:
-    path input_file
-    path metadata
-    val min_cells
-    val min_frac_samples
-    val annot
-    val condition_varname
-    val sample_varname
-
-    output:
-    path "402_aggregation/402_number_of_interactions.xlsx"
-    path "402_aggregation/402_sample_interactions_mvoted_w_filters.rds"
-
-    script:
-    def time_out_limit = (task.time).toSeconds() - 30
-    """
-    #!/usr/bin/env bash
-
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/402a_aggregation_sample.R" \
-    --output_dir \$PWD/402_aggregation \
-    --input_file \$PWD/${input_file} \
-    --metadata \$PWD/${metadata} \
-    --min_cells ${min_cells} \
-    --min_frac_samples ${min_frac_samples} \
-    --annot ${annot} \
-    --condition_varname ${condition_varname} \
-    --sample_varname ${sample_varname}
-    """
-}
-
 process AGGREGATION_PATIENT {
     label "mem2"
     label "time_10m"

@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 include { GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT; DOWNSAMPLING } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
 include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB; COMBINING_CELL2CELL_RUNS; COMBINING_LIANA_RUNS; COMBINING_CELLCHAT_RUNS; COMBINING_CPDB_RUNS } from "./nf-modules/filtering.nf"
-include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT; AGGREGATION_SAMPLE } from "./nf-modules/consensus.nf"
+include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT } from "./nf-modules/consensus.nf"
 
 workflow {
     // Convert string paths
@@ -78,10 +78,6 @@ workflow {
     Condition:          ${params.condition_varname}
     Min.patients:       ${params.min_patients}
     Patient varname:    ${params.patient_varname}
-
-    ---- AGGREGATION -----------------------------------------------------------------------------
-    Aggregate samples:  ${params.aggregate_samples}
-    Aggregate patients: ${params.aggregate_patients}
 
 
     """.stripIndent()
@@ -167,11 +163,6 @@ workflow {
         metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname, sample_varname = params.split_varname, patient_varname = params.patient_varname)
     }
     if (params.approach >= 6) {
-        if(params.aggregate_samples) {
-            AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.mvoted_interactions, metadata = metadata_rds, min_cells = params.min_cells, min_frac_samples = params.min_frac_samples, annot = params.annot, condition_varname = params.condition_varname, sample_varname = params.split_varname )
-        }
-        if(params.aggregate_patients) {
             AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, min_patients = params.min_patients)
-        }
     } 
 }
