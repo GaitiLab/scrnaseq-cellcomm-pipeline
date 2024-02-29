@@ -92,7 +92,6 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     --meta_vars_oi $meta_vars_oi \
     --approach $approach \
     --condition_varname $condition_varname \
-    --aggregate_patients \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
     --num_cells ${num_cells} \
