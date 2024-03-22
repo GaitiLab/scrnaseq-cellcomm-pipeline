@@ -43,6 +43,25 @@ L2 <- c(
     "Progenitor_like"
 )
 
+#' @title L4 cell type labels
+#' @export
+L4 <- c(
+    # Malignant
+    "Differentiated_like",
+    "Progenitor_like",
+    "Neuronal OPC-like",
+    # TME
+    "Myeloid_Immunosuppressive",
+    "Myeloid_Inflammatory",
+    "Neuron",
+    "Pericyte",
+    "Oligodendrocyte",
+    "OPC",
+    "Astrocyte",
+    "T_cell"
+)
+
+
 #' @title L2 TME cell type labels (TME only, no tumor)
 #' @export
 L2_TME <- c(
@@ -99,6 +118,11 @@ names(COLORS_L2_TME_HIGHLIGHTED) <- L2_TME
 # scales::show_col(COLORS_L2_TME)
 # scales::show_col(COLORS_L2_TME_HIGHLIGHTED)
 
+# #' @title Color palette for L2 TME cell types (highlight groups of interest)
+# #' @export
+# COLORS_L4_TME_HIGHLIGHTED <- sapply(seq_along(COLORS_L4_TME), adapt_transparency, groups = groups_oi, colors = COLORS_L4_TME)
+# names(COLORS_L4_TME_HIGHLIGHTED) <- L4_TME
+
 #' @title Color palette for L1 cell types
 #' @export
 COLORS_L1 <- palette[seq_along(L1)]
@@ -109,8 +133,14 @@ names(COLORS_L1) <- L1
 COLORS_L2 <- palette[seq_along(L2)]
 names(COLORS_L2) <- L2
 
+
+#' @title Color palette for L2 cell types
+#' @export
+COLORS_L4 <- palette[seq_along(L4)]
+names(COLORS_L4) <- L4
+
 # scales::show_col(COLORS_L1)
 # scales::show_col(COLORS_L2)
 #' @title Dictionary of color palettes
 #' @export
-CELLTYPES_COLOR_PALETTE <- list("CCI_CellClass_L1" = COLORS_L1, "CCI_CellClass_L2" = COLORS_L2)
+CELLTYPES_COLOR_PALETTE <- list("CCI_CellClass_L1" = COLORS_L1, "CCI_CellClass_L2" = COLORS_L2, "CCI_CellClass_L2_2" = COLORS_L4)

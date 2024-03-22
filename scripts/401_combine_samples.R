@@ -30,14 +30,15 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$input_dir <- glue("{here::here()}/output/CCI_CellClass_L1_updated/400_consensus")
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1_updated/401_combine_samples")
+    run_dir <- "CCI_CellClass_L4_w_agg"
+    args$input_dir <- glue("{here::here()}/output/{run_dir}/400_consensus")
+    args$output_dir <- glue("{here::here()}/output/{run_dir}/401_combine_samples")
     args$celltype_oi <- NULL
-    args$metadata <- glue("{here::here()}/output/CCI_CellClass_L1_updated/000_data/gbm_regional_study__metadata.rds")
+    args$metadata <- glue("{here::here()}/output/{run_dir}/000_data/gbm_regional_study__metadata.rds")
     args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
     args$sample_varname <- "Sample"
     # args$condition_varname <- "Region_Grouped"
-    args$patient_varname  <- "Patient"
+    args$patient_varname <- "Patient"
 }
 
 # Set up logging
@@ -109,6 +110,11 @@ all_sign_interactions <- do.call(rbind, lapply(all_sign_interactions, readRDS))
 # 5 6514_solid_core Microglia__Microglia YBX1__NOTCH1                1        0           0            1       0
 # 6 6514_solid_core Microglia__Microglia ZP3__MERTK                  1        0           0            1       0
 
+log_info("Load aggregated interactions (includes sample information)...")
+interactions_agg_rank <- list.files(args$input_dir,
+    full.names = TRUE, pattern = glue("*__interactions_agg_rank.rds")
+)
+interactions_agg_rank <- do.call(rbind, lapply(interactions_agg_rank, readRDS))
 
 log_info("Load metadata...")
 if (file.exists(args$meta_vars_oi) && !is.null(args$meta_vars_oi) && args$meta_vars_oi != "") {
@@ -120,9 +126,8 @@ if (file.exists(args$meta_vars_oi) && !is.null(args$meta_vars_oi) && args$meta_v
 } else {
     log_info("No metadata variables of interest provided. Using default variables (Sample, Region_Grouped)...")
     cols_oi <- unique(c(args$sample_varname, args$condition_varname, args$patient_varname))
-
 }
-metadata <- readRDS(args$metadata) 
+metadata <- readRDS(args$metadata)
 cols <- colnames(metadata)
 cols_oi <- intersect(cols_oi, cols)
 metadata <- metadata %>%
@@ -178,7 +183,14 @@ all_sign_interactions <- all_sign_interactions %>%
 # 5 6234_2895153_A Malignant__Malignant ADAM10__GPNMB               1        0           0            1       0 TE
 # 6 6234_2895153_A Malignant__Malignant ADAM10__IL6R                1        0           0            1       0 TE
 
+
+interactions_agg_rank <- interactions_agg_rank %>%
+    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
+    ungroup()
+
 log_info("Save...")
 saveRDS(all_mvoted, file = glue("{output_dir}/401_samples_interactions_mvoted.rds"))
 saveRDS(all_sign_interactions, file = glue("{output_dir}/401_samples_sign_interactions.rds"))
+saveRDS(interactions_agg_rank, file = glue("{output_dir}/401_samples_interactions_agg_rank.rds"))
+
 log_info("COMPLETED!")

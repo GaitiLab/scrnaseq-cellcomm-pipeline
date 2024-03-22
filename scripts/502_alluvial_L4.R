@@ -32,8 +32,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L1"
-    run_name <- "CCI_CellClass_L1_w_agg"
+    args$annot <- "CCI_CellClass_L2_2"
+    run_name <- "CCI_CellClass_L4_w_agg"
     args$output_dir <- glue("{here::here()}/output/{run_name}/502_alluvial")
     args$input_file <- glue("{here::here()}/output/{run_name}/402_aggregation/402_interactions_combi_agg.rds")
     args$interactions_db <- "001_data_local/interactions_db_v2/ref_db.rds"
@@ -57,8 +57,9 @@ log_info("Load additional libraries...")
 pacman::p_load(ggplot2, ggalluvial, ggtext)
 
 log_info("Load interactions...")
-interactions <- readRDS(args$input_file) %>% mutate(Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC")))
-
+interactions <- readRDS(args$input_file) %>%
+    mutate(Region_Grouped = factor(Region_Grouped, levels = c("PT", "TE", "SC"))) %>%
+    filter(pval < 0.05)
 
 interactions <- interactions %>%
     mutate(source_target_abbrev = str_replace_all(source_target, CELLTYPE_ANNOT_ABBREV_DICT)) %>%
@@ -67,8 +68,8 @@ interactions <- interactions %>%
 
 
 # Defaults
-malignant_name <- "Malignant"
-alluv_width <- .15
+malignant_name <- "_like|-like"
+alluv_width <- .25
 alluv_linewidth <- .75
 alluv_linecolor <- "black"
 add_on_theme <- theme(
@@ -79,74 +80,45 @@ add_on_theme <- theme(
     axis.title.y = element_blank()
 )
 
-palettes <- list(palette1 = COLORS_L1_TME, palette2 = COLORS_L1_TME_HIGHLIGHTED)
-
+palettes <- list(palette1 = COLORS_L2_TME, palette2 = COLORS_L2_TME_HIGHLIGHTED)
 
 for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
     if (!option %in% colnames(interactions)) {
         next
     }
-
     mal_to_tme <- interactions %>%
         rowwise() %>%
-        filter(
-            str_detect(source, malignant_name),
-            !(str_detect(source, malignant_name) && str_detect(target, malignant_name)),
-            !!sym(option), !is.na(!!sym(option)),
-        ) %>%
-        group_by(
-            !!sym(args$condition_varname),
-            source_abbrev, source, target_abbrev, target
-        ) %>%
+        filter(str_detect(source, malignant_name), !!sym(option), !is.na(!!sym(option)), !(str_detect(source, malignant_name) && str_detect(target, malignant_name))) %>%
+        group_by(!!sym(args$condition_varname), source, source_abbrev, target_abbrev, target) %>%
         summarise(Freq = n()) %>%
         as.data.frame() %>%
         rowwise() %>%
         mutate(
-            pair_ordered = paste0(sort(c(source_abbrev, target_abbrev)), collapse = "__"),
-            source_target = factor(paste0(c(source_abbrev, target_abbrev), collapse = "__"))
-        ) %>%
-        ungroup()
-    #     # A tibble: 6 × 7
-    #   Region_Grouped source_abbrev source    target_abbrev target     Freq source_target
-    #   <fct>          <chr>         <chr>     <chr>         <chr>     <int> <fct>
-    # 1 PT             Astro         Astrocyte Mal           Malignant     8 Astro__Mal
-    # 2 PT             MG            Microglia Mal           Malignant    36 MG__Mal
-    # 3 PT             Mal           Malignant Astro         Astrocyte     5 Mal__Astro
-    # 4 PT             Mal           Malignant MG            Microglia    30 Mal__MG
-    # 5 PT             Mal           Malignant N             Neuron       50 Mal__N
-    # 6 PT             Mal           Malignant OPC           OPC          14 Mal__OPC
+            source_target = factor(paste0(c(source_abbrev, target_abbrev), collapse = "__")),
+        )
 
     tme_to_mal <- interactions %>%
         rowwise() %>%
         filter(str_detect(target, malignant_name), !!sym(option), !(str_detect(source, malignant_name) && str_detect(target, malignant_name))) %>%
-        group_by(Region_Grouped, source, source_abbrev, target_abbrev) %>%
+        group_by(Region_Grouped, source, source_abbrev, target, target_abbrev) %>%
         summarise(Freq = n()) %>%
         as.data.frame() %>%
         rowwise() %>%
         mutate(
-            # pair_ordered = paste0(sort(c(source_abbrev, target_abbrev)), collapse = "__"),
-            source_target = factor(paste0(c(source_abbrev, target_abbrev), collapse = "__"))
-        ) %>%
-        ungroup()
-    # A tibble: 6 × 6
-    #   Region_Grouped source          source_abbrev target_abbrev  Freq source_target
-    #   <fct>          <chr>           <chr>         <chr>         <int> <fct>
-    # 1 PT             Astrocyte       Astro         Mal               8 Astro__Mal
-    # 2 PT             Microglia       MG            Mal              36 MG__Mal
-    # 3 PT             Neuron          N             Mal              48 N__Mal
-    # 4 PT             OPC             OPC           Mal              21 OPC__Mal
-    # 5 PT             Oligodendrocyte Oligo         Mal              40 Oligo__Mal
-    # 6 TE             Macrophage      M             Mal              38 M__Mal
+            source_target = factor(paste0(c(source_abbrev, target_abbrev), collapse = "__")),
+        )
+
     for (i in names(palettes)) {
         color_palette <- palettes[[i]]
-        # Visualizing
         p1 <- ggplot(
-            data = data.frame(mal_to_tme),
+            mal_to_tme,
             aes(y = Freq, axis1 = Region_Grouped, axis2 = source_abbrev, axis3 = target_abbrev)
         ) +
             geom_alluvium(aes(fill = target), width = alluv_width, alpha = 1, linewidth = alluv_linewidth) +
             geom_stratum(alpha = 0.15, width = alluv_width, linewidth = alluv_linewidth) +
-            geom_text(stat = "stratum", aes(label = after_stat(stratum))) +
+            geom_text(stat = "stratum", aes(
+                label = after_stat(stratum),
+            )) +
             scale_x_discrete(limits = c("Region", "Tumor\n(Sender)", "TME\n(Receiver)"), expand = c(.05, .05)) +
             scale_fill_manual(values = color_palette) +
             custom_theme() +
@@ -156,9 +128,9 @@ for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
                 color = alluv_linecolor, linewidth = alluv_linewidth
             ) +
             labs(title = "Tumor - TME")
-
+        p1
         p2 <- ggplot(
-            tme_to_mal,
+            as.data.frame(tme_to_mal),
             aes(y = Freq, axis1 = Region_Grouped, axis2 = source_abbrev, axis3 = target_abbrev)
         ) +
             geom_alluvium(aes(fill = source), width = alluv_width, alpha = 1, linewidth = alluv_linewidth) +
@@ -174,10 +146,9 @@ for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
             ) +
             labs(title = "TME - Tumor")
 
-
         p <- ggpubr::ggarrange(p1, p2)
         p
-
         ggsave(glue("{output_dir}/alluvial__{option}__{i}.pdf"), p, width = 15, height = 8)
+        # auto_crop(glue("{args$output_dir}/alluvial__{option}.pdf"))
     }
 }

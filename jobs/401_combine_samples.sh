@@ -11,14 +11,14 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 
-run_name="CCI_CellClass_L1_conf_malign"
+run_name="CCI_CellClass_L1_w_agg"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 output_dir="${work_dir}/output/${run_name}/401_combine_samples"
-metadata="${work_dir}/output/${run_name}/000_data/bw_gbm_regional_study__metadata.rds"
+metadata="${work_dir}/output/${run_name}/000_data/gbm_regional_study__metadata.rds"
 meta_vars_oi="${work_dir}/000_misc/meta_vars_oi.txt"
 sample_varname="Sample"
 patient_varname="Patient"

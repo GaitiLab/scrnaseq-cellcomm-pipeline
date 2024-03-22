@@ -26,11 +26,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L1"
-    run_name <- "CCI_CellClass_L1"
-    args$agg_level <- "sample"
+    args$annot <- "CCI_CellClass_L2_2"
+    run_name <- "CCI_CellClass_L4_w_agg"
     args$output_dir <- glue("{here::here()}/output/{run_name}/503_heatmaps_interactions")
-    args$interactions <- glue("{here::here()}/output/{run_name}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
+    args$interactions <- glue("{here::here()}/output/{run_name}/402_aggregation/402_interactions_combi_agg.rds")
     args$colors <- glue("{here::here()}/000_misc_local/{args$annot}_network_colors.rds")
 }
 
@@ -42,14 +41,14 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-output_dir <- glue("{args$output_dir}/{args$agg_level}")
+output_dir <- glue("{args$output_dir}/")
 create_dir(output_dir)
 
 # Load additional libraries
 pacman::p_load_gh("jokergoo/ComplexHeatmap")
 
 log_info("Load interactions")
-interactions <- readRDS(args$interactions)
+interactions <- readRDS(args$interactions) %>% filter(pval < 0.05)
 
 log_info("Load color dictionary for cell types...")
 celltype_colors <- CELLTYPES_COLOR_PALETTE[[args$annot]]
@@ -61,11 +60,12 @@ malignant_is_sender <- TRUE
 if (args$annot == "CCI_CellClass_L1") {
     malign_id <- "Malignant"
 } else {
-    malign_id <- "_like"
+    malign_id <- "_like|-like"
 }
 
 # Titles for heatmap
-legend_title <- glue("{str_to_title(args$agg_level)}s")
+# legend_title <- glue("{str_to_title(args$agg_level)}s")
+legend_title <- "Patients"
 interaction_axis_title <- "Interaction"
 
 for (malignant_is_sender in c(TRUE, FALSE)) {
@@ -95,33 +95,33 @@ for (malignant_is_sender in c(TRUE, FALSE)) {
                 !(str_detect(source, malign_id) && str_detect(target, malign_id))
             )
 
-        # TODO Currently only lenient-voting (based on methods) is implemented
-        if (args$agg_level == "sample") {
-            interactions_filtered <- interactions_filtered %>%
-                mutate(
-                    n_detected = str_count(lenient_voting_samples, ",") + 1
-                ) %>%
-                # Make sure only interactions that have at least 2 samples are included
-                filter(n_detected >= 2) %>%
-                select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), n_detected)
-            head(interactions_filtered)
-            # # A tibble: 6 × 6
-            # # Rowwise:
-            #   complex_interaction Region_Grouped source          target    source_target              n_detected
-            #   <chr>               <fct>          <chr>           <chr>     <chr>                           <dbl>
-            # 1 A2M__LRP1           PT             Microglia       Malignant Microglia__Malignant                6
-            # 2 A2M__LRP1           TE             Microglia       Malignant Microglia__Malignant                2
-            # 3 ADAM10__NRCAM       SC             Oligodendrocyte Malignant Oligodendrocyte__Malignant          3
-            # 4 ADAM10__NRCAM       TE             Oligodendrocyte Malignant Oligodendrocyte__Malignant          2
-            # 5 AFDN__EPHA7         PT             Malignant       Neuron    Malignant__Neuron                   4
-            # 6 AFDN__NRXN3         TE             Malignant       Neuron    Malignant__Neuron                   2
-        } else if (args$agg_level == "patient") {
-            interactions_filtered <- interactions_filtered %>%
-                # Make sure only interactions that have at least 2 samples or patients are included
-                filter(lenient_condition_n_patients >= 2) %>%
-                select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), lenient_condition_n_patients) %>%
-                rename(n_detected = lenient_condition_n_patients)
-        }
+        # # TODO Currently only lenient-voting (based on methods) is implemented
+        # if (args$agg_level == "sample") {
+        #     interactions_filtered <- interactions_filtered %>%
+        #         mutate(
+        #             n_detected = str_count(lenient_voting_samples, ",") + 1
+        #         ) %>%
+        #         # Make sure only interactions that have at least 2 samples are included
+        #         filter(n_detected >= 2) %>%
+        #         select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), n_detected)
+        #     head(interactions_filtered)
+        #     # # A tibble: 6 × 6
+        #     # # Rowwise:
+        #     #   complex_interaction Region_Grouped source          target    source_target              n_detected
+        #     #   <chr>               <fct>          <chr>           <chr>     <chr>                           <dbl>
+        #     # 1 A2M__LRP1           PT             Microglia       Malignant Microglia__Malignant                6
+        #     # 2 A2M__LRP1           TE             Microglia       Malignant Microglia__Malignant                2
+        #     # 3 ADAM10__NRCAM       SC             Oligodendrocyte Malignant Oligodendrocyte__Malignant          3
+        #     # 4 ADAM10__NRCAM       TE             Oligodendrocyte Malignant Oligodendrocyte__Malignant          2
+        #     # 5 AFDN__EPHA7         PT             Malignant       Neuron    Malignant__Neuron                   4
+        #     # 6 AFDN__NRXN3         TE             Malignant       Neuron    Malignant__Neuron                   2
+        # } else if (args$agg_level == "patient") {
+        interactions_filtered <- interactions_filtered %>%
+            # Make sure only interactions that have at least 2 samples or patients are included
+            filter(lenient_condition_n_patients >= 2) %>%
+            select(complex_interaction, Region_Grouped, source_target, !!sym(malign_function), lenient_condition_n_patients) %>%
+            rename(n_detected = lenient_condition_n_patients)
+        # }
 
         log_info(interactions_filtered %>% pull(complex_interaction) %>% unique() %>% length())
 

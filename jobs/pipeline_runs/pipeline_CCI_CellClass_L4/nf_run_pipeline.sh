@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_cci_pipeline_CCI_CellClass_L2
+#SBATCH -J launch_cci_pipeline_CCI_CellClass_L4
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --partition=long
@@ -16,7 +16,7 @@ module load java/18
 # Local
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
 nf_exec="${HOME}/nextflow-23.04.3-all"
-work_dir="${base_dir}/nf_work_cci_L2"
+work_dir="${base_dir}/nf_work_cci_L4"
 nf_profile="slurm"
 
 echo "Create work directory if not existing..."
@@ -26,7 +26,7 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-run_name="CCI_CellClass_L2_w_agg"
+run_name="CCI_CellClass_L4_w_agg"
 approach=6
 
 # Inputs 
@@ -34,11 +34,11 @@ input_file="/cluster/projects/gaitigroup/Data/GBM/processed_data/gbm_regional_st
 
 # Pre-processing
 split_varname="Sample"
-annot="CCI_CellClass_L2"
+annot="CCI_CellClass_L2_2"
 condition_varname="Region_Grouped"
 patient_varname="Patient"
 min_patients=2
-min_cells=100
+min_cells=50
 min_cell_types=2
 
 # Cell-cell interactions
@@ -62,7 +62,7 @@ mkdir -p "${project_dir}/output/${run_name}"
 
 echo "Running pipeline..."
 # # Start the pipeline
-${nf_exec} run ${project_dir} -with-report -with-trace \
+${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
@@ -86,5 +86,4 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
     --skip_downsampling
-
 echo "Done!"

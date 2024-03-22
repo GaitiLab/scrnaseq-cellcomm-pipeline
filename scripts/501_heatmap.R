@@ -28,11 +28,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    run_name <- "CCI_CellClass_L2"
-    args$annot <- "CCI_CellClass_L2"
-    args$agg_level <- "patient"
+    run_name <- "CCI_CellClass_L1_w_agg"
+    args$annot <- "CCI_CellClass_L1"
     args$output_dir <- glue("{here::here()}/output/{run_name}/501_heatmap_n_interactions")
-    args$input_file <- glue("{here::here()}/output/{run_name}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
+    args$input_file <- glue("{here::here()}/output/{run_name}/402_aggregation/402_interactions_combi_agg.rds")
     args$condition_varname <- "Region_Grouped"
 }
 
@@ -44,13 +43,13 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-output_dir <- glue("{args$output_dir}/{args$agg_level}")
+output_dir <- glue("{args$output_dir}/")
 create_dir(output_dir)
 
 # Load additional libraries
 
 log_info("Load interactions...")
-interactions <- readRDS(args$input_file)
+interactions <- readRDS(args$input_file) %>% filter(pval < 0.05)
 
 # Count the number of interactions between cell type groups
 # Types of filters:

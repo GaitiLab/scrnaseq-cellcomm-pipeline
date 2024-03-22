@@ -27,7 +27,7 @@ project_dir="${base_dir}/scrnaseq-cellcomm"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-run_name="CCI_CellClass_L1_conf_min50"
+run_name="CCI_CellClass_L1_w_agg"
 approach=6
 
 # Inputs 
@@ -39,7 +39,7 @@ annot="CCI_CellClass_L1"
 condition_varname="Region_Grouped"
 patient_varname="Patient"
 min_patients=2
-min_cells=50
+min_cells=100
 min_cell_types=2
 
 # Cell-cell interactions
@@ -87,4 +87,5 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --aggregate_patients \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
+    --skip_downsampling
 echo "Done!"

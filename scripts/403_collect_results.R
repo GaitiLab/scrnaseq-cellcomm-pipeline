@@ -39,21 +39,24 @@ create_dir(args$output_dir)
 # Load additional libraries
 require(xlsx)
 
-sheet_names <- c("CCI_CellClass_L1_conf_min50", "CCI_CellClass_L2_conf_min50")
+sheet_names <- c("CCI_CellClass_L2_w_agg")
 for (sheet_name in sheet_names) {
     log_info(glue("Annotation: {sheet_name}..."))
     log_info("Load data...")
-    obj <- readRDS(glue("{here::here()}/output/{sheet_name}/402_aggregation/402_patient_interactions_mvoted_w_filters.rds"))
+    obj <- readRDS(glue("{here::here()}/output/{sheet_name}/402_aggregation/402_interactions_combi_agg.rds"))
 
     log_info("Filtering data...")
+    # Now implemented too in 402c_aggregation.R
     obj_filtered <- obj %>%
-        filter(lenient_condition) %>%
-        select(Region_Grouped, source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients) %>%
+        filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
+        select(Region_Grouped, source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval) %>%
         distinct() %>%
         as.data.frame()
 
+    saveRDS(obj_filtered, file = glue("{here::here()}/output/{sheet_name}/402_aggregation/402_interactions_combi_agg_filtered.rds"))
+
     log_info("Write data to Excel...")
-    filename <- glue("{args$output_dir}/interactions_conf_malign_min50.xlsx")
+    filename <- glue("{args$output_dir}/interactions_w_agg.xlsx")
     write.xlsx(obj_filtered, filename,
         sheetName = sheet_name,
         col.names = TRUE, row.names = FALSE, append = TRUE

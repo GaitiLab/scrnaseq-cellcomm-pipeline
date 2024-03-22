@@ -26,10 +26,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/301_postproc_liana")
-    args$input_interactions <- glue("{here::here()}/output/test_pipeline/201_cci_liana/liana__6419_cortex__run__1.rds")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/301_postproc_liana")
+    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/201_cci_liana/liana__6234_2895153_A.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6419_cortex__run__1"
+    args$sample_id <- "6234_2895153_A"
 }
 
 # Set up logging
@@ -65,15 +65,14 @@ if (length(split_sample_id) > 2) {
 }
 
 
-
 log_info(glue("Processing sample={args$sample_id}..."))
 interactions <- interactions %>%
     liana::liana_aggregate() %>%
     dplyr::rename(
-        pval = aggregate_rank,
-        interaction_score = sca.LRscore
+        pval = aggregate_rank
     ) %>%
-    select(source, target, ligand.complex, receptor.complex, pval, interaction_score) %>%
+    mutate(interaction_score = sca.LRscore) %>%
+    # select(source, target, ligand.complex, receptor.complex, pval, interaction_score) %>%
     unite(interaction, ligand.complex, receptor.complex, sep = "_") %>%
     left_join(ref_db, by = "interaction") %>%
     select(-interaction) %>%

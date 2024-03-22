@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_400a_consensus
+#SBATCH -J launch_400_consensus
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --ntasks=1
@@ -11,7 +11,7 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 job_min=1
-run_name="CCI_CellClass_L2"
+run_name="CCI_CellClass_L1_w_agg"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
@@ -34,7 +34,7 @@ echo $job_max
 sbatch <<EOF
 #!/usr/bin/env bash
 
-#SBATCH -J 400a_consensus
+#SBATCH -J 400_consensus
 #SBATCH --mail-type=END,FAIL
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --ntasks=1
@@ -55,7 +55,7 @@ sample_id="\${filename%.*}"
 
 echo \$sample_id
 
-Rscript "$work_dir/scripts/400a_consensus.R" \
+Rscript "$work_dir/scripts/400_consensus.R" \
     --run_dir ${run_dir} \
     --alpha ${alpha} \
     --sample_id \${sample_id} \

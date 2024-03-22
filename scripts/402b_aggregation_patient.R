@@ -34,7 +34,7 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$annot <- "CCI_CellClass_L1"
-    run_name <- "CCI_CellClass_L1_updated"
+    run_name <- "CCI_CellClass_L1_w_agg"
     args$output_dir <- glue("{here::here()}/output/{run_name}/402_aggregation/")
     args$input_file <- glue("{here::here()}/output/{run_name}/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$condition_varname <- "Region_Grouped"

@@ -30,7 +30,7 @@ if (!interactive()) {
     args$output_dir <- glue("{here::here()}/output/")
     args$meta <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/000_data/gbm_regional_study__metadata.rds")
     args$split_varname <- "Sample"
-    args$num_cells <- 2500
+    args$num_cells <- 100
     args$num_repeats <- 3
 }
 
@@ -46,15 +46,16 @@ create_dir(args$output_dir)
 
 # Load additional libraries
 meta <- readRDS(args$meta)
+head(meta)
 
 # TODO remove later, temporary for testing
-samples_oi <- meta %>%
-    count(Sample) %>%
-    filter(n > 3000) %>%
-    pull(Sample) %>%
-    unique()
-meta <- meta %>% filter(Sample %in% samples_oi)
-
+# samples_oi <- meta %>%
+#     count(Sample) %>%
+#     filter(n > 3000) %>%
+#     pull(Sample) %>%
+#     unique()
+# meta <- meta %>% filter(Sample %in% samples_oi)
+# meta <- seurat_obj@meta.data
 log_info("Number of samples...")
 unique_labels <- meta %>%
     pull(!!sym(args$split_varname)) %>%
