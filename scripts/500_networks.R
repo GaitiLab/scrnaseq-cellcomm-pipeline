@@ -20,7 +20,6 @@ if (!interactive()) {
     )
     parser$add_argument("--input_file", type = "character", help = "Input file")
     parser$add_argument("--interactions_db", type = "character", help = "Interactions database")
-    parser$add_argument("--agg_level", type = "character", help = "Level of aggregation: sample or patient")
     parser$add_argument("--meta", type = "character", help = "Path to metadata")
     parser$add_argument("--min_q", type = "numeric", default = 0.5, help = "Threshold for visibility (transparency)")
     parser$add_argument("--min_cells", type = "numeric", default = 100, help = "Min. cells for a celltype to be included")
@@ -32,14 +31,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$annot <- "CCI_CellClass_L1"
-    args$output_dir <- glue("{here::here()}/output/{args$annot}/500_networks")
-    args$agg_level <- "patient"
-    args$input_file <- glue("{here::here()}/output/{args$annot}/402_aggregation/402_{args$agg_level}_interactions_mvoted_w_filters.rds")
+    args$annot <- "CCI_CellClass_L2_2"
+    run_name <- "CCI_CellClass_L4_w_agg"
+    args$output_dir <- glue("{here::here()}/output/{run_name}/500_networks")
+    args$input_file <- glue("{here::here()}/output/{run_name}/402_aggregation/402_interactions_combi_agg.rds")
     args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$meta <- glue("{here::here()}/output/{args$annot}/000_data/gbm_regional_study__metadata.rds")
+    args$meta <- glue("{here::here()}/output/{run_name}/000_data/gbm_regional_study__metadata.rds")
     args$min_q <- 0.5
-    args$min_cells <- 100
+    args$min_cells <- 50
     args$min_celltypes <- 2
     args$has_loops <- TRUE
 }
@@ -52,7 +51,7 @@ log_info(ifelse(interactive(),
 ))
 
 log_info("Create output directory...")
-output_dir <- glue("{args$output_dir}/{args$agg_level}")
+output_dir <- glue("{args$output_dir}")
 create_dir(output_dir)
 
 # Load additional libraries
@@ -62,7 +61,7 @@ pacman::p_load(igraph, ggplot2)
 
 
 log_info("Load interactions...")
-interactions <- readRDS(args$input_file)
+interactions <- readRDS(args$input_file) %>% filter(pval < 0.05)
 
 # Load interactions database
 log_info("Determine number of possible interactions...")
@@ -116,7 +115,8 @@ for (option in INTERACTIONS_POST_FILTERING_OPTIONS) {
         next
     }
     # TODO comment when in use, just for testing
-    option <- INTERACTIONS_POST_FILTERING_OPTIONS[3]
+    # option <- INTERACTIONS_POST_FILTERING_OPTIONS[3]
+    # Filter on p-value
     interactions_filtered <- interactions %>%
         ungroup() %>%
         # TODO: filter based on one of the above INTERACTIONS_POST_FILTERING_OPTIONS

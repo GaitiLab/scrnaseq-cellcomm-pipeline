@@ -27,7 +27,9 @@ create_hm(
   custom_layer_fun = NULL,
   cluster_rows = TRUE,
   cell_size = 4,
-  heatmap_legend_list = NULL
+  heatmap_legend_list = NULL,
+  row_split = NULL,
+  column_split = NULL
 )
 }
 \arguments{
@@ -52,6 +54,10 @@ create_hm(
 \item{save_plot}{save plot}
 
 \item{top_annotation}{column heatmap annotation}
+
+\item{row_split}{null}
+
+\item{column_split}{null}
 
 \item{width}{width of the plot}
 

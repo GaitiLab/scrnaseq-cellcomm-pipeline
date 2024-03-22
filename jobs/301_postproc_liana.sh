@@ -18,9 +18,9 @@ base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
-output_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/301_postproc_liana"
-ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
-sample_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/201_cci_liana"
+output_dir="${work_dir}/output/CCI_CellClass_L1_conf_malign/301_postproc_liana"
+ref_db="${work_dir}/data/interactions_db/ref_db.rds"
+sample_dir="${work_dir}/output/CCI_CellClass_L1_conf_malign/201_cci_liana"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name 'liana__*.rds' | wc -l) 2>/dev/null
@@ -43,7 +43,7 @@ sbatch <<EOF
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
 input_file=\$(find $sample_dir -type f -name 'liana__*.rds' | sed -n \${SLURM_ARRAY_TASK_ID}p)
 

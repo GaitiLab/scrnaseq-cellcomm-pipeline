@@ -5,7 +5,7 @@
 \alias{INTERACTIONS_POST_FILTERING_OPTIONS}
 \title{List of filtering options}
 \format{
-An object of class \code{character} of length 4.
+An object of class \code{character} of length 2.
 }
 \usage{
 INTERACTIONS_POST_FILTERING_OPTIONS
@@ -13,14 +13,6 @@ INTERACTIONS_POST_FILTERING_OPTIONS
 \description{
 Types of filtering
 Count the number of interactions between cell type groups
-Types of filters:
-\itemize{
-\item stringent_region (voting method based stringent + take into account only region)
-\item stringent_region_pair (voting stringent + take into account both region and presence of pair in sample of that region)
-\item lenient_region (take into account only region)
-\item lenient_region_pair (take into account both region and presence of pair in sample of that region)
-INTERACTIONS_POST_FILTERING_OPTIONS <- c("stringent_condition", "stringent_condition_pair", "lenient_condition", "lenient_condition_pair")
-}
 }
 \details{
 CONSTANT VARIABLES USED IN MULTIPLE SCRIPTS

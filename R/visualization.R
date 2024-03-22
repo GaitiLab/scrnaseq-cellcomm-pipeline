@@ -65,6 +65,34 @@ custom_cell_function <- function(j, i, x, y, width, height, fill) {
     grid.text(mat[i, j], x, y, gp = gpar(fontsize = 5))
 }
 
+
+#' Cell function for ComplexHeatmap
+#' @param j column index
+#' @param i row index
+#' @param x x coordinate
+#' @param y y coordinate
+#' @param width width of the cell
+#' @param height height of the cell
+#' @param fill fill color
+#' @return NA
+#' @export
+#' @importFrom grid grid.rect gpar grid.text
+custom_cell_function_triangular <- function(j, i, x, y, width, height, fill) {
+    if (i > j) {
+        grid.rect(
+            x = x,
+            y = y, width = width, height = height,
+            gp = gpar(col = NA, fill = NA, lwd = 0)
+        )
+    } else {
+        grid.rect(
+            x = x, y = y, width = width, height = height,
+            gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+        )
+        grid.text(mat[i, j], x, y, gp = gpar(fontsize = 5))
+    }
+}
+
 #' Cell function for ComplexHeatmap
 #' @param j column index
 #' @param i row index
@@ -83,6 +111,35 @@ custom_cell_function_default <- function(j, i, x, y, width, height, fill) {
     )
 }
 
+
+#' Cell function for ComplexHeatmap
+#' @param j column index
+#' @param i row index
+#' @param x x coordinate
+#' @param y y coordinate
+#' @param width width of the cell
+#' @param height height of the cell
+#' @param fill fill color
+#' @return NA
+#' @export
+#' @importFrom grid grid.rect gpar grid.text
+custom_cell_function_triangular_default <- function(j, i, x, y, width, height, fill) {
+    if (i > j) {
+        grid.rect(
+            x = x,
+            y = y, width = width, height = height,
+            gp = gpar(col = NA, fill = NA, lwd = 0)
+        )
+    } else {
+        grid.rect(
+            x = x,
+            y = y, width = width, height = height,
+            gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+        )
+    }
+}
+
+
 #' Plot heatmap + save
 #' @param mat matrix
 #' @param col_fun color function
@@ -95,6 +152,8 @@ custom_cell_function_default <- function(j, i, x, y, width, height, fill) {
 #' @param cluster_columns cluster columns
 #' @param show_column_dend show column dendrogram
 #' @param show_row_dend show row dendrogram
+#' @param row_split null
+#' @param column_split null
 #' @param save_plot save plot
 #' @param col color
 #' @param top_annotation column heatmap annotation
@@ -111,7 +170,7 @@ create_hm <- function(
     legend_title = "score",
     row_title = NULL,
     column_title = NULL, column_title_rot = 90, cluster_columns = TRUE,
-    show_column_dend = TRUE, show_row_dend = TRUE, save_plot = FALSE, top_annotation = NULL, show_heatmap_legend = TRUE, heatmap_legend_param = list(), annotation_legend_side = "right", heatmap_legend_side = "right", merge_legend = TRUE, left_annotation = NULL, custom_cell_fun = NULL, custom_layer_fun = NULL, cluster_rows = TRUE, cell_size = 4, heatmap_legend_list = NULL) {
+    show_column_dend = TRUE, show_row_dend = TRUE, save_plot = FALSE, top_annotation = NULL, show_heatmap_legend = TRUE, heatmap_legend_param = list(), annotation_legend_side = "right", heatmap_legend_side = "right", merge_legend = TRUE, left_annotation = NULL, custom_cell_fun = NULL, custom_layer_fun = NULL, cluster_rows = TRUE, cell_size = 4, heatmap_legend_list = NULL, row_split = NULL, column_split = NULL) {
     hm <- mat %>%
         Heatmap(
             matrix = .,
@@ -148,7 +207,9 @@ create_hm <- function(
             # Annotations
             top_annotation = top_annotation,
             left_annotation = left_annotation,
-            heatmap_legend_param = heatmap_legend_param
+            heatmap_legend_param = heatmap_legend_param,
+            row_split = row_split,
+            column_split = column_split
         )
     if (save_plot) {
         hm <- draw(hm, annotation_legend_side = annotation_legend_side, heatmap_legend_side = heatmap_legend_side, merge_legend = merge_legend, heatmap_legend_list = heatmap_legend_list)
@@ -158,62 +219,6 @@ create_hm <- function(
         dev.off()
     }
     return(hm)
-}
-
-#' Pipeline for creating heatmaps (customized for 401_heatmap)
-#' @param interactions_mvoted interactions
-#' @param pairs pairs of interest
-#' @param setname name of the set
-#' @param idx index of the column to use for the title
-#' @return list of heatmaps
-#' @export
-#' @importFrom glue glue
-#' @importFrom dplyr %>% filter select group_by summarise pull rowwise mutate select
-#' @importFrom tibble column_to_rownames
-#' @importFrom stringr str_split str_replace_all
-pipeline_heatmap <- function(interactions_mvoted, pairs, obj_literature, setname = "TAM-BDM - Malignant", idx = 2) {
-    list_of_hm <- NULL
-    all_hm_data <- interactions_mvoted %>%
-        filter(source_target %in% pairs)
-
-    # Only keep the interactions that are found for the set of source-targets
-    interactions_oi <- all_hm_data %>%
-        rowwise() %>%
-        mutate(dummy = (across(where(is.numeric), ~ sum(.x, na.rm = TRUE)))) %>%
-        select(interaction, dummy) %>%
-        group_by(interaction) %>%
-        summarise(sm = sum(dummy)) %>%
-        filter(sm >= 1) %>%
-        pull(interaction)
-
-    # Create a heatmap for each pair, with columns the regions
-    for (pair in pairs) {
-        hm_mat <- all_hm_data %>%
-            filter(source_target == pair, interaction %in% interactions_oi) %>%
-            column_to_rownames("interaction") %>%
-            select(-source_target) %>%
-            as.matrix()
-        # Binarise
-        hm_mat[hm_mat > 1] <- 1
-
-        # Annotate using literature
-        mask <- rownames(hm_mat) %in% (obj_literature %>% filter(source_target == setname) %>% pull(interaction))
-        rownames(hm_mat)[mask] <- paste0(rownames(hm_mat)[mask], "*")
-
-        log_info(glue("Number of interactions to plot: {nrow(hm_mat)}"))
-
-        # Add heatmap to list
-        list_of_hm <- list_of_hm + create_hm(
-            mat = hm_mat,
-            legend_title = "Identified",
-            column_title = str_split(pair, "__", simplify = TRUE)[idx],
-            column_title_rot = 90,
-            cluster_columns = FALSE,
-            show_column_dend = TRUE, show_row_dend = TRUE,
-            save_plot = FALSE, col = colors
-        )
-    }
-    return(list_of_hm)
 }
 
 #' Create venndiagram

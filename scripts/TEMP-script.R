@@ -45,39 +45,42 @@ obj <- readRDS(glue("{here::here()}/data/interactions_db/ref_db.rds")) %>%
         source_genesymbol_ordered = paste0(sort(str_split(source_genesymbol, "_", simplify = TRUE)), collapse = "_"),
         target_genesymbol_ordered = paste0(sort(str_split(target_genesymbol, "_", simplify = TRUE)), collapse = "_")
     )
+
+obj %>% filter(str_detect(source_genesymbol, "NLGN"))
+
 obj %>% nrow()
 
-obj %>%
-    distinct(complex_interaction) %>%
-    nrow()
+# obj %>%
+#     distinct(complex_interaction) %>%
+#     nrow()
 
-pathways_cellchat_og <- read.csv(glue("{here::here()}/000_misc_local/cellchat_pathway.csv"))
-
-
-pathways_cellchat <- pathways_cellchat_og %>%
-    mutate(
-        source_genesymbol = str_replace_all(ligand.symbol, ", ", "_"),
-        target_genesymbol = str_replace_all(receptor.symbol, ", ", "_")
-    ) %>%
-    mutate(
-        source_genesymbol = ifelse(source_genesymbol == "", toupper(ligand), source_genesymbol),
-        target_genesymbol = ifelse(target_genesymbol == "", toupper(receptor), target_genesymbol)
-    ) %>%
-    rowwise() %>%
-    mutate(
-        source_genesymbol_ordered = paste0(sort(str_split(source_genesymbol, "_", simplify = TRUE)), collapse = "_"),
-        target_genesymbol_ordered = paste0(sort(str_split(target_genesymbol, "_", simplify = TRUE)), collapse = "_")
-    ) %>%
-    select(-X, -interaction_name, -ligand, -receptor, -interaction_name_2, -source_genesymbol, -target_genesymbol)
+# pathways_cellchat_og <- read.csv(glue("{here::here()}/000_misc_local/cellchat_pathway.csv"))
 
 
+# pathways_cellchat <- pathways_cellchat_og %>%
+#     mutate(
+#         source_genesymbol = str_replace_all(ligand.symbol, ", ", "_"),
+#         target_genesymbol = str_replace_all(receptor.symbol, ", ", "_")
+#     ) %>%
+#     mutate(
+#         source_genesymbol = ifelse(source_genesymbol == "", toupper(ligand), source_genesymbol),
+#         target_genesymbol = ifelse(target_genesymbol == "", toupper(receptor), target_genesymbol)
+#     ) %>%
+#     rowwise() %>%
+#     mutate(
+#         source_genesymbol_ordered = paste0(sort(str_split(source_genesymbol, "_", simplify = TRUE)), collapse = "_"),
+#         target_genesymbol_ordered = paste0(sort(str_split(target_genesymbol, "_", simplify = TRUE)), collapse = "_")
+#     ) %>%
+#     select(-X, -interaction_name, -ligand, -receptor, -interaction_name_2, -source_genesymbol, -target_genesymbol)
 
-obj_merged <- obj %>% left_join(pathways_cellchat, by = c("source_genesymbol_ordered", "target_genesymbol_ordered"))
-
-obj_merged %>% nrow()
-obj_merged %>%
-    distinct(complex_interaction) %>%
-    nrow()
 
 
-saveRDS(obj_merged, glue("{here::here()}/data/interactions_db/ref_db_with_pathway.rds"))
+# obj_merged <- obj %>% left_join(pathways_cellchat, by = c("source_genesymbol_ordered", "target_genesymbol_ordered"))
+
+# obj_merged %>% nrow()
+# obj_merged %>%
+#     distinct(complex_interaction) %>%
+#     nrow()
+
+
+# saveRDS(obj_merged, glue("{here::here()}/data/interactions_db/ref_db_with_pathway.rds"))

@@ -33,7 +33,7 @@ custom_theme <- function(base_size = 14, base_family = "Helvetica") {
             legend.direction = "horizontal",
             legend.key.size = unit(0.2, "cm"),
             legend.spacing = unit(0, "cm"),
-            legend.title = element_text(face = "italic"),
+            legend.title = element_text(face = "plain"),
             plot.margin = unit(c(10, 5, 5, 5), "mm"),
             strip.background = element_rect(colour = "#ffffff", fill = "#ffffff"),
             strip.text = element_text(face = "bold", size = rel(1.1))

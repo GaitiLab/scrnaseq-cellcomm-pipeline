@@ -10,7 +10,7 @@ nextflow.enable.dsl=2
 include { GET_METADATA; REDUCE_SEURAT_OBJECT_SIZE; PREPROCESSING; SPLIT_SEURAT_OBJECT; DOWNSAMPLING } from "./nf-modules/prep_data.nf"
 include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "./nf-modules/infer_interactions.nf"
 include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB; COMBINING_CELL2CELL_RUNS; COMBINING_LIANA_RUNS; COMBINING_CELLCHAT_RUNS; COMBINING_CPDB_RUNS } from "./nf-modules/filtering.nf"
-include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT } from "./nf-modules/consensus.nf"
+include { CONSENSUS; COMBINE_SAMPLES; AGGREGATION_PATIENT; AGGREGATION_SAMPLE; AGGREGATION_COMBI } from "./nf-modules/consensus.nf"
 
 workflow {
     // Convert string paths
@@ -78,8 +78,6 @@ workflow {
     Condition:          ${params.condition_varname}
     Min.patients:       ${params.min_patients}
     Patient varname:    ${params.patient_varname}
-
-
     """.stripIndent()
 
     if(params.approach >= 1) {
@@ -159,10 +157,12 @@ workflow {
         CONSENSUS(combined_objects, alpha = params.alpha)
     }
     if (params.approach >= 5) {
-        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), 
+        COMBINE_SAMPLES(CONSENSUS.out.mvoted_interactions.collect(), CONSENSUS.out.signif_interactions.collect(), CONSENSUS.out.interactions_agg_rank.collect(), 
         metadata = metadata_rds, meta_vars_oi = meta_vars_oi, condition_varname = params.condition_varname, sample_varname = params.split_varname, patient_varname = params.patient_varname)
     }
     if (params.approach >= 6) {
             AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, min_patients = params.min_patients)
+            AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.interactions_agg_rank, condition_varname = params.condition_varname)
+            AGGREGATION_COMBI(AGGREGATION_PATIENT.out, AGGREGATION_SAMPLE.out)
     } 
 }

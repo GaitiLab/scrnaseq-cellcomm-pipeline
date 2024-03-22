@@ -5,7 +5,7 @@
 \alias{CELLTYPE_ANNOT_ABBREV_DICT}
 \title{Dictionary of cell type abbreviations}
 \format{
-An object of class \code{character} of length 13.
+An object of class \code{character} of length 14.
 }
 \usage{
 CELLTYPE_ANNOT_ABBREV_DICT
