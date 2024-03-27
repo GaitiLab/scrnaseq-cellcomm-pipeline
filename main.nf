@@ -163,6 +163,6 @@ workflow {
     if (params.approach >= 6) {
             AGGREGATION_PATIENT(COMBINE_SAMPLES.out.mvoted_interactions, annot = params.annot, condition_varname = params.condition_varname, min_patients = params.min_patients)
             AGGREGATION_SAMPLE(COMBINE_SAMPLES.out.interactions_agg_rank, condition_varname = params.condition_varname)
-            AGGREGATION_COMBI(AGGREGATION_PATIENT.out, AGGREGATION_SAMPLE.out)
+            AGGREGATION_COMBI(AGGREGATION_PATIENT.out, AGGREGATION_SAMPLE.out, condition_varname = params.condition_varname)
     } 
 }
