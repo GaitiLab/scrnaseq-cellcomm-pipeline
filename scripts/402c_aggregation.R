@@ -20,6 +20,7 @@ if (!interactive()) {
     )
     parser$add_argument("--interactions_by_patient", default = "", help = "Result of 402b aggregation by patient")
     parser$add_argument("--interactions_by_sample", default = "", help = "Result of 402a aggregation by sample")
+    parser$add_argument("--condition_varname", default = "", help = "Condition, e.g. mutation, region")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -49,14 +50,14 @@ log_info("Load interactions aggregated by sample...")
 samples_agg <- readRDS(args$interactions_by_sample)
 
 log_info("Combine...")
-combi <- merge(samples_agg, interactions_mvoted, by = c("Region_Grouped", "complex_interaction", "source_target"), all = TRUE) %>%
+combi <- merge(samples_agg, interactions_mvoted, by = c(args$condition_varname, "complex_interaction", "source_target"), all = TRUE) %>%
     distinct() %>%
     filter(!is.na(lenient_condition))
 
 log_info("Filtering results...")
 obj_filtered <- combi %>%
     filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
-    select(Region_Grouped, source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval) %>%
+    select(!!sym(args$condition_varname), source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval) %>%
     distinct() %>%
     as.data.frame()
 

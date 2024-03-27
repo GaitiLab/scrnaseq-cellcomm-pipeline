@@ -135,6 +135,8 @@ process AGGREGATION_COMBI {
     input:
     path interactions_by_patient
     path interactions_by_sample
+    val condition_varname
+
 
     output:
     path "402_aggregation/402_interactions_combi_agg.rds"
@@ -148,6 +150,7 @@ process AGGREGATION_COMBI {
     timeout ${time_out_limit} Rscript "${projectDir}/scripts/402c_aggregation.R" \
     --output_dir \$PWD/402_aggregation \
     --interactions_by_patient \$PWD/${interactions_by_patient} \
-    --interactions_by_sample \$PWD/${interactions_by_sample}
+    --interactions_by_sample \$PWD/${interactions_by_sample} \
+    --condition_varname ${condition_varname}
     """
 }
