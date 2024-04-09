@@ -66,6 +66,9 @@ if (length(split_sample_id) > 2) {
 
 
 log_info(glue("Processing sample={args$sample_id}..."))
+# FIX temporary solution of bug cytotalk (duplicate interactions)
+interactions$cytotalk <- interactions$cytotalk %>% distinct(source, target, ligand.complex, receptor.complex, .keep_all = TRUE)
+
 interactions <- interactions %>%
     liana::liana_aggregate() %>%
     dplyr::rename(
