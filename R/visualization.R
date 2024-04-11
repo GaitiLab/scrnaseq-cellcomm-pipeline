@@ -66,32 +66,102 @@ custom_cell_function <- function(j, i, x, y, width, height, fill) {
 }
 
 
-#' Cell function for ComplexHeatmap
-#' @param j column index
-#' @param i row index
-#' @param x x coordinate
-#' @param y y coordinate
-#' @param width width of the cell
-#' @param height height of the cell
-#' @param fill fill color
-#' @return NA
+#' @title Cell function
+#' @param is_upper_tri heatmap only contains upper triangle of matrix (default=FALSE)
+#' @param add_annot annotate cells in heatmap (default=TRUE)
 #' @export
-#' @importFrom grid grid.rect gpar grid.text
-custom_cell_function_triangular <- function(j, i, x, y, width, height, fill) {
-    if (i > j) {
-        grid.rect(
-            x = x,
-            y = y, width = width, height = height,
-            gp = gpar(col = NA, fill = NA, lwd = 0)
-        )
-    } else {
+get_cell_function <- function(is_upper_tri = FALSE, add_annot = TRUE) {
+    # Full matrix
+    cell_fun_annot <- function(j, i, x, y, width, height, fill) {
         grid.rect(
             x = x, y = y, width = width, height = height,
             gp = gpar(col = "grey", fill = NA, lwd = 0.2)
         )
         grid.text(mat[i, j], x, y, gp = gpar(fontsize = 5))
     }
+
+    cell_fun_no_annot <- function(j, i, x, y, width, height, fill) {
+        grid.rect(
+            x = x, y = y, width = width, height = height,
+            gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+        )
+    }
+
+    # Triangular
+    cell_fun_tri_annot <- function(j, i, x, y, width, height, fill) {
+        if (i >= j) {
+            grid.rect(
+                x = x,
+                y = y, width = width, height = height,
+                gp = gpar(col = NA, fill = NA, lwd = 0)
+            )
+        } else {
+            grid.rect(
+                x = x, y = y, width = width, height = height,
+                gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+            )
+            grid.text(mat[i, j], x, y, gp = gpar(fontsize = 5))
+        }
+    }
+
+    cell_fun_tri_no_annot <- function(j, i, x, y, width, height, fill) {
+        if (i >= j) {
+            grid.rect(
+                x = x,
+                y = y, width = width, height = height,
+                gp = gpar(col = NA, fill = NA, lwd = 0)
+            )
+        } else {
+            grid.rect(
+                x = x,
+                y = y, width = width, height = height,
+                gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+            )
+        }
+    }
+
+    if (is_upper_tri) {
+        if (add_annot) {
+            return(cell_fun_tri_annot)
+        } else {
+            return(cell_fun_tri_no_annot)
+        }
+    } else {
+        if (add_annot) {
+            return(cell_fun_annot)
+        } else {
+            return(cell_fun_no_annot)
+        }
+    }
 }
+
+
+# #' Cell function for ComplexHeatmap
+# #' @param j column index
+# #' @param i row index
+# #' @param x x coordinate
+# #' @param y y coordinate
+# #' @param width width of the cell
+# #' @param height height of the cell
+# #' @param fill fill color
+# #' @return NA
+# ##' @export
+# #' @importFrom grid grid.rect gpar grid.text
+# custom_cell_function_triangular <- function(j, i, x, y, width, height, fill) {
+#     if (i > j) {
+#         grid.rect(
+#             x = x,
+#             y = y, width = width, height = height,
+#             gp = gpar(col = NA, fill = NA, lwd = 0)
+#         )
+#     } else {
+#         grid.rect(
+#             x = x, y = y, width = width, height = height,
+#             gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+#         )
+#         grid.text(mat[i, j], x, y, gp = gpar(fontsize = 5))
+#     }
+# }
 
 #' Cell function for ComplexHeatmap
 #' @param j column index
@@ -112,32 +182,32 @@ custom_cell_function_default <- function(j, i, x, y, width, height, fill) {
 }
 
 
-#' Cell function for ComplexHeatmap
-#' @param j column index
-#' @param i row index
-#' @param x x coordinate
-#' @param y y coordinate
-#' @param width width of the cell
-#' @param height height of the cell
-#' @param fill fill color
-#' @return NA
-#' @export
-#' @importFrom grid grid.rect gpar grid.text
-custom_cell_function_triangular_default <- function(j, i, x, y, width, height, fill) {
-    if (i > j) {
-        grid.rect(
-            x = x,
-            y = y, width = width, height = height,
-            gp = gpar(col = NA, fill = NA, lwd = 0)
-        )
-    } else {
-        grid.rect(
-            x = x,
-            y = y, width = width, height = height,
-            gp = gpar(col = "grey", fill = NA, lwd = 0.2)
-        )
-    }
-}
+# #' Cell function for ComplexHeatmap
+# #' @param j column index
+# #' @param i row index
+# #' @param x x coordinate
+# #' @param y y coordinate
+# #' @param width width of the cell
+# #' @param height height of the cell
+# #' @param fill fill color
+# #' @return NA
+# #' @export
+# #' @importFrom grid grid.rect gpar grid.text
+# custom_cell_function_triangular_default <- function(j, i, x, y, width, height, fill) {
+#     if (i > j) {
+#         grid.rect(
+#             x = x,
+#             y = y, width = width, height = height,
+#             gp = gpar(col = NA, fill = NA, lwd = 0)
+#         )
+#     } else {
+#         grid.rect(
+#             x = x,
+#             y = y, width = width, height = height,
+#             gp = gpar(col = "grey", fill = NA, lwd = 0.2)
+#         )
+#     }
+# }
 
 
 #' Plot heatmap + save
@@ -350,7 +420,7 @@ plot_expr_hist_ccis <- function(avg_expr, annot, args) {
         geom_histogram(data = avg_expr, aes(x = expr), binwidth = args$binwidth, alpha = 0.5) +
         geom_vline(data = annot, aes(xintercept = x_pos), colour = "red", size = 0.4, linetype = "dashed") +
         geom_text_repel(data = annot, aes(x = x_pos, y = max(p_data$y), label = label), angle = 90, size = 3, hjust = 0.95) +
-        custom_theme() +
+        default_theme() +
         theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
         facet_zoom(x = expr < quantile(expr, args$max_q))
     p_hist_log_transformed <- p_hist + scale_y_continuous(trans = "log10")
