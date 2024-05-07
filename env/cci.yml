@@ -1,5 +1,6 @@
 name: cci
 channels:
+  - r
   - conda-forge
   - bioconda
   - defaults
@@ -19,7 +20,7 @@ dependencies:
   - r-pbapply=1.7_2
   - r-reshape2=1.4.4
   - r-metap=1.1
-  - r-ggplot2=3.4.4
+  - r-ggplot2
   - r-ggthemes=4.2.4
   - r-future=1.33.0
   - r-log4r=0.4.3
@@ -31,7 +32,7 @@ dependencies:
   - r-lemon=0.4.6
   - r-ggrepel=0.9.4
   - r-ggpubr=0.6.0
-  - r-scales=1.2.1
+  - r-scales
   - r-entropy=1.3.1
   - r-here=1.0.1
   - r-styler=1.10.2
@@ -50,13 +51,27 @@ dependencies:
   - r-tidyr=1.3.0
   - bioconductor-biocneighbors
   - r-ggforce=0.4.1
-  - r-ggtext
+  - r-magick
+  - imagemagick
+  - r-cairo
+  - r-randomcolor
   - ca-certificates
   - openssl
-  - r-igraph
-  - r-randomcolor
   - r-ggalluvial
+  - r-ggtext
+  - radian
+  - r-ggcorrplot
+  - r-signac
+  - r-ggvenn
+  - r-ggh4x
   - r-harmonicmeanp
   - r-robustrankaggreg
   - bioconductor-survcomp
-prefix: /cluster/home/t119972uhn/miniforge3/envs/cci
+  - r-ggvenndiagram
+  - r-ggraph
+  - r-tidygraph
+  - r-igraph
+  - bioconductor-fgsea
+  - r-msigdbr
+  - bioconductor-ggtree
+prefix: /Users/joankant/miniforge3/envs/cci

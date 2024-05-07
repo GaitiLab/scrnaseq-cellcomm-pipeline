@@ -11,7 +11,7 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 job_min=1
-run_name="CCI_CellClass_L1_w_agg"
+run_name="CCI_CellClass_L2_2_reassigned_samples_confident_only"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"

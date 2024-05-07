@@ -12,7 +12,7 @@
 
 job_min=1
 
-annot="CellClass_L2"
+annot="CCI_CellClass_L2_2"
 min_cells=50
 celltypes_oi=""
 # first_n = 0, don't check for presence of specific cell tyeps
@@ -22,17 +22,18 @@ first_n=0
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-interactions_db="${work_dir}/data/interactions_db/interactions_ref.rds"
+interactions_db="${work_dir}/data/interactions_db/ref_db.rds"
 
-sample_dir="/cluster/projects/gaitigroup/Users/Joan/001_data/GBM/split_by_Sample"
-output_dir="${work_dir}/final_output/${annot}_all/100_preprocessing/"
+sample_dir="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/000_data/split_by_Sample"
+output_dir="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/100_preprocessing/"
 
+sample="${sample_dir}/6509_cortex.rds"
 # Determine job array limits
 # A. Determine number of files
-job_max=$(ls -d -- $sample_dir/* | wc -l) 2>/dev/null
+# job_max=$(ls -d -- $sample_dir/* | wc -l) 2>/dev/null
 # B. Number of lines in a file
 # job_max=$(wc -l < "${sample_ids}")
-# job_max=1
+job_max=1
 
 echo $job_max
 
@@ -53,12 +54,12 @@ sbatch <<EOF
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
-sample=\$(ls -d -- $sample_dir/* | sed -n \${SLURM_ARRAY_TASK_ID}p)
+#sample=\$(ls -d -- $sample_dir/* | sed -n \${SLURM_ARRAY_TASK_ID}p)
 
 Rscript "$work_dir/scripts/100_preprocessing.R" \
-    --input_file \${sample} \
+    --input_file ${sample} \
     --output_dir ${output_dir} \
     --annot ${annot} \
     --min_cells ${min_cells} \

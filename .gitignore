@@ -91,3 +91,8 @@ TEMP-*
 # Nextflow (containing symlinks)
 nf-config-local
 
+notebooks/
+*.rds
+
+scripts/INACTIVE/
+002_WIP_Figures

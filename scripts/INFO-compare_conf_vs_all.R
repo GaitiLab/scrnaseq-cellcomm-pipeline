@@ -117,7 +117,7 @@ log_info("Visualize...")
 hist_plt <- ggplot(data = comparison_df) +
     geom_histogram(aes(x = value)) +
     ggh4x::facet_nested(region + filter_option ~ variable) +
-    custom_theme() +
+    default_theme() +
     labs(
         x = "Fraction of overlap", y = "Counts", title = glue("Comparison: {run_name1} vs {run_name2}"),
         # subtitle = glue("Smallest frac of overlap: {smallest_overlap}")

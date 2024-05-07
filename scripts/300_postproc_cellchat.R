@@ -2,12 +2,10 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
@@ -26,10 +24,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/300_postproc_cellchat")
-    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/200_cci_cellchat/cellchat__6234_2895153_A.rds")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/300_postproc_cellchat")
+    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/200_cci_cellchat/cellchat__6234_2895153_B.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6234_2895153_A__run__1"
+    args$sample_id <- "6234_2895153_B"
 }
 
 # Set up logging
@@ -62,7 +60,7 @@ if (length(split_sample_id) > 2) {
 
 log_info("Load data...")
 interactions <- readRDS(args$input_interactions) %>%
-    dplyr::rename(interaction_score = proba) %>%
+    dplyr::rename(CellChat_score = proba) %>%
     left_join(ref_db, by = "interaction") %>%
     select(-interaction) %>%
     unite(source_target, source, target, sep = "__") %>%

@@ -107,13 +107,13 @@ model_1_residuals <- data.frame(model_1$residuals)
 
 plt_residuals <- ggplot(model_1_residuals) +
     geom_histogram(aes(model_1.residuals)) +
-    custom_theme() +
+    default_theme() +
     labs(x = "Residuals", y = "Count")
 
 plt_normality <- ggplot(data = model_1_residuals, aes(sample = model_1.residuals)) +
     stat_qq() +
     stat_qq_line() +
-    custom_theme() +
+    default_theme() +
     labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
 
 plt_quality <- ggarrange(plt_residuals, plt_normality)
@@ -126,7 +126,7 @@ print(summary(model_1))
 ggplot(data = predictors_long, aes(value)) +
     geom_histogram() +
     facet_wrap(~variable, scales = "free") +
-    custom_theme()
+    default_theme()
 
 # Multi-collinearity
 corr_mat <- round(predictors %>%
@@ -135,7 +135,7 @@ corr_mat <- round(predictors %>%
 plt_corr <- ggcorrplot(corr_mat,
     hc.order = TRUE, type = "lower",
     lab = TRUE
-) + labs(x = "", y = "") + guides(fill = guide_colourbar(title = "Spearman Coefficient", nbin = 3, barwidth = 10, barheight = 1)) + custom_theme() + theme(axis.text.x = element_text(angle = 90, hjust = 0.95, vjust = 0.2))
+) + labs(x = "", y = "") + guides(fill = guide_colourbar(title = "Spearman Coefficient", nbin = 3, barwidth = 10, barheight = 1)) + default_theme() + theme(axis.text.x = element_text(angle = 90, hjust = 0.95, vjust = 0.2))
 plt_corr
 ggsave(plot = plt_corr, filename = glue("{output_dir}/corr_mat.pdf"), width = 8, height = 8)
 
@@ -148,13 +148,13 @@ model_2_residuals <- data.frame(model_2$residuals)
 
 plt_residuals <- ggplot(model_2_residuals) +
     geom_histogram(aes(model_2.residuals)) +
-    custom_theme() +
+    default_theme() +
     labs(x = "Residuals", y = "Count")
 
 plt_normality <- ggplot(data = model_2_residuals, aes(sample = model_2.residuals)) +
     stat_qq() +
     stat_qq_line() +
-    custom_theme() +
+    default_theme() +
     labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
 
 plt_quality <- ggarrange(plt_residuals, plt_normality)
@@ -175,13 +175,13 @@ model_3_residuals <- data.frame(model_3$residuals)
 
 plt_residuals <- ggplot(model_3_residuals) +
     geom_histogram(aes(model_3.residuals)) +
-    custom_theme() +
+    default_theme() +
     labs(x = "Residuals", y = "Count")
 
 plt_normality <- ggplot(data = model_3_residuals, aes(sample = model_3.residuals)) +
     stat_qq() +
     stat_qq_line() +
-    custom_theme() +
+    default_theme() +
     labs(x = "Theoretical Quantiles", y = "Sample Quantiles")
 
 plt_quality <- ggarrange(plt_residuals, plt_normality)

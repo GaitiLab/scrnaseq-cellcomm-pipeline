@@ -49,7 +49,7 @@ L4 <- c(
     # Malignant
     "Differentiated_like",
     "Progenitor_like",
-    "Neuronal OPC-like",
+    "Invasive-high OPC/NPC1",
     # TME
     "Myeloid_Immunosuppressive",
     "Myeloid_Inflammatory",

@@ -2,7 +2,7 @@
 % Please edit documentation in R/visualization.R
 \name{get_optimal_output_size}
 \alias{get_optimal_output_size}
-\title{Obtain optimal size of heatmap or list of heatmaps}
+\title{Obtain optimal ComplexHeatmap Size}
 \usage{
 get_optimal_output_size(hm, m = 4)
 }

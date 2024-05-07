@@ -2,17 +2,14 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -23,7 +20,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("/Users/joankant/Library/CloudStorage/OneDrive-SharedLibraries-UHN/Wu, Yiyan - Spatial_GBM/Analysis/CCI")
+    args$output_dir <- glue("/Users/joankant/Library/CloudStorage/OneDrive-UHN/Spatial_GBM/Analysis/WIP/scRNAseq/CCI")
+    args$input_dir <- "output/CCI_CellClass_L2_2_reassigned_samples_confident_only"
+    args$output_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only"
+    args$condition_varname <- "Region"
 }
 
 # Set up logging
@@ -38,27 +38,20 @@ create_dir(args$output_dir)
 
 # Load additional libraries
 require(xlsx)
+output_filename <- glue("{args$output_dir}/{args$output_name}.xlsx")
 
-sheet_names <- c("CCI_CellClass_L2_w_agg")
-for (sheet_name in sheet_names) {
-    log_info(glue("Annotation: {sheet_name}..."))
-    log_info("Load data...")
-    obj <- readRDS(glue("{here::here()}/output/{sheet_name}/402_aggregation/402_interactions_combi_agg.rds"))
-
-    log_info("Filtering data...")
-    # Now implemented too in 402c_aggregation.R
-    obj_filtered <- obj %>%
-        filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
-        select(Region_Grouped, source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval) %>%
-        distinct() %>%
-        as.data.frame()
-
-    saveRDS(obj_filtered, file = glue("{here::here()}/output/{sheet_name}/402_aggregation/402_interactions_combi_agg_filtered.rds"))
-
-    log_info("Write data to Excel...")
-    filename <- glue("{args$output_dir}/interactions_w_agg.xlsx")
-    write.xlsx(obj_filtered, filename,
-        sheetName = sheet_name,
-        col.names = TRUE, row.names = FALSE, append = TRUE
-    )
+if (file.exists(output_filename)) {
+    file.remove(output_filename)
 }
+
+obj <- readRDS(glue("{args$input_dir}/402_aggregation/402c_aggregation_integration.rds"))
+obj_filtered <- obj %>%
+    filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
+    select(!!sym(args$condition_varname), source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval, LIANA_score, CellPhoneDB_score, CellChat_score) %>%
+    distinct() %>%
+    as.data.frame()
+
+log_info("Write data to Excel...")
+write.xlsx(obj_filtered, glue("{args$output_dir}/{args$output_name}.xlsx"),
+    col.names = TRUE, row.names = FALSE, append = TRUE
+)

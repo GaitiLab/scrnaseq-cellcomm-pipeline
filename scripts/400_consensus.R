@@ -1,23 +1,14 @@
-if (dir.exists("/opt/.renv")) {
-    print("running with Docker/Singularity")
-    renv::load("/opt/.renv")
-}
-
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -56,20 +47,20 @@ if (!interactive()) {
 } else {
     # Provide arguments here for local runs
     args <- list()
-    args$run_dir <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign")
+    args$run_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only")
 
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/400_consensus")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/400_consensus")
     args$sample_id <- "6234_2895153_A"
     args$alpha <- 0.05
-    # args$cellchat_obj <- glue("{run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
-    # args$liana_obj <- glue("{run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds")
-    # args$cell2cell_obj <- glue("{run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds")
-    # args$cpdb_obj <- glue("{run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds")
-    args$cellchat_obj <- ""
-    args$liana_obj <- ""
-    args$cell2cell_obj <- ""
-    args$cpdb_obj <- ""
+    args$cellchat_obj <- glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
+    args$liana_obj <- glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds")
+    args$cell2cell_obj <- glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds")
+    args$cpdb_obj <- glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds")
+    # args$cellchat_obj <- ""
+    # args$liana_obj <- ""
+    # args$cell2cell_obj <- ""
+    # args$cpdb_obj <- ""
 }
 
 # Set up logging
@@ -175,14 +166,14 @@ interactions_df_aggregated <- do.call(rbind, aggregated_ranks) %>%
     mutate(Sample = obj_liana %>% pull(Sample) %>% unique()) %>%
     remove_rownames() %>%
     # Adding individual p-values
-    left_join(obj_cellchat %>% rename(cellchat = pval) %>% select(Sample, source_target, complex_interaction, cellchat)) %>%
+    left_join(obj_cellchat %>% rename(cellchat = pval) %>% select(Sample, source_target, complex_interaction, cellchat, CellChat_score)) %>%
     left_join(obj_cell2cell %>% rename(cell2cell = pval) %>% select(Sample, source_target, complex_interaction, cell2cell)) %>%
-    left_join(obj_cell2cell %>% rename(liana = pval) %>% select(Sample, source_target, complex_interaction, liana)) %>%
-    left_join(obj_cpdb %>% rename(cpdb = pval) %>% select(Sample, source_target, complex_interaction, cpdb))
+    left_join(obj_liana %>% rename(liana = pval) %>% select(Sample, source_target, complex_interaction, liana, LIANA_score)) %>%
+    left_join(obj_cpdb %>% rename(cpdb = pval) %>% select(Sample, source_target, complex_interaction, cpdb, CellPhoneDB_score))
 
 #  ===== APPROACH 2: FILTERING BASED ON SIGNIFICANCE ===== #
 log_info(glue("Filter by significance... (alpha = {args$alpha})"))
-obj_cellchat <- obj_cellchat %>%
+obj_cellchat_filtered <- obj_cellchat %>%
     select(all_of(common_cols)) %>%
     filter(!is.na(pval)) %>%
     filter(pval < args$alpha) %>%
@@ -195,7 +186,7 @@ obj_cellchat <- obj_cellchat %>%
 # 4       Microglia__Macrophage   SPP1__ITGAV:ITGB1 CellChatv2 6514_enhancing_border
 # 5 Oligodendrocyte__Macrophage   SPP1__ITGAV:ITGB1 CellChatv2 6514_enhancing_border
 # 6        Malignant__Malignant   GLS:SLC1A2__GRIA2 CellChatv2 6514_enhancing_border
-obj_liana <- obj_liana %>%
+obj_liana_filtered <- obj_liana %>%
     select(all_of(common_cols)) %>%
     filter(!is.na(pval)) %>%
     filter(pval < args$alpha) %>%
@@ -210,7 +201,7 @@ obj_liana <- obj_liana %>%
 # 4 Malignant__Malignant             BCAN__NRCAM         LIANA  6514_enhancing_border
 # 5 Oligodendrocyte__Oligodendrocyte TF__LRP2            LIANA  6514_enhancing_border
 # 6 Malignant__Malignant             CHL1__CHL1          LIANA  6514_enhancing_border
-obj_cell2cell <- obj_cell2cell %>%
+obj_cell2cell_filtered <- obj_cell2cell %>%
     select(all_of(common_cols)) %>%
     filter(!is.na(pval)) %>%
     filter(pval < args$alpha) %>%
@@ -223,7 +214,7 @@ obj_cell2cell <- obj_cell2cell %>%
 # 4 Macrophage__Malignant    EREG__ERBB2:ERBB4 Cell2Cell 6514_enhancing_border
 # 5 Macrophage__Malignant NFASC__CNTN1:CNTNAP1 Cell2Cell 6514_enhancing_border
 # 6 Macrophage__Malignant    THY1__ITGAM:ITGB2 Cell2Cell 6514_enhancing_border
-obj_cpdb <- obj_cpdb %>%
+obj_cpdb_filtered <- obj_cpdb %>%
     select(all_of(common_cols)) %>%
     filter(!is.na(pval)) %>%
     filter(pval < args$alpha) %>%
@@ -237,17 +228,17 @@ obj_cpdb <- obj_cpdb %>%
 # 5 Macrophage__Macrophage        ADAM9__ITGB1 CellPhoneDBv5 6514_enhancing_border
 # 6 Macrophage__Macrophage       LGALS1__ITGB1 CellPhoneDBv5 6514_enhancing_border
 
-log_info(glue("Number of interactions in CellChat AFTER filtering: {nrow(obj_cellchat)}"))
-log_info(glue("Number of interactions in LIANA AFTER filtering: {nrow(obj_liana)}"))
-log_info(glue("Number of interactions in Cell2Cell AFTER filtering: {nrow(obj_cell2cell)}"))
-log_info(glue("Number of interactions in CPDB AFTER filtering: {nrow(obj_cpdb)}"))
+log_info(glue("Number of interactions in CellChat AFTER filtering: {nrow(obj_cellchat_filtered)}"))
+log_info(glue("Number of interactions in LIANA AFTER filtering: {nrow(obj_liana_filtered)}"))
+log_info(glue("Number of interactions in Cell2Cell AFTER filtering: {nrow(obj_cell2cell_filtered)}"))
+log_info(glue("Number of interactions in CPDB AFTER filtering: {nrow(obj_cpdb_filtered)}"))
 
 log_info("Combine the different methods...")
 interactions_signif <- do.call(rbind, list(
-    obj_cellchat,
-    obj_liana,
-    obj_cell2cell,
-    obj_cpdb
+    obj_cellchat_filtered,
+    obj_liana_filtered,
+    obj_cell2cell_filtered,
+    obj_cpdb_filtered
 ))
 # r$> head(interactions_signif)
 #                 source_target complex_interaction     method                Sample
@@ -271,10 +262,10 @@ all_votes <- interactions_signif %>%
     group_by(Sample, source_target, complex_interaction) %>%
     count() %>%
     rename(n_methods = n) %>%
-    left_join(obj_liana %>% select(all_of(cols_oi)) %>% mutate(in_liana = 1)) %>%
-    left_join(obj_cellchat %>% select(all_of(cols_oi)) %>% mutate(in_cellchat = 1)) %>%
+    left_join(obj_liana %>% select(all_of(cols_oi), LIANA_score) %>% mutate(in_liana = 1)) %>%
+    left_join(obj_cellchat %>% select(all_of(cols_oi), CellChat_score) %>% mutate(in_cellchat = 1)) %>%
     left_join(obj_cell2cell %>% select(all_of(cols_oi)) %>% mutate(in_cell2cell = 1)) %>%
-    left_join(obj_cpdb %>% select(all_of(cols_oi)) %>% mutate(in_cpdb = 1))
+    left_join(obj_cpdb %>% select(all_of(cols_oi), CellPhoneDB_score) %>% mutate(in_cpdb = 1))
 all_votes[is.na(all_votes)] <- 0
 # # A tibble: 6 × 8
 # # Groups:   Sample, source_target, complex_interaction [6]

@@ -146,7 +146,7 @@ for (type_of_voting in types_of_voting) {
     # p_fraction <- ggplot(all_df, aes(x = id, y = fraction, color = Region_Grouped)) +
     #     geom_boxplot(outlier.shape = NA) +
     #     coord_flip() +
-    #     custom_theme() +
+    #     default_theme() +
     #     labs(x = "Cell type", title = "Number of ligands/receptors expressed from database per cell type", subtitle = glue("min. fraction of cells that express the ligand/receptor > {args$min_pct}"), y = "Fraction of ligands and receptors expressed") +
     #     geom_point(position = position_jitterdodge(), size = .75)
 
@@ -154,7 +154,7 @@ for (type_of_voting in types_of_voting) {
     # facet.by = "Region_Grouped", add = "jitter", outlier.shape = NA, ylab = "Fraction of ligands and receptors expressed",
     # xlab = "Cell type", title = "Number of ligands/receptors expressed from database per cell type",
     # subtitle = glue("min. fraction of cells that express the ligand/receptor > {args$min_pct}"), legend = "bottom", ggtheme = theme_pubr(), ncol = 5) +
-    # stat_compare_means() + custom_theme() + theme(axis.text.x)
+    # stat_compare_means() + default_theme() + theme(axis.text.x)
     # p_fraction_stat_test
 
     # ggsave(plot = p_fraction_stat_test, filename = glue("{args$output_dir}/fractiongenes_per_class_minpct{args$min_pct * 100}__stat_test.pdf"), width = 10, height = 10, dpi = 300)
@@ -164,7 +164,7 @@ for (type_of_voting in types_of_voting) {
     # p_counts <- ggplot(all_df, aes(x = id, y = n, color = Region_Grouped)) +
     #     geom_boxplot(outlier.shape = NA) +
     #     coord_flip() +
-    #     custom_theme() +
+    #     default_theme() +
     #     labs(x = "Cell type", title = "Number of ligands/receptors expressed from database per cell type", subtitle = glue("min. fraction of cells that express the ligand/receptor > {args$min_pct}"), y = "Number of genes") +
     #     geom_point(position = position_jitterdodge(), size = .75)
 
@@ -220,7 +220,7 @@ for (type_of_voting in types_of_voting) {
     plt_possible_interactions <- ggplot(data = all_n_interactions_by_sample) +
         geom_point(aes(x = n_possible_interactions, y = n_interactions, color = target)) +
         facet_grid(Region_Grouped ~ source) +
-        custom_theme() +
+        default_theme() +
         labs(x = "Number of possible interactions", y = "Number of interactions", title = "Number of interactions per cell type pair", subtitle = glue("min. fraction of cells that express the ligand/receptor > {args$min_pct}")) +
         stat_cor(aes(x = n_possible_interactions, y = n_interactions), method = "spearman")
     ggsave(plot = plt_possible_interactions, filename = glue("{args$output_dir}/ninteractions_per_celltypepair_{type_of_voting}_minpct{args$min_pct * 100}.pdf"), width = 25, height = 10, dpi = 300)
@@ -228,7 +228,7 @@ for (type_of_voting in types_of_voting) {
 
     plot_possible_interactions_overall <- ggplot(data = all_n_interactions_by_sample) +
         geom_point(aes(x = n_possible_interactions, y = n_interactions)) +
-        custom_theme() +
+        default_theme() +
         facet_grid(~Region_Grouped) +
         labs(x = "Number of possible interactions", y = "Number of interactions", title = "Number of interactions per cell type pair", subtitle = glue("min. fraction of cells that express the ligand/receptor > {args$min_pct}")) +
         stat_cor(aes(x = n_possible_interactions, y = n_interactions), method = "spearman")

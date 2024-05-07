@@ -1,6 +1,6 @@
 process DOWNSAMPLING { 
-    label 'mem16'
-    label 'time_15m'
+    label 'mem_16G'
+    label 'time_10m'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -16,7 +16,6 @@ process DOWNSAMPLING {
     script: 
     """
     #!/usr/bin/env bash
-
     Rscript "${projectDir}/scripts/000_create_downsampling_info.R" \
     --split_varname ${split_varname} \
     --num_cells ${num_cells} \
@@ -29,7 +28,7 @@ process DOWNSAMPLING {
 }
 
 process GET_METADATA {
-    label 'mem32'
+    label 'mem_32G'
     label 'time_10m'
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -43,19 +42,17 @@ process GET_METADATA {
     when: (!(file(params.metadata_csv).isFile() || file(params.metadata_rds).isFile())) && (input_file.isFile())
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
-
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/000_get_metadata.R" \
+    Rscript "${projectDir}/scripts/000_get_metadata.R" \
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data" \
     """
 }
 
 process REDUCE_SEURAT_OBJECT_SIZE {
-    label 'mem32'
-    label 'time_15m'
+    label 'mem_32G'
+    label 'time_30m'
     // Commented, cause we probably do not need this object afterwards + takes a lot of space
     // publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -69,10 +66,9 @@ process REDUCE_SEURAT_OBJECT_SIZE {
     when: (!(params.skip_reduction && file(params.sample_dir).isDirectory())) && (input_file.exists())
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/001_reduce_seurat_object_size.R" \
+    Rscript "${projectDir}/scripts/001_reduce_seurat_object_size.R" \
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data" \
     --annot ${annot}
@@ -80,8 +76,8 @@ process REDUCE_SEURAT_OBJECT_SIZE {
 }
 
 process SPLIT_SEURAT_OBJECT {
-    label 'mem20'
-    label 'time_15m'
+    label 'mem_32G'
+    label 'time_30m'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "symlink"
 
@@ -96,12 +92,9 @@ process SPLIT_SEURAT_OBJECT {
     when: (!file(params.sample_dir).isDirectory()) && (input_file.isFile())
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
-
     """
     #!/usr/bin/env bash
-
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/002_split_seurat_object.R" \
+    Rscript "${projectDir}/scripts/002_split_seurat_object.R" \
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data/split_by_${split_varname}" \
     --split_varname ${split_varname} \
@@ -112,8 +105,8 @@ process SPLIT_SEURAT_OBJECT {
 }
 
 process PREPROCESSING {
-    label 'mem4'
-    label 'time_15m'
+    label 'mem_8G'
+    label 'time_10m'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -132,11 +125,10 @@ process PREPROCESSING {
     when: (!params.skip_preprocessing) && (input_file.isFile())
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/100_preprocessing.R" \
+    Rscript "${projectDir}/scripts/100_preprocessing.R" \
     --input_file \$PWD/${input_file} \
     --output_dir "\$PWD/100_preprocessing" \
     --annot "${annot}" \

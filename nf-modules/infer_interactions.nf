@@ -1,6 +1,6 @@
 process INFER_CELLCHAT {
-    label 'mem64'
-    label 'time_6h'
+    label 'mem_32G'
+    label 'time_12h'
 
     publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
 
@@ -15,18 +15,12 @@ process INFER_CELLCHAT {
     path "200_cci_cellchat/cellchat__${input_file.simpleName}__raw_obj.rds"
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     def filename_without_ext = input_file.simpleName
     def chunks = filename_without_ext.split( '__' )
     sample_id=chunks[0]
-    // if (chunks.size() > 2) {
-    //     run_id=chunks[2]
-    // } else {
-    //     run_id="1"
-    // }
     """
     #!/usr/bin/env bash
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/200_cci_cellchat.R" \
+    Rscript "${projectDir}/scripts/200_cci_cellchat.R" \
     --gene_expr \$PWD/${input_file} \
     --output_dir "\$PWD/200_cci_cellchat" \
     --resource \$PWD/${interactions_db} \
@@ -38,8 +32,8 @@ process INFER_CELLCHAT {
 }
 
 process INFER_LIANA {
-    label 'mem4'
-    label 'time_15m'
+    label 'mem_8G'
+    label 'time_30m'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -54,18 +48,12 @@ process INFER_LIANA {
     tuple val(sample_id), val(input_file.simpleName), path("201_cci_liana/liana__${input_file.simpleName}.rds"), emit: liana_obj
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     def filename_without_ext = input_file.simpleName
     def chunks = filename_without_ext.split( '__' )
     sample_id=chunks[0]
-    // if (chunks.size() > 2) {
-    //     run_id=chunks[2]
-    // } else {
-    //     run_id="1"
-    // }
     """
     #!/usr/bin/env bash
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/201_cci_liana.R" \
+    Rscript "${projectDir}/scripts/201_cci_liana.R" \
     --gene_expr \$PWD/${input_file} \
     --output_dir "\$PWD/201_cci_liana" \
     --resource \$PWD/${interactions_db} \
@@ -76,8 +64,8 @@ process INFER_LIANA {
 }
 
 process INFER_CELL2CELL {
-    label 'mem16'
-    label 'time_2h'
+    label 'mem_16G'
+    label 'time_8h'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
 
@@ -93,19 +81,13 @@ process INFER_CELL2CELL {
     tuple val(sample_id), val(input_dir.simpleName), path("202_cci_cell2cell/cell2cell__${input_dir.simpleName}.csv"), emit: cell2cell_obj
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     def filename_without_ext = input_dir.simpleName
     def chunks = filename_without_ext.split( '__' )
     sample_id=chunks[0]
-    // if (chunks.size() > 2) {
-    //     run_id=chunks[2]
-    // } else {
-    //     run_id="1"
-    // }
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} python3 "${projectDir}/Python/202_cci_cell2cell.py" \
+    python3 "${projectDir}/Python/202_cci_cell2cell.py" \
     --input_dir \$PWD/${input_dir} \
     --output_dir "\$PWD/202_cci_cell2cell" \
     --annot ${annot} \
@@ -119,7 +101,7 @@ process INFER_CELL2CELL {
 
 process INFER_CPDB {
     label 'cpdb_env'
-    label 'mem16'
+    label 'mem_16G'
     label 'time_1h'
 
     publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
@@ -146,18 +128,12 @@ process INFER_CPDB {
     path "203_cci_cpdb/${input_dir.simpleName}_metadata.tsv"
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     def filename_without_ext = input_dir.simpleName
     def chunks = filename_without_ext.split( '__' )
     sample_id=chunks[0]
-    // if (chunks.size() > 2) {
-    //     run_id=chunks[2]
-    // } else {
-    //     run_id="1"
-    // }
     """
     #!/usr/bin/env bash
-    timeout ${time_out_limit} python3 "${projectDir}/Python/203_cci_cpdb.py" \
+    python3 "${projectDir}/Python/203_cci_cpdb.py" \
     --output_dir \$PWD/203_cci_cpdb \
     --meta \$PWD/$meta \
     --annot $annot \

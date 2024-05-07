@@ -4,26 +4,26 @@
 #SBATCH --mail-user=joan.kant@uhn.ca
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
-##SBATCH --partition=himem
+#SBATCH --partition=himem
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=30G
-#SBATCH --time=01:00:00
+#SBATCH --mem=64G
+#SBATCH --time=1-00:00:00
 #SBATCH --output=slurm_out/%x_%A.out
 #SBATCH --error=slurm_out/%x_%A.out
 
 
-nperm=10
-annot="CellClass_L4"
+nperm=1000
+annot="CCI_CellClass_L2_2"
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
-sample_id="6467_solid_core"
-resource="${work_dir}/001_data/interactions_db_v2/liana_db.csv"
+sample_id="6509_cortex"
+resource="${work_dir}/data/interactions_db/cell2cell_db.csv"
 
-meta="${work_dir}/output/CellClass_L4_min3_types_rerun/000_data/seurat_annot_adapted__metadata.csv"
-sample_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/100_preprocessing/mtx/6467_solid_core"
-output_dir="${work_dir}/final_output/"
+meta="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/000_data/gbm_regional_study__metadata.csv"
+sample_dir="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/100_preprocessing/mtx/6509_cortex"
+output_dir="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/202_cci_cell2cell"
 
 echo "Actsivating conda environment..."
 source "$HOME/miniforge3/bin/activate" "cell2cell"
@@ -36,4 +36,3 @@ python3 "$work_dir/Python/202_cci_cell2cell.py" \
     --nperm $nperm \
     --input_dir $sample_dir \
     --sample_id $sample_id
-EOF

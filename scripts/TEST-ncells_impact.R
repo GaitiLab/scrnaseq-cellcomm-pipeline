@@ -117,7 +117,7 @@ for (type_of_voting in types_of_voting) {
 
     plt <- ggplot(data = all_n_interactions_by_sample) +
         geom_point(aes(x = n_cells_source, y = n_cells_target, color = n_interactions)) +
-        custom_theme() +
+        default_theme() +
         guides(color = guide_colourbar(barwidth = 10, ticks = TRUE)) +
         scale_colour_gradient(
             low = "yellow",
@@ -152,7 +152,7 @@ for (type_of_voting in types_of_voting) {
     # # plt_auto <- ggplot(data = auto_interactions) +
     # #     geom_point(aes(x = n_cells_source, y = n_interactions, color = source, shape = Region_Grouped)) +
     # #     labs(x = "Number of cells", y = "Number of interactions", title = "Communication of cell group with itself") +
-    # #     custom_theme() +
+    # #     default_theme() +
     # #     stat_cor(aes(x = n_cells_source, y = n_interactions), method = "spearman") +  scale_x_log10(
     # #          breaks = scales::trans_breaks("log10", function(x) 10^x),
     # #          labels = scales::trans_format("log10", scales::math_format(10^.x))
@@ -173,7 +173,7 @@ for (type_of_voting in types_of_voting) {
     # plt_sum <- ggplot(data = other_combi) +
     #     geom_point(aes(x = total_cells, y = n_interactions, shape = Region_Grouped, color = target)) +
     #     labs(x = "(source + target) cells", y = "Number of interactions", title = "Communication of cell group with other cell group") +
-    #     custom_theme() +
+    #     default_theme() +
     #     facet_wrap(~source, nrow = 3) +
     #     stat_cor(aes(x = total_cells, y = n_interactions), method = "spearman")
 
@@ -181,7 +181,7 @@ for (type_of_voting in types_of_voting) {
     # plt_product <- ggplot(data = other_combi) +
     #     geom_point(aes(x = product_of_cells, y = n_interactions, shape = Region_Grouped, color = target)) +
     #     labs(x = "(source x target) cells", y = "Number of interactions", title = "Communication of cell group with other cell group") +
-    #     custom_theme() +
+    #     default_theme() +
     #     facet_wrap(~source, nrow = 3) +
     #     stat_cor(aes(x = product_of_cells, y = n_interactions), method = "spearman")
 
@@ -189,7 +189,7 @@ for (type_of_voting in types_of_voting) {
     # plt_max <- ggplot(data = other_combi) +
     #     geom_point(aes(x = max_cells, y = n_interactions, shape = Region_Grouped, color = target)) +
     #     labs(x = "max(source, target) cells", y = "Number of interactions", title = "Communication of cell group with other cell group") +
-    #     custom_theme() +
+    #     default_theme() +
     #     facet_wrap(~source, nrow = 3) +
     #     stat_cor(aes(x = max_cells, y = n_interactions), method = "spearman")
 
@@ -197,7 +197,7 @@ for (type_of_voting in types_of_voting) {
     # plt_min <- ggplot(data = other_combi) +
     #     geom_point(aes(x = min_cells, y = n_interactions, shape = Region_Grouped, color = target)) +
     #     labs(x = "min(source, target) cells", y = "Number of interactions", title = "Communication of cell group with other cell group") +
-    #     custom_theme() +
+    #     default_theme() +
     #     facet_wrap(~source, nrow = 3) +
     #     stat_cor(aes(x = min_cells, y = n_interactions), method = "spearman")
 
@@ -205,7 +205,7 @@ for (type_of_voting in types_of_voting) {
     # plt_mean <- ggplot(data = other_combi) +
     #     geom_point(aes(x = mean_cells, y = n_interactions, shape = Region_Grouped, color = target)) +
     #     labs(x = "mean(source, target) cells", y = "Number of interactions", title = "Communication of cell group with other cell group") +
-    #     custom_theme() +
+    #     default_theme() +
     #     facet_wrap(~source, nrow = 3) +
     #     stat_cor(aes(x = mean_cells, y = n_interactions), method = "spearman")
 

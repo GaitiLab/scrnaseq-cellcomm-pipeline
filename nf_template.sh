@@ -13,18 +13,16 @@
 
 module load java/18
 
-
-
 # Setting up Nextflow
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
+project_dir="${base_dir}/scrnaseq-cellcomm"
+
 nf_exec="${HOME}/nextflow-23.04.3-all"
-work_dir="${base_dir}/nf_work_cci"
-nf_profile="slurm"
+work_dir="${project_dir}/nf-work"
+nf_profile="conda"
 # Output directory for: trace, report + timeline by NextFlow
 outdir="nf-logs"
 # Project directory
-project_dir="${base_dir}/scrnaseq-cellcomm"
-
 
 echo "PIPELINE CONFIGURATION..."
 # General
@@ -32,29 +30,29 @@ run_name="test_pipeline"
 approach=6
 
 # Inputs 
-input_file="${project_dir}/output/CCI_CellClass_L1_conf_min50/000_data/split_by_Sample/6419_cortex.rds"
+input_file="${project_dir}/data/example_data.rds"
 
 # Downsampling
 # downsampling_sheet="${project_dir}/output/downsampling_info.rds"
-num_repeats=3
-num_cells=2000
+# num_repeats=3
+# num_cells=2000
 
 # Pre-processing
 split_varname="Sample"
-annot="CCI_CellClass_L1"
-condition_varname="Region_Grouped"
-patient_varname="Patient"
+annot="seurat_annotations"
+condition_varname="Condition"
+patient_varname="Sample"
 min_patients=2
 min_cells=50
 min_cell_types=2
 
 # Cell-cell interactions
-n_perm=5
+n_perm=100
 min_pct=0.10
 alpha=0.05
 
 # Post-processing/formatting
-meta_vars_oi="${project_dir}/000_misc/meta_vars_oi.txt"
+# meta_vars_oi="${project_dir}/000_misc/meta_vars_oi.txt"
 
 # Databases of interactions (GitHub)
 interactions_db="${project_dir}/data/interactions_db"
@@ -69,10 +67,9 @@ echo "Create work directory if not existing..."
 mkdir -p "${project_dir}/output/${run_name}"
 mkdir -p "${project_dir}/nf-logs"
 
-
 echo "Running pipeline..."
 # # Start the pipeline
-${nf_exec} run ${project_dir} -with-report -with-trace -resume \
+${nf_exec} run ${project_dir} -with-report -with-trace \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
@@ -89,12 +86,11 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     --liana_db_csv ${liana_db_csv} \
     --ref_db $ref_db \
     --alpha $alpha \
-    --meta_vars_oi $meta_vars_oi \
     --approach $approach \
     --condition_varname $condition_varname \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
     --num_cells ${num_cells} \
-    --num_repeats ${num_repeats}
-    # --downsampling_sheet $downsampling_sheet
+    --num_repeats ${num_repeats} \
+    --skip_downsampling
 echo "Done!"

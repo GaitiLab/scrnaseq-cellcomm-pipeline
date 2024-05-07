@@ -18,9 +18,9 @@ base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
-output_dir="${work_dir}/output/CCI_CellClass_L1_conf_malign/301_postproc_liana"
+output_dir="${work_dir}/output/CCI_CellClass_L2_2/301_postproc_liana"
 ref_db="${work_dir}/data/interactions_db/ref_db.rds"
-sample_dir="${work_dir}/output/CCI_CellClass_L1_conf_malign/201_cci_liana"
+sample_dir="${work_dir}/output/CCI_CellClass_L2_2/201_cci_liana"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name 'liana__*.rds' | wc -l) 2>/dev/null

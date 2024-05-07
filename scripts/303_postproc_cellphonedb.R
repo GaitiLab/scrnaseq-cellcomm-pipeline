@@ -2,17 +2,14 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -48,14 +45,13 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/303_postproc_cpdb")
-    args$sample_id <- "6234_2895153_A"
-    args$interaction_scores <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_interaction_scores__{args$sample_id}.txt")
-    args$pval <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_pvalues__{args$sample_id}.txt")
-    args$sign_means <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_significant_means__{args$sample_id}.txt")
-    args$means <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/203_cci_cpdb/statistical_analysis_means__{args$sample_id}.txt")
+    args$sample_id <- "6509_cortex"
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/303_postproc_cpdb")
+    args$interaction_scores <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/203_cci_cpdb/statistical_analysis_interaction_scores__{args$sample_id}.txt")
+    args$pval <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/203_cci_cpdb/statistical_analysis_pvalues__{args$sample_id}.txt")
+    args$sign_means <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/203_cci_cpdb/statistical_analysis_significant_means__{args$sample_id}.txt")
+    args$means <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/203_cci_cpdb/statistical_analysis_means__{args$sample_id}.txt")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6234_2895153_A__run__3"
 }
 
 # Set up logging
@@ -121,7 +117,8 @@ interactions <- pval %>%
         by = c("interacting_pair", "source_target")
     ) %>%
     left_join(ref_db, by = c("interacting_pair" = "interaction")) %>%
-    mutate(method = "CellPhoneDBv5", Sample = sample_id, run_id = run_id)
+    mutate(method = "CellPhoneDBv5", Sample = sample_id, run_id = run_id) %>%
+    rename(CellPhoneDB_score = interaction_score)
 #   interacting_pair        source_target pval  rank sign_mean      mean interaction_score simple_interaction complex_interaction        method         Sample run_id
 # 1         NRG2_MOG Malignant__Malignant    1 1.889        NA 0.7974264                 0          NRG2__MOG           NRG2__MOG CellPhoneDBv5 6234_2895153_A      1
 # 2        NRG2_NRP2 Malignant__Malignant    1 0.222        NA 0.7786296                 0         NRG2__NRP2          NRG2__NRP2 CellPhoneDBv5 6234_2895153_A      1
