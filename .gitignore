@@ -70,24 +70,7 @@ slurm_out
 .fuse_hidden*
 **/.nextflow/
 
-# jobs/
-# !jobs/[0-5][0-9][0-9]*\.sh
-# scripts/
-# !scripts/[0-4][0-9][0-9]*\.R
-# jobs/pipeline_runs
+*.rds
+*.html
 
-Python/
-!017_update_cellphonedb.py
-!Python/202_cci_cell2cell.py
-!Python/203_cci_cpdb.py
-
-
-# Development scripts
-**/TEST-*
-**/DEV-*
-FIGURES-*
-TEMP-*
-
-# Nextflow (containing symlinks)
-nf-config-local
-
+002_WIP_Figures
