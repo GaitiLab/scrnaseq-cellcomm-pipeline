@@ -6,10 +6,3 @@ repos:
     entry: pre-commit-hooks/copy_db.sh
     language: script
     pass_filenames: false
-- repo: local
-  hooks:
-  - id: copy_nf_config
-    name: copy_nf_config
-    entry: pre-commit-hooks/copy_nf_config.sh
-    language: script
-    pass_filenames: false
