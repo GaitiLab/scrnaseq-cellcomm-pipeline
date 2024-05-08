@@ -15,6 +15,8 @@ if (!interactive()) {
         description = "Combine aggregation by sample (p-value combi) + aggregation by patient",
     )
     parser$add_argument("--input_dir", default = "", help = "Directory called 402_aggregation")
+    parser$add_argument("--interactions_agg_binarized", default = "", help = "Path to 402a_aggregation_binarized.rds")
+    parser$add_argument("--interactions_agg_continuous", default = "", help = "Path to 402b_aggregation_continuous.rds")
     parser$add_argument("--condition_varname", default = "", help = "Condition, e.g. mutation, region")
     args <- parser$parse_args()
 } else {
@@ -38,11 +40,19 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-log_info("Load interactions after aggregation: binarized...")
-interactions_binarized <- readRDS(glue("{args$input_dir}/402a_aggregation_binarized.rds"))
+if (file.exists(args$input_dir)) {
+    log_info("Load interactions after aggregation: binarized...")
+    interactions_binarized <- readRDS(glue("{args$input_dir}/402a_aggregation_binarized.rds"))
 
-log_info("Load interactions after aggregation: continuous...")
-interactions_continuous <- readRDS(glue("{args$input_dir}/402b_aggregation_continuous.rds"))
+    log_info("Load interactions after aggregation: continuous...")
+    interactions_continuous <- readRDS(glue("{args$input_dir}/402b_aggregation_continuous.rds"))
+} else {
+    log_info("Load interactions after aggregation: binarized...")
+    interactions_binarized <- readRDS(args$interactions_agg_binarized)
+
+    log_info("Load interactions after aggregation: continuous...")
+    interactions_continuous <- readRDS(args$interactions_agg_continuous)
+}
 
 log_info("Combine...")
 combi <- merge(interactions_continuous, interactions_binarized, by = c(args$condition_varname, "complex_interaction", "source_target"), all = TRUE) %>%

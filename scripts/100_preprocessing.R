@@ -38,6 +38,7 @@ if (!interactive()) {
     parser$add_argument("-fn", "--first_n", type = "numeric", default = 0, help = "First N cell types that have to be present from given celltypes_oi file")
     parser$add_argument("--min_cell_types", type = "numeric", default = 2, help = "Minimum number of cell types to be present after filtering")
     parser$add_argument("--downsampling_sheet", type = "character", default = "", help = "Path to RDS file with the cell ids for downsampling")
+    parser$add_argument("--is_confident", type = "numeric", default = "", help = "Filter confident cells (1) or not (0)")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -88,7 +89,9 @@ log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$input_file)
 
 # TODO remove before commit (only for GBM project)
-seurat_obj <- subset(seurat_obj, subset = Confident_Annotation)
+if (args$is_confident) {
+    seurat_obj <- subset(seurat_obj, subset = Confident_Annotation)
+}
 
 if ((!is.null(args$celltypes_oi))) {
     log_info("Check if cell types of interest file exists...")

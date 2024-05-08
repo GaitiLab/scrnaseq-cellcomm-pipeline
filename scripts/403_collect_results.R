@@ -15,6 +15,10 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Create ExcelSheet with interactions from post-filtered data",
     )
+    parser$add_argument("--interactions_agg_integration", type = "character", help = "path to 402c_aggregation_integration.rds")
+    parser$add_argument("--condition_varname", type = "character", help = "Condition variablem e.g. mutation or region")
+    parser$add_argument("--alpha", type = "numeric", help = "Alpha for additional filtering (default = 1.01, e.g. keeping all)", default = 1.01)
+    parser$add_argument("--output_name", type = "character", default = "interactions", help = "filename without extension for saving interactions in an Excel file.")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -44,7 +48,7 @@ if (file.exists(output_filename)) {
     file.remove(output_filename)
 }
 
-obj <- readRDS(glue("{args$input_dir}/402_aggregation/402c_aggregation_integration.rds"))
+obj <- readRDS(args$interactions_agg_integration)
 obj_filtered <- obj %>%
     filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
     select(!!sym(args$condition_varname), source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval, LIANA_score, CellPhoneDB_score, CellChat_score) %>%
@@ -52,6 +56,6 @@ obj_filtered <- obj %>%
     as.data.frame()
 
 log_info("Write data to Excel...")
-write.xlsx(obj_filtered, glue("{args$output_dir}/{args$output_name}.xlsx"),
+write.xlsx(obj_filtered, output_filename,
     col.names = TRUE, row.names = FALSE, append = TRUE
 )

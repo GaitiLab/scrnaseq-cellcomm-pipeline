@@ -96,3 +96,6 @@ notebooks/
 
 scripts/INACTIVE/
 002_WIP_Figures
+
+nf-work
+test_pipeline*

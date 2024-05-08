@@ -1,9 +1,8 @@
-
 process CONSENSUS {
     label "mem_4G"
     label "time_30m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), path(cellchat_obj), path(liana_obj), path(cell2cell_obj), path(cpdb_obj)
@@ -35,7 +34,7 @@ process COMBINE_SAMPLES {
     label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path "*__interactions_mvoted.rds"
@@ -71,7 +70,7 @@ process AGGREGATION_BINARIZED {
     label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
@@ -99,7 +98,7 @@ process AGGREGATION_CONTINUOUS {
     label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
@@ -123,16 +122,15 @@ process AGGREGATION_INTEGRATION {
     label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
-    path interactions_by_patient
-    path interactions_by_sample
+    path interactions_agg_binarized
+    path interactions_agg_continuous
     val condition_varname
 
-
     output:
-    path "402_aggregation/402c_aggregation_integration.rds"
+    path "402_aggregation/402c_aggregation_integration.rds", emit: aggregation_integration
 
     script:
     """
@@ -140,8 +138,37 @@ process AGGREGATION_INTEGRATION {
 
     Rscript "${projectDir}/scripts/402c_aggregation_integration.R" \
     --output_dir \$PWD/402_aggregation \
-    --interactions_by_patient \$PWD/${interactions_by_patient} \
-    --interactions_by_sample \$PWD/${interactions_by_sample} \
+    --interactions_agg_binarized \$PWD/${interactions_agg_binarized} \
+    --interactions_agg_continuous \$PWD/${interactions_agg_continuous} \
     --condition_varname ${condition_varname}
+    """
+}
+
+
+process COLLECT_RESULTS {
+    label "mem_4G"
+    label "time_10m"
+
+    publishDir params.output_dir, mode: "copy"
+
+    input:
+    path interactions_agg_integration
+    val condition_varname
+    val alpha
+    val output_name
+
+    output:
+    path "${output_name}.xlsx"
+
+    script:
+    """
+    #!/usr/bin/env bash
+
+    Rscript "${projectDir}/scripts/403_collect_results.R" \
+    --output_dir \$PWD \
+    --output_name ${output_name} \
+    --interactions_agg_integration \$PWD/${interactions_agg_integration} \
+    --condition_varname ${condition_varname} \
+    --alpha ${alpha}
     """
 }

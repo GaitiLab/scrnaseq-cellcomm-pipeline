@@ -13,24 +13,16 @@
 
 module load java/18
 
-# Setting up Nextflow
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
+# base_dir="/Users/joankant/Desktop/gaitigroup/Users/Joan"
 project_dir="${base_dir}/scrnaseq-cellcomm"
 
-nf_exec="${HOME}/nextflow-23.04.3-all"
-work_dir="${project_dir}/nf-work"
-nf_profile="conda"
-# Output directory for: trace, report + timeline by NextFlow
-outdir="nf-logs"
-# Project directory
-
-echo "PIPELINE CONFIGURATION..."
-# General
-run_name="test_pipeline"
-approach=6
-
-# Inputs 
+# ---- PIPELINE CONFIGURATION ---- #
+# Input seurat file
 input_file="${project_dir}/data/example_data.rds"
+
+# Output directory
+output_dir="${project_dir}/test_pipeline"
 
 # Downsampling
 # downsampling_sheet="${project_dir}/output/downsampling_info.rds"
@@ -41,13 +33,13 @@ input_file="${project_dir}/data/example_data.rds"
 split_varname="Sample"
 annot="seurat_annotations"
 condition_varname="Condition"
-patient_varname="Sample"
+patient_varname="Patient"
 min_patients=2
-min_cells=50
+min_cells=70
 min_cell_types=2
 
 # Cell-cell interactions
-n_perm=100
+n_perm=5
 min_pct=0.10
 alpha=0.05
 
@@ -62,14 +54,23 @@ liana_db="${interactions_db}/liana_db.rds"
 liana_db_csv="${interactions_db}/cell2cell_db.csv"
 ref_db="${interactions_db}/ref_db.rds"
 
-echo "Create work directory if not existing..."
-# Create output directory if not existing
-mkdir -p "${project_dir}/output/${run_name}"
+# ----  NEXTFLOW CONFIGURATION ---- #
+# Path to nextflow executable
+nf_exec="${HOME}/nextflow-23.04.3-all"
+# nf_exec="/Users/joankant/Library/CloudStorage/OneDrive-UHN/nextflow"
+# Work directory - all executed tasks (processes) are stored here
+work_dir="${project_dir}/nf-work"
+nf_profile="conda"
+# Output directory for: trace, report + timeline by NextFlow
+outdir="${project_dir}/nf-logs"
+
+# Create directories
+mkdir -p "${output_dir}"
 mkdir -p "${project_dir}/nf-logs"
 
 echo "Running pipeline..."
 # # Start the pipeline
-${nf_exec} run ${project_dir} -with-report -with-trace \
+${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
@@ -90,7 +91,5 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --condition_varname $condition_varname \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
-    --num_cells ${num_cells} \
-    --num_repeats ${num_repeats} \
-    --skip_downsampling
+    --output_dir ${output_dir}
 echo "Done!"

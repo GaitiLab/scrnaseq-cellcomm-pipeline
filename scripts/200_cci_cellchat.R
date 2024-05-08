@@ -43,11 +43,11 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/")
-    args$ident_col <- "CellClass_L1"
+    args$output_dir <- glue("{here::here()}/test_pipeline_manual/")
+    args$ident_col <- "seurat_annotations"
     args$n_perm <- 3
     args$resource <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
-    args$gene_expr <- glue("{here::here()}/output/test_dowsampling_implementation/100_preprocessing/seurat/6419_cortex__run__1.rds")
+    args$gene_expr <- glue("test_pipeline/100_preprocessing/seurat/Sample_2.rds")
     args$n_cores <- 1
 }
 
@@ -90,7 +90,10 @@ cellchat <- identifyOverExpressedGenes(cellchat)
 cellchat <- identifyOverExpressedInteractions(cellchat)
 
 log_info("Infer cell-cell interactions...")
-cellchat <- computeCommunProb(cellchat, nboot = args$n_perm, population.size = TRUE)
+cellchat <- computeCommunProb(cellchat,
+    nboot = args$n_perm,
+    population.size = TRUE
+)
 cellchat <- filterCommunication(cellchat)
 # a. signaling pathway level cellchat <- computeCommunProbPathway(cellchat)
 

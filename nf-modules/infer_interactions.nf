@@ -2,7 +2,7 @@ process INFER_CELLCHAT {
     label 'mem_32G'
     label 'time_12h'
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
@@ -35,7 +35,7 @@ process INFER_LIANA {
     label 'mem_8G'
     label 'time_30m'
 
-    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
@@ -67,7 +67,7 @@ process INFER_CELL2CELL {
     label 'mem_16G'
     label 'time_8h'
 
-    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_dir
@@ -104,7 +104,7 @@ process INFER_CPDB {
     label 'mem_16G'
     label 'time_1h'
 
-    publishDir "${projectDir}/output/${params.run_name}/", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_dir
@@ -113,7 +113,6 @@ process INFER_CPDB {
     val annot
     val n_perm
     val min_pct
-    val alpha
 
     output:
 
@@ -142,7 +141,6 @@ process INFER_CPDB {
     --input_dir \$PWD/$input_dir \
     --min_pct $min_pct \
     --threads ${task.cpus} \
-    --alpha $alpha \
     --sample_id ${input_dir.simpleName}
 
     """

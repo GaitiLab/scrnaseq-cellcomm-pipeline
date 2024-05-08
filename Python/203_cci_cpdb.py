@@ -115,8 +115,6 @@ if __name__ == "__main__":
                         help="Path to 10X data directory")
     parser.add_argument("-t", "--threads", type=int,
                         default=4, help="Number of threads")
-    parser.add_argument("--alpha", type=float, default=0.05, help="p-value cutoff"
-                        )
     parser.add_argument("-min", "--min_pct", type=float,
                         default=0.1, help="Minimum percentage of cells expressing a gene")
     parser.add_argument("--sample_id", type=str, default="",

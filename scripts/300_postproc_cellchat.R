@@ -24,10 +24,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/300_postproc_cellchat")
-    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/200_cci_cellchat/cellchat__6234_2895153_B.rds")
+    args$output_dir <- glue("{here::here()}/test_pipeline_manual")
+    args$input_interactions <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/test_pipeline/200_cci_cellchat/cellchat__Sample_2.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6234_2895153_B"
+    args$sample_id <- "Sample_2"
 }
 
 # Set up logging
