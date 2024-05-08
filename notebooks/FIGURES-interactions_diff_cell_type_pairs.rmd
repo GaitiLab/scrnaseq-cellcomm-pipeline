@@ -1,0 +1,401 @@
+---
+title:"Analysis: Comparison of Neuron x Invasive-high OPC/NPC1 vs Neuron x Progenitor-like in PT only"
+author: "Joan Kant"
+params:
+    input_file: "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation/402c_aggregation_integration.rds"
+    output_dir: "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/002_WIP_FIGURES_local/scRNAseq/CCI_CellClass_L2_2_reassigned_samples"
+    unique_interactions: "/Users/joankant/Library/CloudStorage/OneDrive-UHN/Spatial_GBM/Analysis/WIP/scRNAseq/CCI/CCI_CellClass_L2_2_reassigned_samples_unique_interactions_neuron_invasive_high.xlsx"
+    score: "CellPhoneDB_score"
+    top_n: 20
+output: html_document
+---
+
+```{r ,echo = FALSE, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.height = "\\textheight", out.width = "\\textwidth", warning = FALSE, message = FALSE)
+
+# # TODO remove later, just for testing temporary
+library(GaitiLabUtils)
+library(GBMutils)
+set_wd()
+
+# Set up logging
+logr <- init_logging(log_level = 5)
+
+# Load **libraries**
+pacman::p_load(glue, data.table, tidyverse, stringr)
+devtools::load_all("./", export_all = FALSE)
+
+# Load additional libraries
+pacman::p_load(ggplot2, ggpubr, scales, ggtext, ComplexHeatmap, ggrepel, readxl, ggrastr, ComplexHeatmap)
+# TMP: only temporary for testing (interactively)
+# params <- list()
+# params$input_file <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation/402c_aggregation_integration.rds"
+# params$output_dir <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/002_WIP_FIGURES_local/scRNAseq/CCI_CellClass_L2_2_reassigned_samples"
+# params$unique_interactions <- "/Users/joankant/Library/CloudStorage/OneDrive-UHN/Spatial_GBM/Analysis/WIP/scRNAseq/CCI/CCI_CellClass_L2_2_reassigned_samples_unique_interactions_neuron_invasive_high.xlsx"
+# params$condition_varname <- "Region"
+# params$source <- "Neuron"
+# params$target <- "Invasive-high OPC/NPC1"
+# params$condition_oi <- "PT"
+# params$meta <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/CCI_CellClass_L2_2_reassigned_samples/000_data/gbm_regional_study__metadata.rds"
+# params$interactions_db <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/data/interactions_db/ref_db.rds"
+# params$score <- "CellPhoneDB_score"
+
+# params$avg_expr <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/average_expression_and_pseudobulk/average_expression_by_Sample_CCI_CellClass_L2_2.rds"
+# params$cutoff <- 3
+
+# params$input_file
+
+generate_pair <- function(source_oi, target_oi, is_directed = FALSE) {
+    st <- paste0(source_oi, "__", target_oi)
+    st_rev <- paste0(target_oi, "__", source_oi)
+
+    if (is_directed) {
+        st_vec <- c(st)
+    } else {
+        st_vec <- c(st, st_rev)
+    }
+}
+
+color_group <- GBMutils::load_color_palette("Divergent_1")[["Group2"]]
+
+get_genes_from_unique_interactions <- function(unique_interactions_path, source_oi, target_oi, condition_varname, condition_oi, is_directed = TRUE, top_n = NULL) {
+    st <- paste0(source_oi, "__", target_oi)
+    st_rev <- paste0(target_oi, "__", source_oi)
+
+    if (is_directed) {
+        st_vec <- c(st)
+    } else {
+        st_vec <- c(st, st_rev)
+    }
+
+    unique_interactions <- read_excel(unique_interactions_path) %>%
+        filter(source_target %in% st_vec, !!sym(condition_varname) == condition_oi) %>%
+        mutate(log10p = -log10(pval)) %>%
+        arrange(desc(log10p), desc(CellChat_score), .by_group = TRUE) %>%
+        distinct(complex_interaction, .keep_all = TRUE) %>%
+        # Ranking
+        mutate(unique_order_id = min_rank(desc(log10p))) %>%
+        select(unique_order_id, complex_interaction, unique_order_id) %>%
+        ungroup()
+    # Add dummy, used for merging later, and format interaction string for visualization
+    top_n <- ifelse(is.null(top_n), nrow(unique_interactions), top_n)
+    unique_interactions <- unique_interactions %>%
+        filter(unique_order_id <= top_n) %>%
+        pull(complex_interaction)
+    return(unique_interactions)
+}
+```
+
+
+```{r prep_data}
+neuron_invasive <- generate_pair("Neuron", "Invasive-high OPC/NPC1")
+neuron_pl_like <- generate_pair("Neuron", "Progenitor_like")
+
+pairs_oi <- c(neuron_invasive, neuron_pl_like)
+
+
+interactions_oi <- readRDS(params$input_file) %>%
+    filter(pval < 0.05, source_target %in% pairs_oi, Region == "PT") %>%
+    separate(source_target, c("source", "target"), sep = "__", remove = FALSE) %>%
+    # Remove direction by sorting source-target alphabetically
+    rowwise() %>%
+    mutate(source_target_undirected = paste0(sort(c(source, target)), collapse = "__")) %>%
+    # Remove duplicate interactions, when they are found in both directions only keep 1
+    distinct(Region, source_target_undirected, complex_interaction, .keep_all = TRUE) %>%
+    mutate(new_source_target = ifelse(str_detect(source_target_undirected, "Invasive"), "Invasive-high NPC/OPC1", "Progenitor-like")) %>%
+    group_by(new_source_target, complex_interaction) %>%
+    arrange(pval, .by_group = TRUE) %>%
+    distinct(new_source_target, complex_interaction, .keep_all = TRUE) %>%
+    ungroup()
+```
+
+## Heatmap based on p-values
+
+```{r echo = TRUE}
+interactions_oi_wide <- interactions_oi %>%
+    select(complex_interaction, new_source_target, pval) %>%
+    mutate(log10p = -log10(pval)) %>%
+    select(-pval) %>%
+    # If not found in the other, set to 1
+    pivot_wider(names_from = new_source_target, values_from = log10p, values_fill = 1) %>%
+    arrange(complex_interaction) %>%
+    column_to_rownames("complex_interaction")
+```
+
+
+Label based on top-N largest **absolute** differences. 
+```{r}
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(matrix = mat, is_upper_tri = FALSE, add_annot = FALSE)
+
+diff <- mat[, "Invasive-high NPC/OPC1"] - mat[, "Progenitor-like"]
+abs_diff <- abs(diff)
+
+# Label interactions with top-20 biggest differences
+pos <- order(abs_diff, decreasing = TRUE)[1:params$top_n]
+labels <- names(diff[pos])
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(labels, "__", "-")
+))
+
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("-log10(pval)"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__pval__label_by_top{params$top_n}_abs_diff.pdf"))
+```
+
+
+Label based on top-N largest differences. 
+
+```{r}
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(matrix = mat, is_upper_tri = FALSE, add_annot = FALSE)
+
+diff <- mat[, "Invasive-high NPC/OPC1"] - mat[, "Progenitor-like"]
+
+# Label interactions with top-20 biggest differences
+pos <- order(diff, decreasing = TRUE)[1:params$top_n]
+labels <- names(diff[pos])
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(labels, "__", "-")
+))
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("-log10(pval)"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    show_heatmap_legend = TRUE,
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__pval__label_by_top{params$top_n}_diff.pdf"))
+```
+
+Label based on **unique** interactions.
+
+```{r }
+# Get unique interactions
+unique_interactions <- get_genes_from_unique_interactions(
+    unique_interactions_path = params$unique_interactions,
+    target_oi = "Invasive-high OPC/NPC1", source_oi = "Neuron",
+    condition_varname = "Region", condition_oi = "PT",
+    is_directed = FALSE, top_n = NULL
+)
+
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(matrix = mat, is_upper_tri = FALSE, add_annot = FALSE)
+
+pos <- seq_len(nrow(mat))[rownames(mat) %in% unique_interactions]
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(unique_interactions, "__", "-")
+))
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("-log10(pval)"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    show_heatmap_legend = TRUE,
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__pval_label_by_unique.pdf"))
+```
+
+
+
+## Heatmap based on interaction score
+
+```{r echo = TRUE}
+interactions_oi_wide <- interactions_oi %>%
+    select(complex_interaction, new_source_target, !!sym(params$score)) %>%
+    mutate(score = !!sym(params$score)) %>%
+    select(-!!sym(params$score)) %>%
+    pivot_wider(names_from = new_source_target, values_from = score, values_fill = 1) %>%
+    arrange(complex_interaction) %>%
+    column_to_rownames("complex_interaction")
+```
+
+
+Label based on top-N largest **absolute** differences. 
+```{r}
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(matrix = mat, is_upper_tri = FALSE, add_annot = FALSE)
+
+diff <- mat[, "Invasive-high NPC/OPC1"] - mat[, "Progenitor-like"]
+abs_diff <- abs(diff)
+
+# Label interactions with top-20 biggest differences
+pos <- order(abs_diff, decreasing = TRUE)[1:params$top_n]
+labels <- names(diff[pos])
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(labels, "__", "-")
+))
+
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("{params$score}"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    show_heatmap_legend = TRUE,
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__{params$score}__label_by_top{params$top_n}_abs_diff.pdf"))
+```
+
+
+Label based on top-N largest differences. 
+
+```{r}
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(is_upper_tri = FALSE, add_annot = FALSE)
+
+diff <- mat[, "Invasive-high NPC/OPC1"] - mat[, "Progenitor-like"]
+
+# Label interactions with top-20 biggest differences
+pos <- order(diff, decreasing = TRUE)[1:params$top_n]
+labels <- names(diff[pos])
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(labels, "__", "-")
+))
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("{params$score}"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    show_heatmap_legend = TRUE,
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__{params$score}__label_by_top{params$top_n}_diff.pdf"))
+```
+
+Label based on **unique** interactions.
+
+```{r uniqueness_pval}
+# Get unique interactions
+unique_interactions <- get_genes_from_unique_interactions(
+    unique_interactions_path = params$unique_interactions,
+    target_oi = "Invasive-high OPC/NPC1", source_oi = "Neuron",
+    condition_varname = "Region", condition_oi = "PT",
+    is_directed = FALSE, top_n = NULL
+)
+
+mat <- data.matrix(interactions_oi_wide)
+
+# Determine min/max values for heatmap
+legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
+legend_min <- plyr::round_any(min(mat), 5, f = floor)
+
+# Setup colors
+color_fun <- circlize::colorRamp2(c(0, legend_max), c("white", color_group))
+chosen_cell_func <- get_cell_function(is_upper_tri = FALSE, add_annot = FALSE)
+
+pos <- seq_len(nrow(mat))[rownames(mat) %in% unique_interactions]
+
+row_annot <- rowAnnotation(gene = anno_mark(
+    at = pos,
+    labels = str_replace_all(unique_interactions, "__", "-")
+))
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("{params$score}"),
+    cell_fun = chosen_cell_func,
+    column_title = "", row_title = "",
+    show_heatmap_legend = TRUE,
+    column_title_rot = 0,
+    cluster_rows = TRUE,
+    cluster_columns = FALSE,
+    show_row_names = FALSE,
+    right_annotation = row_annot,
+    cell_height = 1,
+)
+
+save_hm(hm_obj = hm, output_file = glue("{params$output_dir}/heatmap__neuron__invasive_vs_pl_like__{params$score}_label_by_unique.pdf"))
+```
+
+
+
+# Session Info
+```{r session_info}
+sessioninfo::session_info()
+```

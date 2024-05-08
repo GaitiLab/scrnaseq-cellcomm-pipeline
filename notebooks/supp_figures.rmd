@@ -1,0 +1,20 @@
+---
+title: "Figures - Pseudobulk scRNAseq"
+author: "Joan Kant"
+params:
+    pseudobulk_scores: "data/features_tcga_skcm_ff"
+    tcga_bagaev_subtypes: "data/bagaev_file.xlsx"
+    tcga_survival: "data/tcga_survival_file.xlsx"
+    bootstrap_model: "data/bootstrap_model.RData"
+output: html_document
+---
+  <style type="text/css">
+  .smaller {
+    font-size: 10px
+    font-style: normal
+  }
+</style>
+
+```{r}
+
+```

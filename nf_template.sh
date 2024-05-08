@@ -13,6 +13,7 @@
 
 module load java/18
 
+
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
 # base_dir="/Users/joankant/Desktop/gaitigroup/Users/Joan"
 project_dir="${base_dir}/scrnaseq-cellcomm"
@@ -24,6 +25,7 @@ input_file="${project_dir}/data/example_data.rds"
 # Output directory
 output_dir="${project_dir}/test_pipeline"
 
+
 # Pre-processing
 split_varname="Sample"
 annot="seurat_annotations"
@@ -34,9 +36,10 @@ min_cells=70
 min_cell_types=2
 
 # Cell-cell interactions
-n_perm=5
+n_perm=100
 min_pct=0.10
 alpha=0.05
+
 
 # ----  NEXTFLOW CONFIGURATION ---- #
 # Path to nextflow executable
@@ -68,4 +71,5 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     --patient_varname $patient_varname \
     --min_patients $min_patients \
     --output_dir ${output_dir}
+
 echo "Done!"

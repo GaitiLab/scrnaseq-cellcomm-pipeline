@@ -1,0 +1,128 @@
+---
+title: "Analysis: Number of interactions - Comparison all regions"
+author: "Joan Kant"
+params:
+    input_file: "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation/402c_aggregation_integration.rds"
+    output_dir: "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/002_WIP_FIGURES_local/scRNAseq/CCI_CellClass_L2_2_reassigned_samples"
+    condition_varname: "Region"
+output: html_document
+---
+
+```{r, echo = FALSE, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, out.height = "\\textheight", out.width = "\\textwidth", warning = FALSE, message = FALSE)
+
+library(GaitiLabUtils)
+library(GBMutils)
+set_wd()
+
+# Set up logging
+logr <- init_logging(log_level = 5)
+
+# Load libraries
+pacman::p_load(glue, data.table, tidyverse, stringr)
+devtools::load_all("./", export_all = FALSE)
+
+# Load additional libraries
+pacman::p_load(ggplot2, ggpubr, scales, ggtext, ComplexHeatmap)
+
+# log_info("Create output directory...")
+create_dir(params$output_dir)
+```
+
+
+```{r}
+region_color_palette <- GBMutils::load_color_palette("Region")
+cci_l2_2_palette <- GBMutils::load_color_palette("CCI_CellClass_L2_2")
+
+targets_oi <- c("Differentiated_like", "Progenitor_like", "Invasive-high OPC/NPC1")
+celltypes_oi <- c("Neuron", "Myeloid_Immunosuppressive", "Myeloid_Inflammatory")
+
+malign <- names(cci_l2_2_palette)[1:3]
+tme <- setdiff(names(cci_l2_2_palette), malign)
+
+obj <- readRDS(params$input_file) %>%
+    # Additional filtering on p-value (aggregate rank)
+    filter(pval < 0.05) %>%
+    separate(source_target, c("source", "target"), sep = "__", remove = FALSE) %>%
+    # Remove direction by sorting source-target alphabetically
+    rowwise() %>%
+    mutate(source_target_undirected = paste0(sort(c(source, target)), collapse = "__")) %>%
+    # Remove duplicate interactions, when they are found in both directions only keep 1
+    distinct(!!sym(params$condition_varname), source_target_undirected, complex_interaction, .keep_all = FALSE) %>%
+    separate(source_target_undirected, c("source", "target"), sep = "__") %>%
+    arrange(!!sym(params$condition_varname), source, target, .by_group = TRUE) %>%
+    # Count number of interactions per source-target per region
+    group_by(!!sym(params$condition_varname), target, source) %>%
+    summarise(n = n()) %>%
+    ungroup() %>%
+    mutate(
+        Region = factor(!!sym(params$condition_varname), levels = names(GBMutils::load_color_palette("Region")))
+    ) %>%
+    ungroup() %>%
+    filter(source != target)
+
+
+obj_tme_to_tumor <- obj %>%
+    filter(source %in% tme) %>%
+    rename(celltype1 = source, celltype2 = target)
+
+tmp <- obj %>%
+    filter(!(source %in% tme)) %>%
+    rename(celltype1 = target, celltype2 = source)
+obj_undirected <- rbind(obj_tme_to_tumor, tmp) %>% distinct()
+
+n_interactions_df <- obj_undirected %>% filter(celltype1 %in% celltypes_oi)
+
+# Unscaled
+n_freq <- ggplot(data = n_interactions_df %>% filter(celltype2 %in% targets_oi), aes(x = celltype1, y = celltype2)) +
+    geom_point(aes(size = n, color = celltype1)) +
+    GBMutils::GBM_theme() +
+    facet_grid(. ~ Region, ) +
+    scale_color_manual(values = cci_l2_2_palette, ) +
+    labs(x = "TME", y = "Malignant") +
+    guides(color = "none", size = guide_legend(title = "Interactions")) +
+    theme(
+        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, color = "black"),
+        legend.key.width = unit(1.5, "lines"),
+        legend.key.height = unit(0.8, "lines")
+    ) +
+    scale_size(range = c(0, 15))
+n_freq
+ggsave(plot = n_freq, filename = glue("{params$output_dir}/dotplot_n_freq_absolute.pdf"), height = 8, width = 12)
+
+
+# Scaling by TME cell type
+n_total <- n_interactions_df %>%
+    filter(celltype2 %in% targets_oi) %>%
+    group_by(celltype1) %>%
+    summarise(n_total = sum(n)) %>%
+    ungroup()
+
+n_interactions_df <- n_interactions_df %>%
+    left_join(n_total) %>%
+    mutate(perc = 100 * n / n_total) %>%
+    filter(celltype2 %in% targets_oi)
+
+n_freq <- ggplot(data = n_interactions_df, aes(x = celltype1, y = celltype2)) +
+    geom_point(aes(size = perc, color = celltype1)) +
+    GBMutils::GBM_theme() +
+    facet_grid(. ~ Region) +
+    scale_color_manual(values = cci_l2_2_palette, ) +
+    labs(x = "TME", y = "Malignant") +
+    guides(color = "none", size = guide_legend(title = "% of interactions in TME cell type")) +
+    theme(
+        axis.text.x = element_text(size = 10, angle = 45, hjust = 1, color = "black"),
+        legend.key.width = unit(1.5, "lines"),
+        legend.key.height = unit(0.8, "lines")
+    ) +
+    scale_size(range = c(0, 15))
+
+n_freq
+ggsave(plot = n_freq, filename = glue("{params$output_dir}/dotplot_n_freq_scaled.pdf"), height = 8, width = 12)
+```
+
+# Session Info
+```{r session_info}
+options(width = 120)
+sessioninfo::session_info()
+```
