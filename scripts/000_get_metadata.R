@@ -2,12 +2,10 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)

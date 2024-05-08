@@ -2,15 +2,13 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
-pacman::p_load_gh("GaitiLabUtils")
-
+require(GaitiLabUtils)
 # Set working directory
 set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -28,14 +26,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/TESTING_PIPELINE")
-    args$input_file <- "/Users/joankant/Desktop/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_LP_IMM_Apr9/402_aggregation/402_interactions_combi_agg.rds"
-    args$condition_varname <- "Mutation"
-    args$group1 <- "BRCA1"
-    args$group2 <- "NonCarrier"
-    args$remove_autocrine <- 0
-    args$color_group2 <- scales::muted("blue")
-    args$color_group1 <- scales::muted("red")
+    args$output_dir <- glue("{here::here()}/output/TEST")
+    args$input_file <- "output/CCI_CellClass_L2_2/402_aggregation/402c_aggregation_integration.rds"
+    args$condition_varname <- "Region_Grouped"
+    args$group1 <- "PT"
+    args$group2 <- "TC"
+    args$remove_autocrine <- 1
+    args$color_group2 <- GBMutils::load_color_palette("Region")[[args$group2]]
+    args$color_group1 <- GBMutils::load_color_palette("Region")[[args$group1]]
 }
 
 # Set up logging
@@ -50,6 +48,7 @@ create_dir(args$output_dir)
 
 # Load additional libraries
 pacman::p_load(ComplexHeatmap)
+
 
 log_info("Load data + formatting...")
 obj <- readRDS(args$input_file) %>%
@@ -134,7 +133,7 @@ mat <- mat + t(mat)
 mat[lower.tri(mat)] <- 0
 
 
-if (!args$remove_autocrine) {
+if (args$remove_autocrine) {
     log_info("Remove autocrine interactions (diagonal)...")
     # Remove diagonal (autocrine)
     diag(mat) <- 0
@@ -146,13 +145,12 @@ if (!args$remove_autocrine) {
     # Myeloid_Immunosuppressive         0                   0                      0                         0                    0     76  62             -62            -194     -1
     # Myeloid_Inflammatory              0                   0                      0                         0                    0     80  63              21             -11     26
     # Neuron                            0                   0                      0                         0                    0      0 151             133             101     14
-    # log_info("Remove fully empty columns/rows...")
 } else {
     log_info("Not removing autocrine interactions (diagonal)...")
 }
+log_info("Remove fully empty columns/rows...")
 mat <- mat[, which(colSums(mat) != 0)]
 mat <- mat[which(rowSums(mat) != 0), ]
-
 # print(mat)
 #                           Invasive-high OPC/NPC1 Myeloid_Immunosuppressive Myeloid_Inflammatory Neuron OPC Oligodendrocyte Progenitor_like T_cell
 # Astrocyte                                     48                        92                   99    141 125              86              36     15
@@ -165,39 +163,36 @@ mat <- mat[which(rowSums(mat) != 0), ]
 # Oligodendrocyte                                0                         0                    0      0   0               0             -83     10
 # Progenitor_like                                0                         0                    0      0   0               0               0     -6
 
-
 # Determine min/max values for heatmap
 legend_max <- plyr::round_any(max(mat), 5, f = ceiling)
 legend_min <- plyr::round_any(min(mat), 5, f = floor)
 
 # Setup colors
 color_fun <- circlize::colorRamp2(c(legend_min, 0, legend_max), c(args$color_group2, "white", args$color_group1))
-
-
-chosen_cell_func_w_annot <- get_cell_function(is_upper_tri = TRUE, add_annot = TRUE)
+chosen_cell_func <- get_cell_function(matrix = mat, is_upper_tri = TRUE, add_annot = TRUE)
 
 log_info("Plot Heatmap and save...")
-create_hm(
-    mat = mat,
-    col_fun = color_fun,
-    output_file = glue("{args$output_dir}/heatmap__diff_undirected_w_annot.pdf"),
-    legend_title = glue("{args$group1}-{args$group2}\ninteractions"),
-    save_plot = TRUE,
-    custom_cell_fun = chosen_cell_func_w_annot,
+hm <- create_hm(
+    matrix = mat,
+    col = color_fun,
+    name = glue("{args$group1}-{args$group2}\ninteractions"),
+    cell_fun = chosen_cell_func,
     column_title = "", row_title = "",
     column_title_rot = 0, cluster_rows = FALSE, cluster_columns = FALSE,
-    cell_size = 10
+    cell_width = 10, cell_height = 10,
 )
-chosen_cell_func_w_annot <- get_cell_function(is_upper_tri = TRUE, add_annot = FALSE)
+save_hm(hm_obj = hm, output_file = glue("{args$output_dir}/heatmap__diff_undirected_w_annot.pdf"), )
+
+chosen_cell_func <- get_cell_function(is_upper_tri = TRUE, add_annot = FALSE)
 
 create_hm(
     mat = mat,
-    col_fun = color_fun,
-    output_file = glue("{args$output_dir}/heatmap__diff_undirected.pdf"),
-    legend_title = glue("{args$group1}-{args$group2}\ninteractions"),
-    save_plot = TRUE,
-    custom_cell_fun = chosen_cell_func_w_annot,
+    col = color_fun,
+    name = glue("{args$group1}-{args$group2}\ninteractions"),
+    cell_fun = chosen_cell_func,
     column_title = "", row_title = "",
     column_title_rot = 0, cluster_rows = FALSE, cluster_columns = FALSE,
-    cell_size = 10
+    cell_width = 10, cell_height = 10,
 )
+save_hm(hm_obj = hm, output_file = glue("{args$output_dir}/heatmap__diff_undirected.pdf"))
+log_info("COMPLETED!")

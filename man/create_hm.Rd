@@ -4,35 +4,11 @@
 \alias{create_hm}
 \title{Plot heatmap + save}
 \usage{
-create_hm(
-  mat,
-  col_fun = NULL,
-  output_file = "heatmap.pdf",
-  legend_title = "score",
-  row_title = NULL,
-  column_title = NULL,
-  column_title_rot = 90,
-  cluster_columns = TRUE,
-  show_column_dend = TRUE,
-  show_row_dend = TRUE,
-  save_plot = FALSE,
-  top_annotation = NULL,
-  show_heatmap_legend = TRUE,
-  heatmap_legend_param = list(),
-  annotation_legend_side = "right",
-  heatmap_legend_side = "right",
-  merge_legend = TRUE,
-  left_annotation = NULL,
-  custom_cell_fun = NULL,
-  custom_layer_fun = NULL,
-  cluster_rows = TRUE,
-  cell_size = 4,
-  heatmap_legend_list = NULL,
-  row_split = NULL,
-  column_split = NULL
-)
+create_hm(matrix, cell_width = 4, cell_height = 4, ...)
 }
 \arguments{
+\item{matrix}{A matrix. Either numeric or character. If it is a simple vector, it will be converted to a one-column matrix.}
+
 \item{mat}{matrix}
 
 \item{col_fun}{color function}
@@ -41,29 +17,7 @@ create_hm(
 
 \item{legend_title}{legend title}
 
-\item{column_title}{column title}
-
-\item{column_title_rot}{rotation of column title}
-
-\item{cluster_columns}{cluster columns}
-
-\item{show_column_dend}{show column dendrogram}
-
-\item{show_row_dend}{show row dendrogram}
-
 \item{save_plot}{save plot}
-
-\item{top_annotation}{column heatmap annotation}
-
-\item{row_split}{null}
-
-\item{column_split}{null}
-
-\item{width}{width of the plot}
-
-\item{height}{height of the plot}
-
-\item{col}{color}
 }
 \value{
 hm

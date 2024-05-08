@@ -2,17 +2,14 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -41,6 +38,7 @@ if (!interactive()) {
     parser$add_argument("-fn", "--first_n", type = "numeric", default = 0, help = "First N cell types that have to be present from given celltypes_oi file")
     parser$add_argument("--min_cell_types", type = "numeric", default = 2, help = "Minimum number of cell types to be present after filtering")
     parser$add_argument("--downsampling_sheet", type = "character", default = "", help = "Path to RDS file with the cell ids for downsampling")
+    parser$add_argument("--is_confident", type = "numeric", default = "", help = "Filter confident cells (1) or not (0)")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -90,6 +88,11 @@ log_info(glue("Downsampling run: {is_downsampling_run}"))
 log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$input_file)
 
+# TODO remove before commit (only for GBM project)
+if (args$is_confident) {
+    seurat_obj <- subset(seurat_obj, subset = Confident_Annotation)
+}
+
 if ((!is.null(args$celltypes_oi))) {
     log_info("Check if cell types of interest file exists...")
     if (file.exists(args$celltypes_oi)) {
@@ -135,7 +138,7 @@ if (args$first_n == 0) {
     check_first_n <- celltypes_oi[1:first_n] %in% common_cell_types
 }
 
-if (check_first_n && length(common_cell_types) >= args$min_cell_types) {
+if (check_first_n && (length(common_cell_types) >= args$min_cell_types) && !is.null(seurat_obj)) {
     log_info("Only keep cell types of interest...")
     cells_to_keep <- rownames(seurat_obj@meta.data)[seurat_obj@meta.data[[args$annot]] %in% celltypes_oi]
     seurat_obj <- subset(seurat_obj,

@@ -18,9 +18,9 @@ base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
-output_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/303_postproc_cpdb"
-ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
-sample_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/203_cci_cpdbv5"
+output_dir="${work_dir}/output/CCI_CellClass_L2_2/303_postproc_cpdb"
+ref_db="${work_dir}/data/interactions_db/ref_db.rds"
+sample_dir="${work_dir}/output/CCI_CellClass_L2_2/203_cci_cpdb"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name '*_metadata.tsv' | wc -l) 2>/dev/null
@@ -43,7 +43,7 @@ sbatch <<EOF
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
 input_file=\$(find $sample_dir -type f -name '*_metadata.tsv' | sed -n \${SLURM_ARRAY_TASK_ID}p)
 
@@ -56,7 +56,7 @@ pval="${sample_dir}/statistical_analysis_pvalues__\${sample_id}.txt"
 sign_means="${sample_dir}/statistical_analysis_significant_means__\${sample_id}.txt"
 means="${sample_dir}/statistical_analysis_means__\${sample_id}.txt"
 
-Rscript "$work_dir/scripts/303_postproc_cellphonedbv5.R" \
+Rscript "$work_dir/scripts/303_postproc_cellphonedb.R" \
     --output_dir ${output_dir} \
     --ref_db ${ref_db} \
     --sample_id \${sample_id} \

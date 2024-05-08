@@ -13,20 +13,20 @@
 #SBATCH --error=slurm_out/%x_%A.out
 
 echo "Activating conda environment..."
-source "$HOME/miniforge3/bin/activate" "standard_env"
+source "$HOME/miniforge3/bin/activate" "cci"
 
-n_perm=100
-ident_col="CellClass_L4"
-n_cells=100
+n_perm=1000
+ident_col="CCI_CellClass_L2_2"
+n_cells=50
 
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-resource="${work_dir}/001_data/interactions_db_v2/liana_updated_test.rds"
+resource="${work_dir}/data/interactions_db/liana_db.rds"
 
-sample="${work_dir}/output/CellClass_L4_min3_types/100_preprocessing/seurat/6419_cortex.rds"
-output_dir="${work_dir}/output/test/"
+sample="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/100_preprocessing/seurat/6509_cortex.rds"
+output_dir="${work_dir}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/201_cci_liana/"
 
 Rscript "$work_dir/scripts/201_cci_liana.R" \
     --output_dir ${output_dir} \

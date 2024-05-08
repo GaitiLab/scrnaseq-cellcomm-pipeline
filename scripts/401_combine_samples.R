@@ -2,17 +2,14 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -30,14 +27,15 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    run_dir <- "CCI_CellClass_L4_w_agg"
-    args$input_dir <- glue("{here::here()}/output/{run_dir}/400_consensus")
-    args$output_dir <- glue("{here::here()}/output/{run_dir}/401_combine_samples")
+    run_dir <- "CCI_CellClass_L2_2_reassigned_samples"
+    args$input_dir <- glue("output/CCI_CellClass_L2_2_reassigned_samples/400_consensus")
+    args$output_dir <- glue("output/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples")
     args$celltype_oi <- NULL
-    args$metadata <- glue("{here::here()}/output/{run_dir}/000_data/gbm_regional_study__metadata.rds")
-    args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
+    args$metadata <- glue("output/CCI_CellClass_L2_2_reassigned_samples/000_data/gbm_regional_study__metadata.rds")
+    # args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
+    args$meta_vars_oi <- ""
     args$sample_varname <- "Sample"
-    # args$condition_varname <- "Region_Grouped"
+    args$condition_varname <- "Region"
     args$patient_varname <- "Patient"
 }
 

@@ -2,17 +2,14 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
+require(GaitiLabUtils)
+# require(GBMutils)
 # Set working directory
-cmd_args <- commandArgs(trailingOnly = FALSE)
-has_script_filepath <- startsWith(cmd_args, "--file=")
-if (sum(has_script_filepath)) {
-    setwd(dirname(unlist(strsplit(cmd_args[has_script_filepath], "=")))[2])
-}
+set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
 devtools::load_all("./", export_all = FALSE)
-
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
@@ -26,10 +23,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/301_postproc_liana")
-    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L1_conf_malign/201_cci_liana/liana__6234_2895153_A.rds")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/301_postproc_liana")
+    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/201_cci_liana/liana__6509_cortex.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6234_2895153_A"
+    args$sample_id <- "6509_cortex"
 }
 
 # Set up logging
@@ -74,7 +71,7 @@ interactions <- interactions %>%
     dplyr::rename(
         pval = aggregate_rank
     ) %>%
-    mutate(interaction_score = sca.LRscore) %>%
+    mutate(LIANA_score = sca.LRscore) %>%
     # select(source, target, ligand.complex, receptor.complex, pval, interaction_score) %>%
     unite(interaction, ligand.complex, receptor.complex, sep = "_") %>%
     left_join(ref_db, by = "interaction") %>%

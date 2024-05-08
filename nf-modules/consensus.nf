@@ -1,9 +1,8 @@
-
 process CONSENSUS {
-    label "mem4"
-    label "time_15m"
+    label "mem_4G"
+    label "time_30m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), path(cellchat_obj), path(liana_obj), path(cell2cell_obj), path(cpdb_obj)
@@ -17,12 +16,10 @@ process CONSENSUS {
     path("400_consensus/${sample_id}__interactions_agg_rank.rds"), emit: interactions_agg_rank
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
-
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/400_consensus.R" \
+    Rscript "${projectDir}/scripts/400_consensus.R" \
     --output_dir "\$PWD/400_consensus" \
     --sample_id ${sample_id} \
     --alpha ${alpha} \
@@ -33,12 +30,11 @@ process CONSENSUS {
     """
 }
 
-
 process COMBINE_SAMPLES {
-    label "mem2"
+    label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path "*__interactions_mvoted.rds"
@@ -50,18 +46,16 @@ process COMBINE_SAMPLES {
     val sample_varname
     val patient_varname
 
-
     output:
     path "401_combine_samples/401_samples_interactions_mvoted.rds", emit: mvoted_interactions
     path "401_combine_samples/401_samples_sign_interactions.rds", emit: signif_interactions
     path "401_combine_samples/401_samples_interactions_agg_rank.rds", emit: interactions_agg_rank
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/401_combine_samples.R" \
+    Rscript "${projectDir}/scripts/401_combine_samples.R" \
     --output_dir \$PWD/401_combine_samples \
     --input_dir \$PWD \
     --metadata \$PWD/${metadata} \
@@ -72,11 +66,11 @@ process COMBINE_SAMPLES {
     """
 }
 
-process AGGREGATION_PATIENT {
-    label "mem2"
+process AGGREGATION_BINARIZED {
+    label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
@@ -85,14 +79,13 @@ process AGGREGATION_PATIENT {
     val min_patients
 
     output:
-    path "402_aggregation/402_patient_interactions_mvoted_w_filters.rds"
+    path "402_aggregation/402a_aggregation_binarized.rds"
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/402b_aggregation_patient.R" \
+    Rscript "${projectDir}/scripts/402a_aggregation_binarized.R" \
     --output_dir \$PWD/402_aggregation \
     --input_file \$PWD/${input_file} \
     --annot ${annot} \
@@ -101,56 +94,81 @@ process AGGREGATION_PATIENT {
     """
 }
 
-process AGGREGATION_SAMPLE {
-    label "mem2"
+process AGGREGATION_CONTINUOUS {
+    label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     path input_file
     val condition_varname
 
     output:
-    path "402_aggregation/402_samples_interactions_aggregated.rds"
+    path "402_aggregation/402b_aggregation_continuous.rds"
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/402a_aggregate_sample.R" \
+    Rscript "${projectDir}/scripts/402b_aggregation_continuous.R" \
     --output_dir \$PWD/402_aggregation \
     --input_file \$PWD/${input_file} \
     --condition_varname ${condition_varname}
     """
 }
 
-process AGGREGATION_COMBI {
-    label "mem2"
+process AGGREGATION_INTEGRATION {
+    label "mem_4G"
     label "time_10m"
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
-    path interactions_by_patient
-    path interactions_by_sample
+    path interactions_agg_binarized
+    path interactions_agg_continuous
     val condition_varname
 
-
     output:
-    path "402_aggregation/402_interactions_combi_agg.rds"
-    path "402_aggregation/402_interactions_combi_agg_filtered.rds"
+    path "402_aggregation/402c_aggregation_integration.rds", emit: aggregation_integration
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/402c_aggregation.R" \
+    Rscript "${projectDir}/scripts/402c_aggregation_integration.R" \
     --output_dir \$PWD/402_aggregation \
-    --interactions_by_patient \$PWD/${interactions_by_patient} \
-    --interactions_by_sample \$PWD/${interactions_by_sample} \
+    --interactions_agg_binarized \$PWD/${interactions_agg_binarized} \
+    --interactions_agg_continuous \$PWD/${interactions_agg_continuous} \
     --condition_varname ${condition_varname}
+    """
+}
+
+
+process COLLECT_RESULTS {
+    label "mem_4G"
+    label "time_10m"
+
+    publishDir params.output_dir, mode: "copy"
+
+    input:
+    path interactions_agg_integration
+    val condition_varname
+    val alpha
+    val output_name
+
+    output:
+    path "${output_name}.xlsx"
+
+    script:
+    """
+    #!/usr/bin/env bash
+
+    Rscript "${projectDir}/scripts/403_collect_results.R" \
+    --output_dir \$PWD \
+    --output_name ${output_name} \
+    --interactions_agg_integration \$PWD/${interactions_agg_integration} \
+    --condition_varname ${condition_varname} \
+    --alpha ${alpha}
     """
 }

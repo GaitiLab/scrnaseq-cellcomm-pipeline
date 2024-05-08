@@ -73,5 +73,16 @@ slurm_out
 *.rds
 *.html
 
+
+notebooks/
+*.rds
+
+scripts/INACTIVE/
+002_WIP_Figures
+
+nf-work
+test_pipeline*
+
 002_WIP_Figures
 scripts/INACTIVE
+
