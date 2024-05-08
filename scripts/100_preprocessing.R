@@ -81,10 +81,6 @@ pacman::p_load(Seurat, DropletUtils)
 # Need at least 2 cell types for communication
 min_cells <- 5
 
-log_info("Check if this is a run with downsampling...")
-is_downsampling_run <- file.exists(args$downsampling_sheet)
-log_info(glue("Downsampling run: {is_downsampling_run}"))
-
 log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$input_file)
 

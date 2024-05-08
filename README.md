@@ -14,62 +14,36 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 3. Setup required conda environments with `cd env && setup_env.sh`
 4. Use `nf_template.sh` to run the pipeline.
 
-## Workflow Schematic
+## Workflow
 
 ![workflow](src/cci_workflow_v2.png)
 
-## Running the Nextflow pipeline
+Modules 
 
-> Make sure you have Nextflow set up as described here [Confluence](https://gaitilab.atlassian.net/wiki/spaces/GAITILAB/pages/3211272/Running+cellranger+and+split-pipe+scRNA-seq+processing+pipelines+in+Nextflow#Nextflow-executable) (only accessible internally) or see the official Nextflow page for the [installation instructions](https://www.nextflow.io/docs/latest/getstarted.html#installation).
+1. **Preparing the data**. Pre-filtering and pre-processing of the gene expression data. 
+2. **Inference of CCIs**. Using the gene-expression matrix infer the CCIs using four publicly available tools (LIANA, CellPhoneDB, Cell2cell and CellChat). 
+3. **Post-processing CCIs**. Formatting the CCI results in predefined format for outputs of each tool.
+4. **Consensus across methods**. Filtering interactions based on significance level and detection in multiple tools. This is done for each individual sample.
+5. **Recurrence/conservation across samples**. Filtering interactions based on detection in multiple samples.
 
-The repository contains the file [nf_template.sh](nf_template.sh) which can be used to run the pipeline. In this file, please set up your own paths etc. After changing this file, you can run the pipeline on the cluster, you can run the following:
+The pipeline is setup up modular, so you can start the pipeline from any of the five modules. 
 
-```sh
-sbatch nf_template.sh
-```
+### Parameters
+All default parameters can be found in [nextflow.config](nextflow.config).
 
-The actual pipeline can be executed with the following:
+Below the required parameters for each of the five modules as described above. 
 
-```sh
-nextflow run ${project_dir} -with-report -with-trace \
-    -profile ${nf_profile} \
-    -w ${work_dir} \
-    --input_file $input_file
-```
+Module 1.
+- `input_file`. Seurat object containing your scRNAseq data. 
+- `annot`. Variable in Seurat object's metadata containing the cell type labels.
+- `min_cells`. Min. number of cells that a cell type group should have to be included, default = .
+- `split_varname`. Variable in Seurat object's containing the sample ID. 
+- `min_cell_types` 
 
-A more elaborate command can be found in [nf_template.sh](nf_template.sh).
-
-Nextflow configuration files can be found in folder [nf-config](nf_config), with two symlinks: `metrics_and_report.config` and `process_resources.config` , these point to two files on H4H. These files do not have to be changed.
-
-> The Nextflow pipeline uses the three conda environments, and uses as path `$HOME/miniforge3/envs/{env_name}` . These are specified in [configuration_profiles](nf-config/configuration_profiles) and [process_info](nf-config/process_info). In the latter, the two environments `cpdb` and `cell2cell` are used for the processes: `INFER_CPDB` and `INFER_CELL2CELL` , respectively. If necessary, feel free to change.
-
-## INPUTS
-
-### Input files
-
-One of the following arguments has to be supplied to run the pipeline.
-
-* `input_file`, if supplied, you can start with Module 1.
-* `sample_dir`, if supplied, you can start with Module 1 or 2. For the latter, it is expected that this folder has two subfolders ('mtx' and 'seurat'). See below for further details.
-
-Other optional arguments are:
-
-* `split_varname`: variable name to be used to split the Seurat object, e.g. variable name for the samples (Module 1: SPLIT_SEURAT_OBJECT). By default:     Sample
-* `annot`: column in Seurat object to be used as cell type labels.
-* `min_cells`: min. number of cells required for a cell type to be kept in a sample (Module 1: PREPROCESSING). By default 100.
-* `min_cell_types`: min. number of cell types in a sample, for a sample to be used for inferring CCIs. At least two cell types are required to infer interactions (Module 1: PREPROCESSING). By default 2.
-* `min_pct`: min. pct of cells expressing a gene for (Module 2: CELLPHONEDB), by default 0.1 (10%)
-* `alpha`: significance threshold for consensus (Module 4), by default 0.05
-* `n_perm`: number of permutations (Module 2), by default 1000.
-* `min_frac_samples`: detected in at least M% of the samples (Module 6), by default 0.5
-* `condition_varname`: name for grouping, e.g. patient if you have multiple samples for each patient, used for aggregation (Module 6).
-* `min_patients`: number of patients that need to have the detected interaction in order to be kept (Module 6).
-* `aggregate_samples`: keep interactions based on aggregation by samples, i.e. detected in min. X% of samples, by default 'true' (remove `--aggregate_samples` for it to be false).
-* `aggregate_condition`: keep interactions based on aggregation by condition, e.g. detected in at least X samples with a condition, by default 'false' (provide `--aggregate_condition` for it to be true).
 
 ### Interactions Database
 
-To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [data/interactions_db_v2](data/interactions_db_v2). The database contains close to 7K interactions.
+To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [data/interactions_db](data/interactions_db). The database contains close to 7K interactions.
 
 The database is constructed using the following existing databases:
 
@@ -77,91 +51,6 @@ The database is constructed using the following existing databases:
 * CellPhoneDB v5
 * CellChat v2
 
-The final database files are generated using a number of scripts (R scripts starting with 010 to 017 and the Python file starting with 017), which are included in the repo.
-
-> NOTE: By unifying these different databases, some of the interactions may be lost due to formatting.
-
-Alternatively, you can create your own database, with the aforementioned files. Detailed documentation for this will be added in the **future**.
-
-### Workflow options
-
-The pipeline is set up to be as modular as possible. Generally, this modularity can be controlled with the parameter `approach` , which can be a value between **1-6**. They do the following:
-
-1. Pre-processing (Module 1)
-2. Inferring interactions (Module 2)
-3. Post-processing (Module 3)
-4. Consensus (Module 4)
-5. Combining samples (Module 5)
-6. Aggregation (Module 6)
-   1. by `Sample` , only keep interactions that are found in at least X% of all samples.
-   2. by `condition_varname` , only keep interactions that are found in at least X number of samples with a condition condition, e.g. detected in at least X patients.
-
-> **NOTE: currently all steps before the value of approach are executed, e.g if `approach` = 5, then Modules 1-5 are executed, unless one of the skip and do arguments are set, which are described below.**.
-
-> As this pipeline is initially setup for the GBM project, not all steps can be used for other cases. Therefore, the setting `approach` can be only a value between 1 and 5, **default = 5**.  
-
-In addition, there are processes within these main modules that can be executed or skipped, namely:
-
-* `skip_reduction`: skip reducing the Seurat object size.
-* `skip_preprocessing`: skip pre-processing of the individual sample Seurat objects. If you skip the pre-processing, you have to give the argument `sample_dir` which should contain two folders: 'seurat' and 'mtx'. The seurat folder should contain Rds files, one for each sample. The mtx folder should contain subfolders for each sample, where each subfolder should contain the following files: 'barcodes.tsv', 'genes.tsv' and 'matrix.mtx'.
-
-These three options are **by default `false` ** If you want to skip (one of) these steps, then add the argument to the bash command, e.g. add `-skip_preprocessing` .
-
-## Running individual scripts
-
-All scripts can be run individually, you can run in through the command line, some example scripts are available in the folder [jobs](jobs).
-
-### Python scripts
-
-There are three Python scripts available in the [Python](Python) folder:
-* [Python/017_update_cellphonedby.py](Python/017_update_cellphonedby.py)
-* [Python/203_cci_cpdb.py](Python/203_cci_cpdb.py)
-* [Python/202_cci_cell2cell.py](Python/202_cci_cell2cell.py)
-
-> Note: Make sure to run the CellPhoneDB related scripts (the first two) in the **cpdb** conda environment, while the latter can has to be run in the **cell2cell** environment.
-
-You can run these scripts directly in Python by uncommenting a section in the Python file. Please do not forget to change the arguments for your use case. See example below:
-
-```Python
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Infer CCIs with CellPhoneDB v5")
-
-    # Parse arguments
-    # Always required
-    parser.add_argument("-o", "--output_dir", type=str,
-                        default="output", help="Output directory")
-    parser.add_argument("-m", "--meta", type=str, help="Path to metadata file")
-    args = parser.parse_args()
-
-    # TODO: if run from Python, please uncomment the following lines
-    args.output_dir = "project_dir/output"
-    args.meta = "project_dir/data/meta.csv"
-
-    main(args)
-
-```
-
-### Rscripts
-
-All R scripts can be found in the folder [scripts](scripts). These files can be run interactively by changing the arguments in the `else { }` section, see the example below.
-
-```R
-if (!interactive()) {
-    # Define input arguments when running from bash
-    parser <- setup_default_argparser(
-        description = "Post-processing LIANA results",
-    )
-    parser$add_argument("--input_interactions", type = "character", default = NULL, help = "Path to LIANA results")
-    args <- parser$parse_args()
-} else {
-    # Provide arguments here for local runs
-    args <- list()
-    args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test/")
-    args$input_interactions <- "data/input_dir"
-}
-```
 
 ## References
 
