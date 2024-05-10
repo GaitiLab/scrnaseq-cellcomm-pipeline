@@ -28,6 +28,11 @@ if (!interactive()) {
     args$input_interactions <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/test_pipeline/200_cci_cellchat/cellchat__Sample_2.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
     args$sample_id <- "Sample_2"
+
+    # args$output_dir <- glue("{here::here()}/test_pipeline_manual")
+    # args$input_interactions <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/test_pipeline/200_cci_cellchat/cellchat__Sample_2.rds")
+    # args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
+    # args$sample_id <- "Sample_2"
 }
 
 # Set up logging

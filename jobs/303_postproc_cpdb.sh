@@ -18,9 +18,9 @@ base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
-output_dir="${work_dir}/output/CCI_CellClass_L2_2/303_postproc_cpdb"
+output_dir="${work_dir}/output_Jiaoyi/303_postproc_cpdb"
 ref_db="${work_dir}/data/interactions_db/ref_db.rds"
-sample_dir="${work_dir}/output/CCI_CellClass_L2_2/203_cci_cpdb"
+sample_dir="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/203_cci_cpdb"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name '*_metadata.tsv' | wc -l) 2>/dev/null

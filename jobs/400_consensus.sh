@@ -17,11 +17,11 @@ run_name="CCI_CellClass_L2_2_reassigned_samples_confident_only"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-run_dir="${work_dir}/output/${run_name}"
-output_dir="${work_dir}/output/${run_name}/400_consensus"
+run_dir="${work_dir}/output_Jiaoyi"
+output_dir="${work_dir}/output_Jiaoyi/400_consensus"
 alpha=0.05
 
-sample_dir="${work_dir}/output/${run_name}/100_preprocessing/seurat"
+sample_dir="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/100_preprocessing/seurat"
 # Determine job array limits
 # A. Determine number of files
 job_max=$(ls -d -- $sample_dir/* | wc -l) 2>/dev/null

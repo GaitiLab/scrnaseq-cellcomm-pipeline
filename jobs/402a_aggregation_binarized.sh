@@ -14,12 +14,11 @@
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=${base_dir}/Joan/scrnaseq-cellcomm
 
-run_name="CCI_CellClass_L2_2_reassigned_samples_confident_only"
 
-input_file="${work_dir}/output/${run_name}/401_combine_samples/401_samples_interactions_mvoted.rds"
-metadata="${work_dir}/output/${run_name}/000_data/regional_study__metadata.rds"
-annot="CCI_CellClass_L2_2"
-condition_varname="Region"
+input_file="${work_dir}/output_Jiaoyi/401_combine_samples/401_samples_interactions_mvoted.rds"
+metadata="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/000_data/merged_3B13mut_annotation_scvi_V2__metadata.rds"
+annot="CellClass_L1"
+condition_varname="Mutation"
 min_patients=2
 
 output_dir="${work_dir}/output/${run_name}/402_aggregation"

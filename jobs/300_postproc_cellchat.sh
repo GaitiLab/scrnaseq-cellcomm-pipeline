@@ -16,9 +16,9 @@ job_min=1
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
-output_dir="${work_dir}/output/CCI_CellClass_L2_2/300_postproc_cellchat"
+output_dir="${work_dir}/output_Jiaoyi/300_postproc_cellchat"
 ref_db="${work_dir}/data/interactions_db/ref_db.rds"
-sample_dir="${work_dir}/output/CCI_CellClass_L2_2/200_cci_cellchat"
+sample_dir="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/200_cci_cellchat"
 
 # Determine job array limits
 job_max=$(find $sample_dir -type f -name 'cellchat__*.rds' -not -name '*__raw_obj.rds' | wc -l) 2>/dev/null
