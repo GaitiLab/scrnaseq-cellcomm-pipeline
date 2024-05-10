@@ -2,7 +2,7 @@ process POSTPROCESSING_CELLCHAT {
     label 'time_10m'
     label 'mem_4G'
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), val(full_id), path(input_interactions)
@@ -28,7 +28,7 @@ process POSTPROCESSING_LIANA {
     label 'time_10m'
     label 'mem_4G'
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), val(full_id), path(input_interactions)
@@ -38,12 +38,11 @@ process POSTPROCESSING_LIANA {
     tuple val(sample_id), path("301_postproc_liana/liana__${full_id}__postproc.rds")
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
 
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/301_postproc_liana.R" \
+    Rscript "${projectDir}/scripts/301_postproc_liana.R" \
     --output_dir "\$PWD/301_postproc_liana/" \
     --input_interactions \$PWD/$input_interactions \
     --sample_id ${full_id} \
@@ -56,7 +55,7 @@ process POSTPROCESSING_CELL2CELL {
     label 'time_10m'
     label 'mem_4G'
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), val(full_id), path(input_interactions)
@@ -66,12 +65,10 @@ process POSTPROCESSING_CELL2CELL {
     tuple val(sample_id), path("302_postproc_cell2cell/cell2cell__${full_id}__postproc.rds")
 
     script:
-    def time_out_limit = (task.time).toSeconds() - 30
-
     """
     #!/usr/bin/env bash
 
-    timeout ${time_out_limit} Rscript "${projectDir}/scripts/302_postproc_cell2cell.R" \
+    Rscript "${projectDir}/scripts/302_postproc_cell2cell.R" \
     --output_dir "\$PWD/302_postproc_cell2cell/" \
     --input_interactions \$PWD/$input_interactions \
     --sample_id ${full_id} \
@@ -83,7 +80,7 @@ process POSTPROCESSING_CPDB {
     label 'time_10m'
     label 'mem_4G'
 
-    publishDir "${projectDir}/output/${params.run_name}", mode: "copy"
+    publishDir params.output_dir, mode: "copy"
 
     input:
     tuple val(sample_id), val(full_id), path(interaction_scores), 

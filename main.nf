@@ -27,10 +27,11 @@ workflow {
     cell2cell_db            = file(params.cell2cell_db)
     ref_db                  = file(params.ref_db)
     meta_vars_oi            = file(params.meta_vars_oi)
+    output_dir              = file(params.output_dir)
 
     // Create empty channels (initalization)
-    preprocessing_mtx_dir = Channel.Empty()
-    preprocessing_seurat_obj = Channel.Empty()
+    preprocessing_mtx_dir = Channel.fromPath("${output_dir}/100_preprocessing/mtx", type = "dir")
+    preprocessing_seurat_obj = Channel.fromPath("${output_dir}/100_preprocessing/seurat/*.rds", type = "file")
 
     println """\
     PIPELINE CONFIGURATION:
@@ -41,13 +42,12 @@ workflow {
 
     ---- INPUTS -----------------------------------------------------------------------------------
     Input file:         ${input_file}
-    Sample dir:         ${sample_dir}
     Metadata csv:       ${metadata_csv}
     Metadata rds:       ${metadata_rds}
     Meta vars oi:       ${meta_vars_oi}
 
     ---- OUTPUTS ----------------------------------------------------------------------------------
-    Output dir:         ${params.output_dir}
+    Output dir:         ${output_dir}
 
     ---- PRE-PROCESSING --------------------------------------------------------------------------
     Annotation:         ${params.annot}
@@ -72,15 +72,17 @@ workflow {
     Patient varname:    ${params.patient_varname}
     """.stripIndent()
 
-    PREP_DATA(
-        input_file                      = input_file,
-        liana_db                        = liana_db
-    )
-
-    PREP_DATA.out.metadata_csv.set  { metadata_csv }
-    PREP_DATA.out.metadata_rds.set  { metadata_rds }
-    PREP_DATA.out.mtx_dir.set       { preprocessing_mtx_dir }
-    PREP_DATA.out.seurat_obj.set    { preprocessing_seurat_obj }
+    // Setup modules
+    if (params.init_step == 1) {
+            PREP_DATA(
+                input_file                  = input_file,
+                liana_db                    = liana_db
+            )
+            PREP_DATA.out.metadata_csv.set  { metadata_csv }
+            PREP_DATA.out.metadata_rds.set  { metadata_rds }
+            PREP_DATA.out.mtx_dir.set       { preprocessing_mtx_dir }
+            PREP_DATA.out.seurat_obj.set    { preprocessing_seurat_obj }
+    }
 
     CCI_SIMPLE_PIPELINE( 
         preprocessing_seurat_obj        = preprocessing_seurat_obj,
@@ -90,7 +92,8 @@ workflow {
         cell2cell_db                    = cell2cell_db,
         liana_db                        = liana_db,
         cellphone_db                    = cellphone_db,
-        ref_db                          = ref_db
+        ref_db                          = ref_db,
+        output_dir                      = output_dir
     )
 
     CCI_CONSENSUS(
@@ -105,4 +108,22 @@ workflow {
         alpha                           = params.alpha, 
         output_name                     = params.interactions_excel_name
     )
+}
+
+workflow.onComplete {
+
+    println ( workflow.success ? """
+        Pipeline execution summary
+        ---------------------------
+        Completed at: ${workflow.complete}
+        Duration    : ${workflow.duration}
+        Success     : ${workflow.success}
+        workDir     : ${workflow.workDir}
+        exit status : ${workflow.exitStatus}
+        """ : """
+        Failed: ${workflow.errorReport}
+        exit status : ${workflow.exitStatus}
+        """
+    )
+
 }
