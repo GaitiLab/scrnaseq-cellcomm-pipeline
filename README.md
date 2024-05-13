@@ -1,6 +1,6 @@
 # scrnaq-cellcomm
 
-Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are currently implemented: 
+Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are currently implemented:
 
 * LIANA (0.1.12)
 * CellPhoneDB v5 (5.0.0)
@@ -16,33 +16,51 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 
 ## Workflow
 
-![workflow](src/cci_workflow_v2.png)
+![workflow](src/workflow.svg)
 
-Modules 
+> Please note that only the main outputs are shown in the workflow. For each step, intermediate results are generated as well.  
 
-1. **Preparing the data**. Pre-filtering and pre-processing of the gene expression data. 
-2. **Inference of CCIs**. Using the gene-expression matrix infer the CCIs using four publicly available tools (LIANA, CellPhoneDB, Cell2cell and CellChat). 
-3. **Post-processing CCIs**. Formatting the CCI results in predefined format for outputs of each tool.
-4. **Consensus across methods**. Filtering interactions based on significance level and detection in multiple tools. This is done for each individual sample.
-5. **Recurrence/conservation across samples**. Filtering interactions based on detection in multiple samples.
+1. **Prepare Data.** Prepare the Seurat object with the scRNAseq data for inference.
+2. **CCI Inference.** Per-sample
+   
+   a. Inference. Run tools with given user parameters.
+   
+   b. Standardize. Format CCI results for each tool.
 
-The pipeline is setup up modular, so you can start the pipeline from any of the five modules. 
+   c. Collect into a single file. Combine the results for all tools into one file.
 
-### Parameters
-All default parameters can be found in [nextflow.config](nextflow.config).
+3. **CCI Filtering & Merging.** 
+    > NOTE: with the continuous approach, no information (interactions) are lost.
 
-Below the required parameters for each of the five modules as described above. 
+    a. **Binary approach**
 
-Module 1.
-- `input_file`. Seurat object containing your scRNAseq data. 
-- `annot`. Variable in Seurat object's metadata containing the cell type labels.
-- `min_cells`. Min. number of cells that a cell type group should have to be included, default = .
-- `split_varname`. Variable in Seurat object's containing the sample ID. 
-- `min_cell_types` 
+   - **Sample-wise.** Keep only significant interactions (p < 0.05) in at least LIANA and 2 other tools, this is done for each unique 'interaction' - 'cell type pair' combination.
+   - **Conservation across samples.** Keep only interactions that are found in at least N samples (or patients, in case sample = patient) for each condition level.
 
+    
+    b. **Continuous approach**
+
+    - **Robust Rank Aggregation (RRA) across methods.** Rank the interactions (each unique 'interaction' - 'cell type pair' combination) based on all tools using the Robust Rank Aggregation method (also used in LIANA). The obtained ranks can be interpreted as p-values. **(sample-wise)**
+    - **Combine interactions by condition.** Summarize interactions by condition, using Fisher combine for the ranks obtained with 3b and averaging the interaction scores for CellPhoneDB, CellChat & LIANA. 
+    
+    c. **Merge.** Use left-join to merge the results from approach 3a with 3b, i.e. adding a p-value and scores for each interaction in 3a. An Excel file with these results is generated. 
+
+### Parameter Configuration
+
+The pipeline contains various parameters that can be set. These can be found in [nf_template.sh](nf_template.sh) or in [nextflow.config](nextflow.config). The latter contains also the default values. 
+
+<!-- The pipeline contains several modules, consequently you can start the pipeline from each module. These modules correspond to the three main steps described in Workflow.  -->
+
+Required inputs:
+
+* `input_file`. This is your Seurat object (RDS file) with the scRNAseq data for your cohort.
+* `split_varname` (default="Sample")
+* `condition` (default="").  Used for **CCI Filtering & Merging** for comparison of multiple conditions (or groups).
+* `Patient` (default=""). In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample.
 
 ### Interactions Database
 
+To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [data/interactions_db](data/interactions_db). The database contains close to 7K interactions.
 To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [data/interactions_db](data/interactions_db). The database contains close to 7K interactions.
 
 The database is constructed using the following existing databases:
@@ -51,6 +69,7 @@ The database is constructed using the following existing databases:
 * CellPhoneDB v5
 * CellChat v2
 
+> NOTE: By unifying these different databases, some of the interactions may be lost due to formatting.
 
 ## References
 
