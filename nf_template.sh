@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
-#SBATCH --time=02:00:00
+#SBATCH --time=00:30:00
 #SBATCH --output=slurm_out/%x_%j.out
 #SBATCH --error=slurm_out/%x_%j.out
 
@@ -33,7 +33,6 @@ condition_varname="Condition"
 patient_varname="Patient"
 min_patients=2
 min_cells=70
-min_cell_types=2
 
 # Cell-cell interactions
 n_perm=100
@@ -57,7 +56,8 @@ mkdir -p "${project_dir}/nf-logs"
 
 echo "Running pipeline..."
 # # Start the pipeline
-${nf_exec} run ${project_dir} -with-report -with-trace -resume \
+# ${nf_exec} run ${project_dir} -with-report -with-trace \
+${nf_exec} run ${project_dir} -resume \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \

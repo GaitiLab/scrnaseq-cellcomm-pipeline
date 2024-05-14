@@ -10,8 +10,6 @@ process GET_METADATA {
     path "000_data/${input_file.simpleName}__metadata.rds", emit: metadata_rds
     path "000_data/${input_file.simpleName}__metadata.csv", emit: metadata_csv
 
-    when: (!(file(params.metadata_csv).isFile() || file(params.metadata_rds).isFile())) && (input_file.isFile())
-
     script:
     """
     #!/usr/bin/env bash
@@ -19,6 +17,14 @@ process GET_METADATA {
     --input_file "\$PWD/${input_file}" \
     --output_dir "\$PWD/000_data" \
     """
+
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 000_data
+    touch "000_data/${input_file.simpleName}__metadata.rds"
+    touch "000_data/${input_file.simpleName}__metadata.csv"
+    """   
 }
 
 process REDUCE_SEURAT_OBJECT_SIZE {
@@ -42,6 +48,13 @@ process REDUCE_SEURAT_OBJECT_SIZE {
     --output_dir "\$PWD/000_data" \
     --annot ${annot}
     """
+
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 000_data
+    touch "000_data/${input_file.simpleName}_reduced_size.rds"
+    """   
 }
 
 process SPLIT_SEURAT_OBJECT {
@@ -67,6 +80,17 @@ process SPLIT_SEURAT_OBJECT {
 
     """
 
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 000_data/split_by_${split_varname}
+    touch "000_data/split_by_${split_varname}/Sample_1.rds"
+    touch "000_data/split_by_${split_varname}/Sample_2.rds"
+    touch "000_data/split_by_${split_varname}/Sample_3.rds"
+    touch "000_data/split_by_${split_varname}/Sample_4.rds"
+    touch "000_data/split_by_${split_varname}/Sample_5.rds"
+    touch "000_data/split_by_${split_varname}/Sample_6.rds"
+    """   
 }
 
 process PREPROCESSING {
@@ -76,28 +100,61 @@ process PREPROCESSING {
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_file
-    path interactions_db
+    tuple val(sample_id), path(input_file)
     val annot
     val min_cells
-    val min_cell_types
     val is_confident
 
     output:
-    path "100_preprocessing/seurat/*.rds", emit: seurat_obj, optional: true
-    path "100_preprocessing/mtx/*", emit: mtx_dir, optional: true
+    tuple val(sample_id), path("100_preprocessing/seurat/${sample_id}.rds"), emit: seurat_obj
+    tuple val(sample_id), path("100_preprocessing/mtx/${sample_id}/barcodes.tsv"), 
+    path("100_preprocessing/mtx/${sample_id}/genes.tsv"), path("100_preprocessing/mtx/${sample_id}/matrix.mtx"), emit: mtx_dir
 
     script:
+    seurat_dummy="\$PWD/100_preprocessing/seurat/${sample_id}.rds"
+    barcodes_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/barcodes.tsv"
+    genes_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/genes.tsv"
+    matrix_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/matrix.mtx"
     """
     #!/usr/bin/env bash
-
     Rscript "${projectDir}/scripts/100_preprocessing.R" \
-    --input_file \$PWD/${input_file} \
-    --output_dir "\$PWD/100_preprocessing" \
-    --annot "${annot}" \
-    --min_cells ${min_cells} \
-    --interactions_db \$PWD/${interactions_db} \
-    --min_cell_types ${min_cell_types} \
-    --is_confident ${is_confident}
+        --input_file \$PWD/${input_file} \
+        --annot "${annot}" \
+        --min_cells ${min_cells} \
+        --is_confident ${is_confident} \
+        --output_dir "\$PWD/100_preprocessing" 
+
+    // Create empty files
+    if [ -f "${seurat_dummy}" ]; then
+        echo "${seurat_dummy} exists."
+    else 
+        echo "${seurat_dummy} does not exist."
+        echo ${seurat_dummy}
+        echo ${barcodes_dummy}
+        echo ${genes_dummy}
+        echo ${matrix_dummy}
+        mkdir -p \$PWD/100_preprocessing/seurat
+        mkdir -p \$PWD/100_preprocessing/mtx/${sample_id}
+
+        touch ${seurat_dummy}
+        touch ${barcodes_dummy}
+        touch ${genes_dummy}
+        touch ${matrix_dummy} 
+    fi 
+    """
+
+    stub:
+    seurat_dummy="\$PWD/100_preprocessing/seurat/${sample_id}.rds"
+    barcodes_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/barcodes.tsv"
+    genes_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/genes.tsv"
+    matrix_dummy="\$PWD/100_preprocessing/mtx/${sample_id}/matrix.mtx"
+    """
+    mkdir -p \$PWD/100_preprocessing/mtx/${sample_id}
+    mkdir -p \$PWD/100_preprocessing/seurat
+
+    touch ${seurat_dummy}
+    touch ${barcodes_dummy}
+    touch ${genes_dummy}
+    touch ${matrix_dummy} 
     """
 }

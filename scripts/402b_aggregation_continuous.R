@@ -22,8 +22,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation")
-    args$input_file <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples/401_samples_interactions_agg_rank.rds")
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation")
+    args$input_file <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples/401_samples_interactions_agg_rank.rds")
     args$condition_varname <- "Region"
 }
 

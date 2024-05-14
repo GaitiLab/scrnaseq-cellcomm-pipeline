@@ -16,11 +16,10 @@ job_min=1
 # base_dir="${HOME}/Desktop/gaitigroup/Users"
 base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
-
-
-output_dir="${work_dir}/output/CCI_CellClass_L2_2/301_postproc_liana"
+s
+output_dir="${work_dir}/output_Jiaoyi/CCI_CellClass_L2_2/301_postproc_liana"
 ref_db="${work_dir}/data/interactions_db/ref_db.rds"
-sample_dir="${work_dir}/output/CCI_CellClass_L2_2/201_cci_liana"
+sample_dir="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/201_cci_liana"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name 'liana__*.rds' | wc -l) 2>/dev/null

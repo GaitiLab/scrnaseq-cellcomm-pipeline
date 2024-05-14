@@ -41,7 +41,7 @@ def main(args):
     rnaseq_df = rnaseq_df.rename_axis("index", axis=1)
 
     logging.info("Load database with CCIs...")
-    lr_pairs = pd.read_csv(args.interactions)
+    lr_pairs = pd.read_csv(args.interactions_db)
     lr_pairs = lr_pairs.astype(str)
 
     # Metadata for the single cells
@@ -73,7 +73,7 @@ def main(args):
     interactions.compute_pairwise_communication_scores()
     logging.info("Perform permutation analysis...")
     interactions.permute_cell_labels(evaluation='communication',
-                                                permutations=args.nperm,
+                                                permutations=args.n_perm,
                                                 fdr_correction=True,
                                                 verbose=True)
     logging.info("Save results...")
@@ -90,35 +90,19 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Infer CCIs with Cell2Cell")
-
-    # Parse arguments
-    # Always required
-    parser.add_argument("-o", "--output_dir", type=str,
-                        default="output", help="Output directory")
-    parser.add_argument("-m", "--meta", type=str, help="Path to metadata file")
-    parser.add_argument("-a", "--annot", type=str, help="Annotation variable")
-    parser.add_argument("-i", "--interactions", type=str,
-                        help="Path to interactions file")
-    parser.add_argument("-p", "--nperm", type=int,
-                        default=1000, help="p-value cutoff")
-
-    # Required for downsampling:
-    parser.add_argument("-g", "--run_grid", type=str, default=None)
     parser.add_argument("-f", "--input_dir", type=str,
                         help="Path to 10X data directory")
-    parser.add_argument("-r", "--run", type=int,
-                        help="Iteration number", default=None)
-    parser.add_argument("-s", "--sampling_path", type=str, default=None)
-    parser.add_argument("--sample_id", type=str, default="")
+    parser.add_argument("-p", "--n_perm", type=int,
+                        default=1000, help="Number of permutations for permutation testing")
+    parser.add_argument("-db", "--interactions_db", type=str,
+                        help="Path to custom database with interactions (csv)")
+    parser.add_argument("-a", "--annot", type=str,
+                        help="Column in metadata containing the cell type labels")
+    parser.add_argument("-id", "--sample_id", type=str, default="")
+    parser.add_argument("-o", "--output_dir", type=str,
+                        default="output", help="Output directory")
+    parser.add_argument("-m", "--meta", type=str,
+                        help="Path to metadata file (CSV)")
 
     args = parser.parse_args()
-
-    # TODO: if run from Python, please uncomment the following lines
-    # args.output_dir = "project_dir/output"
-    # args.meta = "project_dir/data/metadata.csv"
-    # args.annot = "cell_type"
-    # args.interactions = "project_dir/data/custom_liana.csv"
-    # args.nperm = 1000
-    # args.input_dir = "project_dir/data/10x_data"
-    # args.sample_id = "sample_id"
     main(args)

@@ -16,10 +16,10 @@ work_dir=${base_dir}/Joan/scrnaseq-cellcomm
 
 run_name="CCI_CellClass_L2_2_reassigned_samples_confident_only"
 
-input_file="${work_dir}/output/${run_name}/401_combine_samples/401_samples_interactions_agg_rank.rds"
-condition_varname="Region"
+input_file="${work_dir}/output_Jiaoyi/401_combine_samples//401_samples_interactions_agg_rank.rds"
+condition_varname="Mutation"
 
-output_dir="${work_dir}/output/${run_name}/402_aggregation"
+output_dir="${work_dir}/output_Jiaoyi/402_aggregation"
 
 echo "Activating conda environment..."
 source "$HOME/miniforge3/bin/activate" "cci"

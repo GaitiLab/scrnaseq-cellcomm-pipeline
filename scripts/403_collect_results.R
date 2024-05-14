@@ -24,8 +24,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("/Users/joankant/Library/CloudStorage/OneDrive-UHN/Spatial_GBM/Analysis/WIP/scRNAseq/CCI")
-    args$input_dir <- "output/CCI_CellClass_L2_2_reassigned_samples_confident_only"
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only")
+    args$interactions_agg_integration <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/402_aggregation/402c_aggregation_integration.rds"
     args$output_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only"
     args$condition_varname <- "Region"
 }

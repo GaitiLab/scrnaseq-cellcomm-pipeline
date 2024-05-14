@@ -31,8 +31,8 @@ if (!interactive()) {
     args$log_level <- 5
     args$annot <- "CCI_CellClass_L2_2"
     run_name <- "CCI_CellClass_L2_2_reassigned_samples"
-    args$output_dir <- glue("{here::here()}/CCI_CellClass_L2_2_reassigned_samples/402_aggregation")
-    args$input_file <- glue("{here::here()}/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples/401_samples_interactions_mvoted.rds")
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/402_aggregation")
+    args$input_file <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/401_combine_samples/401_samples_interactions_mvoted.rds")
     args$condition_varname <- "Region"
     args$min_patients <- 2
 }
@@ -46,11 +46,6 @@ log_info(ifelse(interactive(),
 
 log_info("Create output directory...")
 create_dir(args$output_dir)
-
-number_of_interactions_filename <- glue("{args$output_dir}/number_of_interactions.xlsx")
-if (file.exists(number_of_interactions_filename)) {
-    file.remove(number_of_interactions_filename)
-}
 
 # Load additional libraries
 pacman::p_load(xlsx, metap)
@@ -74,7 +69,7 @@ input_file <- readRDS(args$input_file)
 
 cols_oi <- c("Patient", "Sample", args$condition_varname, "source_target", "complex_interaction")
 
-if (sum(str_detect(colnames(input_file), "Patient")) > 0) {
+if (sum(str_detect(colnames(input_file), "Patient")) == 0) {
     log_info("Patient column missing, assuming Patient = Sample...")
     input_file <- input_file %>% mutate(Patient = Sample)
 }

@@ -7,12 +7,12 @@
 #' @return (Seurat) seurat_obj Filtered seurat object
 #' @examples seurat_obj <- filtering(seurat_obj, "custom_annot", 300, genes_oi)
 #' @export
-filtering <- function(seurat_obj, annot, min_cells, genes_oi) {
+filtering <- function(seurat_obj, annot, min_cells) {
     cells_annotated <- seurat_obj[[annot]]
     counts_per_label <- table(cells_annotated)
     labels_to_keep <- names(counts_per_label)[counts_per_label >= min_cells]
     cells_to_keep <- rownames(cells_annotated)[cells_annotated[[annot]] %in% labels_to_keep]
-    seurat_obj <- subset(seurat_obj, cells = cells_to_keep, features = genes_oi)
+    seurat_obj <- subset(seurat_obj, cells = cells_to_keep)
     return(seurat_obj)
 }
 

@@ -56,7 +56,7 @@ def main(args):
     logging.info("Run CellPhoneDB...")
     cpdb_results = cpdb_statistical_analysis_method.call(
         # mandatory: CellphoneDB database zip file.
-        cpdb_file_path=args.cpdb_file_path,
+        cpdb_file_path=args.interactions_db,
         # mandatory: tsv file defining barcodes to cell label.
         meta_file_path=meta_file_path,
         # mandatory: normalized count matrix.
@@ -72,12 +72,13 @@ def main(args):
         # defines the min % of cells expressing a gene for this to be employed in the analysis.
         threshold=args.min_pct,
         # number of threads to use in the analysis.
-        threads=args.threads,
+        threads=args.n_cores,
         # debug randome seed. To disable >=0.
         # debug_seed=42,
         # Sets the rounding for the mean values in significan_means.
         result_precision=7,
         # P-value threshold to employ for significance.
+        # Keep all interactions, filtering a posteriori
         pvalue=1.1,
         # To enable subsampling the data (geometri sketching).
         subsampling=False,
@@ -101,36 +102,25 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Infer CCIs with CellPhoneDB v5")
 
-    # Parse arguments
-    # Always required
-    parser.add_argument("-o", "--output_dir", type=str,
-                        default="output", help="Output directory")
-    parser.add_argument("-m", "--meta", type=str, help="Path to metadata file")
-    parser.add_argument("-a", "--annot", type=str, help="Annotation variable")
-    parser.add_argument("--cpdb_file_path", type=str,
-                        help="Path to interactions file")
-    parser.add_argument("-p", "--n_perm", type=int,
-                        default=1000, help="p-value cutoff")
     parser.add_argument("-f", "--input_dir", type=str,
                         help="Path to 10X data directory")
-    parser.add_argument("-t", "--threads", type=int,
-                        default=4, help="Number of threads")
-    parser.add_argument("-min", "--min_pct", type=float,
+    parser.add_argument("-p", "--n_perm", type=int,
+                        default=1000, help="Number of permutations for permutation testing")
+    parser.add_argument("-db", "--interactions_db", type=str,
+                        help="Path to custom database with interactions (zip)")
+
+    parser.add_argument("-a", "--annot", type=str,
+                        help="Column in metadata containing the cell type labels")
+    parser.add_argument("-id", "--sample_id", type=str, default="")
+
+    parser.add_argument("-o", "--output_dir", type=str,
+                        default="output", help="Output directory")
+    parser.add_argument("-m", "--meta", type=str,
+                        help="Path to metadata file (CSV)")
+    parser.add_argument("-nc", "--n_cores", type=int,
+                        default=4, help="Number of cores to use for parallelization")
+    parser.add_argument("-mp", "--min_pct", type=float,
                         default=0.1, help="Minimum percentage of cells expressing a gene")
-    parser.add_argument("--sample_id", type=str, default="",
-                        help="Sample id (default: '')")
 
     args = parser.parse_args()
-
-    # TODO: if run from Python, please uncomment the following lines
-    # args.output_dir = "project_dir/output"
-    # args.meta = "project_dir/data/metadata.csv"
-    # args.annot = "cell_type"
-    # args.cpdb_file_path = "project_dir/data/cellphonedb_custom.zip"
-    # args.n_perm = 1000
-    # args.input_dir = "project_dir/data/10x_data"
-    # args.threads = 4
-    # args.alpha = 0.05
-    # args.min_pct = 0.1
-    # args.sample_id = "sample_id"
     main(args)

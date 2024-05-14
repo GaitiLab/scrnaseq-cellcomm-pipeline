@@ -23,9 +23,9 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    run_name <- "CCI_CellClass_L2_2_reassigned_samples"
-    args$output_dir <- glue("{here::here()}/{run_name}/402_aggregation")
-    args$input_dir <- glue("{here::here()}/{run_name}/402_aggregation")
+    run_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only"
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/{run_name}/402_aggregation")
+    args$input_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/{run_name}/402_aggregation")
     args$condition_varname <- "Region"
 }
 

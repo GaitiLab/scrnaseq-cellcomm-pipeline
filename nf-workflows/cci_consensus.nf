@@ -6,7 +6,6 @@ workflow CCI_CONSENSUS {
     take:
     matched_cci
     metadata_rds
-    meta_vars_oi
 
     main: 
     CONSENSUS(
@@ -19,7 +18,6 @@ workflow CCI_CONSENSUS {
         CONSENSUS.out.signif_interactions.collect(),
         CONSENSUS.out.interactions_agg_rank.collect(), 
         metadata            = metadata_rds, 
-        meta_vars_oi        = meta_vars_oi, 
         condition_varname   = params.condition_varname, 
         sample_varname      = params.split_varname, 
         patient_varname     = params.patient_varname

@@ -18,9 +18,9 @@ base_dir="/cluster/projects/gaitigroup/Users"
 work_dir=$base_dir/Joan/scrnaseq-cellcomm
 
 
-output_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/302_postproc_cell2cell"
+output_dir="${work_dir}/output_Jiaoyi/302_postproc_cell2cell"
 ref_db="${work_dir}/001_data/interactions_db_v2/ref_db.rds"
-sample_dir="${work_dir}/output/CellClass_L4_min3_types_rerun/202_cci_cell2cell"
+sample_dir="/cluster/projects/gaitigroup/Users/Jiaoyi/scrnaseq-cellcomm/output/cci_scvi_merged_annotation_perSample_merged_CellClassL1_Apr12/202_cci_cell2cell"
 
 # etermine job array limits
 job_max=$(find $sample_dir -type f -name 'cell2cell__*.csv' | wc -l) 2>/dev/null
@@ -43,7 +43,7 @@ sbatch <<EOF
 #SBATCH --array=${job_min}-${job_max}
 
 echo "Activating conda environment..."
-source "\$HOME/miniforge3/bin/activate" "standard_env"
+source "\$HOME/miniforge3/bin/activate" "cci"
 
 input_file=\$(find $sample_dir -type f -name 'cell2cell__*.csv' | sed -n \${SLURM_ARRAY_TASK_ID}p)
 

@@ -27,7 +27,11 @@ get_optimal_output_size <- function(hm, m = 4) {
     ht_width <- convertHeight(ht_width, "inch", valueOnly = TRUE)
     return(list(height = ht_height, width = ht_width))
 }
-
+#' @title Obtain optimal ComplexHeatmap Size
+#' @param matrix matrix to use
+#' @param is_upper_tri default=FALSE,
+#' @param add_annot default= TRUE
+#' @export
 get_cell_function <- function(matrix, is_upper_tri = FALSE, add_annot = TRUE) {
     # Full matrix
     cell_fun_annot <- function(j, i, x, y, width, height, fill) {

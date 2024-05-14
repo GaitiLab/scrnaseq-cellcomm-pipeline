@@ -18,7 +18,7 @@ if (!interactive()) {
     parser$add_argument("--input_dir", required = TRUE, help = "Path to input directory")
     parser$add_argument("--celltype_oi", type = "character", help = "Celltype of interest", default = NULL)
     parser$add_argument("--metadata", type = "character", help = "Path to metadata", default = NULL)
-    parser$add_argument("--meta_vars_oi", type = "character", help = "Path to metadata variables of interest", default = NULL)
+    parser$add_argument("--meta_vars_oi", type = "character", help = "Path to metadata variables of interest", default = "")
     parser$add_argument("--sample_varname", type = "character", help = "Name of sample variable", default = "")
     parser$add_argument("--condition_varname", type = "character", help = "Name of condition variable", default = "")
     parser$add_argument("--patient_varname", type = "character", help = "Name of patient variable", default = "")
@@ -115,14 +115,14 @@ interactions_agg_rank <- list.files(args$input_dir,
 interactions_agg_rank <- do.call(rbind, lapply(interactions_agg_rank, readRDS))
 
 log_info("Load metadata...")
-if (file.exists(args$meta_vars_oi) && !is.null(args$meta_vars_oi) && args$meta_vars_oi != "") {
+if (file.exists(args$meta_vars_oi)) {
     log_info("Metadata variables of interest provided. Using these variables...")
     cols_oi <- read.csv(args$meta_vars_oi,
         header = FALSE, stringsAsFactors = FALSE
     ) %>%
         pull(V1)
 } else {
-    log_info("No metadata variables of interest provided. Using default variables (Sample, Region_Grouped)...")
+    log_info("No metadata variables of interest provided. Using default variables (Sample)...")
     cols_oi <- unique(c(args$sample_varname, args$condition_varname, args$patient_varname))
 }
 metadata <- readRDS(args$metadata)
