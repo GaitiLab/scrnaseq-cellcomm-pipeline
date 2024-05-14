@@ -15,25 +15,29 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Inferring CCIs using LIANA",
     )
-    parser$add_argument("-p", "--n_perms",
+    parser$add_argument("-p", "--n_perm",
         type = "integer",
         default = 1000,
-        help = "Number of permutations for significant interactions."
+        help = "Number of permutations for permutation testing"
     )
-    parser$add_argument("-r", "--resource",
-        type = "character", default = "Consensus",
-        help = "Path to custom database with interactions."
+    parser$add_argument("-db", "--interactions_db",
+        type = "character", default = "",
+        help = "Path to custom database with interactions (RDS)"
     )
-    parser$add_argument("-i", "--ident_col",
+    parser$add_argument("-a", "--annot",
         type = "character", default = "cell_type",
-        help = "Identity to use for analysis."
+        help = "Column in metadata containing the cell type labels"
     )
     parser$add_argument("-g", "--gene_expr",
         type = "character",
-        default = NULL, help = "Name of RDS file"
+        default = NULL, help = "Seurat object with the gene expression (RDS file)"
     )
-    parser$add_argument("-n", "--n_cells",
-        type = "integer", default = 5, help = "Number of cells to use"
+    parser$add_argument("-n", "--min_cells",
+        type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication"
+    )
+    parser$add_argument("-mp", "--min_pct",
+        type = "numeric",
+        default = 0.1, help = "Minimum percentage of cells expressing a gene"
     )
     args <- parser$parse_args()
 } else {
@@ -41,9 +45,9 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/201_cci_liana")
-    args$ident_col <- "CCI_CellClass_L1"
+    args$annot <- "CCI_CellClass_L1"
     args$n_perm <- 10
-    args$resource <- glue("{here::here()}/data/interactions_db/liana_db.rds")
+    args$interactions_db <- glue("{here::here()}/data/interactions_db/liana_db.rds")
     args$gene_expr <- glue("{here::here()}/output/test_pipeline/100_preprocessing/seurat/6419_cortex__run__1.rds")
 }
 
@@ -65,11 +69,11 @@ pacman::p_load_gh("saezlab/liana")
 
 # ---- Constants ----
 # TODO add "cytotalk" later after finishing nextflow pipeline
-# methods <- c("natmi", "connectome", "logfc", "sca", "cellphonedb", "cytotalk")
 methods <- c("natmi", "connectome", "logfc", "sca", "cytotalk")
 supp_columns <- c("ligand.expr", "receptor.expr")
-return_all <- FALSE
-permutation_params <- list(nperms = args$n_perms)
+permutation_params <- list(
+    nperms = args$n_perm
+)
 assay <- "RNA"
 
 # ---- Loading data ----
@@ -77,15 +81,20 @@ log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$gene_expr)
 
 log_info("Loading database with interactions...")
-custom_resource <- readRDS(args$resource)
+custom_resource <- readRDS(args$interactions_db)
 
 # ---- Run LIANA ----
 liana_obj <- liana_wrap(seurat_obj,
-    method = methods, resource = "custom",
+    method = methods,
+    resource = "custom",
     external_resource = custom_resource,
-    idents_col = args$ident_col,
-    supp_columns = supp_columns, return_all = return_all,
-    permutation.params = permutation_params, assay = assay
+    idents_col = args$annot,
+    supp_columns = supp_columns,
+    return_all = TRUE,
+    permutation.params = permutation_params,
+    assay = assay,
+    min_cells = args$min_cells,
+    expr_prop = args$min_pct
 )
 log_info("Save LIANA results...")
 saveRDS(liana_obj,

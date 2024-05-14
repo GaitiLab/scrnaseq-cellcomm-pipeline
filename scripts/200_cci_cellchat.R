@@ -15,26 +15,27 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Inferring CCIs using CellChat"
     )
-    parser$add_argument("-r", "--resource",
-        type = "character", help = "Path to custom database with interactions."
-    )
-    parser$add_argument("-i", "--ident_col",
-        type = "character", help = "Column name for cell identity",
-        default = "cell_type"
-    )
-    parser$add_argument("-n", "--n_perm",
-        type = "integer", help = "Number of permutations",
-        default = 1000L
-    )
-    parser$add_argument("-id", "--id",
+    parser$add_argument("-p", "--n_perm",
         type = "integer",
-        default = NULL, help = "Only required when doing downsampling"
+        default = 1000,
+        help = "Number of permutations for permutation testing"
+    )
+    parser$add_argument("-db", "--interactions_db",
+        type = "character", default = "",
+        help = "Path to custom database with interactions (RDS)"
+    )
+    parser$add_argument("-a", "--annot",
+        type = "character", default = "cell_type",
+        help = "Column in metadata containing the cell type labels"
     )
     parser$add_argument("-g", "--gene_expr",
         type = "character",
-        default = NULL, help = "Name of RDS file"
+        default = NULL, help = "Seurat object with the gene expression (RDS file)"
     )
-    parser$add_argument("--n_cores",
+    parser$add_argument("-n", "--min_cells",
+        type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication"
+    )
+    parser$add_argument("-nc", "--n_cores",
         default = 1, type = "integer",
         help = "Number of cores to use for parallelization"
     )
@@ -44,9 +45,9 @@ if (!interactive()) {
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("{here::here()}/test_pipeline_manual/")
-    args$ident_col <- "seurat_annotations"
+    args$annot <- "seurat_annotations"
     args$n_perm <- 3
-    args$resource <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
+    args$interactions_db <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
     args$gene_expr <- glue("test_pipeline/100_preprocessing/seurat/Sample_2.rds")
     args$n_cores <- 1
 }
@@ -74,12 +75,12 @@ mat <- as.matrix(seurat_obj@assays$RNA@data)
 meta <- seurat_obj@meta.data
 
 log_info("Create CellChat object...")
-cellchat <- createCellChat(object = mat, meta = meta, group.by = args$ident_col)
+cellchat <- createCellChat(object = mat, meta = meta, group.by = args$annot)
 cellchat <- addMeta(cellchat, meta = meta)
-cellchat <- setIdent(cellchat, ident.use = args$ident_col) # set 'labels' as default cell identity
+cellchat <- setIdent(cellchat, ident.use = args$annot) # set 'labels' as default cell identity
 
 log_info("Load custom database with interactions...")
-cellchat@DB <- readRDS(args$resource)
+cellchat@DB <- readRDS(args$interactions_db)
 
 log_info("Preprocessing the expression data...")
 cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
@@ -94,7 +95,7 @@ cellchat <- computeCommunProb(cellchat,
     nboot = args$n_perm,
     population.size = TRUE
 )
-cellchat <- filterCommunication(cellchat)
+cellchat <- filterCommunication(cellchat, min.cells = args$min_cells)
 # a. signaling pathway level cellchat <- computeCommunProbPathway(cellchat)
 
 # b. aggregated cell-cell communication network

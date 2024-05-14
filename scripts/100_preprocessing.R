@@ -23,38 +23,19 @@ if (!interactive()) {
         type = "character",
         default = "CellClass_L1", help = "Annotation to use for filtering"
     )
-    parser$add_argument("--min_cells",
-        type = "numeric",
-        default = 5, help = "Minimum number of cells per annotation"
+    parser$add_argument("-n", "--min_cells",
+        type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication"
     )
-    parser$add_argument("--interactions_db",
-        type = "character",
-        default = NULL, help = "Path to interactions db"
-    )
-    parser$add_argument("--celltypes_oi",
-        type = "character",
-        default = NULL, help = "Path to cell types of interest"
-    )
-    parser$add_argument("-fn", "--first_n", type = "numeric", default = 0, help = "First N cell types that have to be present from given celltypes_oi file")
-    parser$add_argument("--min_cell_types", type = "numeric", default = 2, help = "Minimum number of cell types to be present after filtering")
-    parser$add_argument("--downsampling_sheet", type = "character", default = "", help = "Path to RDS file with the cell ids for downsampling")
-    parser$add_argument("--is_confident", type = "numeric", default = "", help = "Filter confident cells (1) or not (0)")
+    parser$add_argument("--is_confident", type = "numeric", default = 0, help = "Filter confident cells (1) or not (0); only relevant for internal project")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
     args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/100_preprocessing")
-    args$interactions_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
     args$input_file <- glue("{here::here()}/output/test_downsampling_implementation/split_by_Sample/6419_cortex__run__3.rds")
     args$annot <- "CellClass_L1"
     args$min_cells <- 5
-    # args$celltypes_oi <- glue("{here::here()}/data/celltypes_oi.txt")
-    args$celltypes_oi <- NULL
-    # args$celltypes_oi <- ""
-    args$first_n <- 0
-    args$min_cell_types <- 2
-    args$downsampling_sheet <- glue("{here::here()}/output/downsampling_info.rds")
 }
 
 # Set up logging
@@ -88,99 +69,40 @@ seurat_obj <- readRDS(args$input_file)
 if (args$is_confident) {
     seurat_obj <- subset(seurat_obj, subset = Confident_Annotation)
 }
-
-if ((!is.null(args$celltypes_oi))) {
-    log_info("Check if cell types of interest file exists...")
-    if (file.exists(args$celltypes_oi)) {
-        log_info("Loading cell types of interest...")
-        celltypes_oi <- read.table(args$celltypes_oi, sep = "\t") %>% pull(V1)
-    }
-} else {
-    log_info("No cell types of interest provided, use all celltypes in object...")
-    celltypes_oi <- seurat_obj[[args$annot]] %>%
-        pull() %>%
-        unique()
-    log_info("Celltypes of interest: {paste0(celltypes_oi, collapse = ', ')}")
-}
-
-if (args$min_cells < min_cells) {
-    stop(glue("Minimum number of cells per annotation must be >= {min_cells}"))
-}
-
-# Get list of genes from interactions db for filtering
-log_info("Loading interactions db...")
-interactions_db <- readRDS(args$interactions_db)
-
-log_info("Extract all unique genes from the interactions db...")
-genes_oi <- interactions_db %>%
-    select(source_genesymbol, target_genesymbol) %>%
-    unlist() %>%
-    unique() %>%
-    str_split(., "_") %>%
-    unlist() %>%
-    unique()
-
-# genes_oi <- c(str_split(interactions_db$interaction, "__", simplify = TRUE))
-# genes_oi <- c(str_split(genes_oi, ":", simplify = TRUE))
-# genes_oi <- unique(genes_oi[genes_oi != ""])
-
-common_cell_types <- intersect(unique(seurat_obj@meta.data[[args$annot]]), celltypes_oi)
-
-if (args$first_n == 0) {
-    log_info("Use all available cell types...")
-    check_first_n <- TRUE
-} else {
-    log_info(glue("First N={first_n} cell types in given cell types of interest need to be present..."))
-    check_first_n <- celltypes_oi[1:first_n] %in% common_cell_types
-}
-
-if (check_first_n && (length(common_cell_types) >= args$min_cell_types) && !is.null(seurat_obj)) {
-    log_info("Only keep cell types of interest...")
-    cells_to_keep <- rownames(seurat_obj@meta.data)[seurat_obj@meta.data[[args$annot]] %in% celltypes_oi]
-    seurat_obj <- subset(seurat_obj,
-        cells = cells_to_keep
+log_info(glue("Only keep cell type groups with at least {args$min_cells} cells"))
+if (args$min_cells >= min_cells) {
+    seurat_obj <- filtering(
+        seurat_obj,
+        annot = args$annot,
+        min_cells = args$min_cells
     )
-    log_info("Filtering...")
-    if (args$min_cells >= min_cells) {
-        seurat_obj <- filtering(
-            seurat_obj,
-            annot = args$annot,
-            min_cells = args$min_cells, genes_oi
-        )
-    } else {
-        log_info("Skipping filtering...")
-    }
-    log_info(glue(
-        "Check number of cell types after filtering (>= {args$min_cell_types})..."
-    ))
-    n_cell_types <- length(unique(seurat_obj@meta.data[[args$annot]]))
-
-    log_info("Create name dependent on downsampling...")
-    if (is_downsampling_run) {
-        output_name <- get_name(args$input_file)
-    } else {
-        output_name <- str_split(get_name(args$input_file), "__", simplify = TRUE)[1]
-    }
-    if (n_cell_types >= args$min_cell_types) {
-        log_info("Normalizing data...")
-        seurat_obj <- NormalizeData(seurat_obj)
-
-        log_info("Saving Seurat object...")
-        saveRDS(
-            seurat_obj,
-            glue("{output_seurat}/{output_name}.rds")
-        )
-        log_info("Convert to mtx format (for Cell2Cell)...")
-        mat <- seurat_obj[["RNA"]]@data
-        write10xCounts(
-            glue("{output_mtx}/{output_name}"),
-            mat
-        )
-    } else {
-        log_info("Not enough cell types of interest...")
-    }
-} else {
-    log_info("Not enough cell types of interest...")
 }
 
+log_info(glue(
+    "Check number of cell types after filtering (>= {args$min_cell_types})..."
+))
+
+n_cell_types <- length(unique(seurat_obj@meta.data[[args$annot]]))
+
+output_name <- str_split(
+    get_name(args$input_file), "__",
+    simplify = TRUE
+)
+
+if (n_cell_types > 1) {
+    log_info("Normalizing data...")
+    seurat_obj <- NormalizeData(seurat_obj)
+
+    log_info("Saving Seurat object...")
+    saveRDS(
+        seurat_obj,
+        glue("{output_seurat}/{output_name}.rds")
+    )
+    log_info("Convert to mtx format (for Cell2Cell)...")
+    mat <- seurat_obj[["RNA"]]@data
+    write10xCounts(
+        glue("{output_mtx}/{output_name}"),
+        mat
+    )
+}
 log_info("COMPLETED!")

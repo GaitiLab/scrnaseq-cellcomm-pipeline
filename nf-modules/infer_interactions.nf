@@ -5,30 +5,36 @@ process INFER_CELLCHAT {
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_file
+    tuple val(sample_id), path(input_file)
     path interactions_db
     val annot
     val n_perm
+    val min_cells
 
     output:
-    tuple val(sample_id), val(input_file.simpleName), path("200_cci_cellchat/cellchat__${input_file.simpleName}.rds"), emit: cellchat_obj
-    path "200_cci_cellchat/cellchat__${input_file.simpleName}__raw_obj.rds"
+    tuple val(sample_id), path("200_cci_cellchat/cellchat__${sample_id}.rds"), emit: cellchat_obj
+    path "200_cci_cellchat/cellchat__${sample_id}__raw_obj.rds"
 
     script:
-    def filename_without_ext = input_file.simpleName
-    def chunks = filename_without_ext.split( '__' )
-    sample_id=chunks[0]
     """
     #!/usr/bin/env bash
     Rscript "${projectDir}/scripts/200_cci_cellchat.R" \
-    --gene_expr \$PWD/${input_file} \
-    --output_dir "\$PWD/200_cci_cellchat" \
-    --resource \$PWD/${interactions_db} \
-    --ident_col ${annot} \
-    --n_perm ${n_perm} \
-    --n_cores ${task.cpus}
-
+        --n_perm ${n_perm} \
+        --interactions_db \$PWD/${interactions_db} \
+        --annot ${annot} \
+        --gene_expr \$PWD/${input_file} \
+        --min_cells ${min_cells} \
+        --output_dir "\$PWD/200_cci_cellchat" \
+        --n_cores ${task.cpus}
     """
+
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 200_cci_cellchat
+    touch "200_cci_cellchat/cellchat__${sample_id}.rds"
+    touch "200_cci_cellchat/cellchat__${sample_id}__raw_obj.rds"
+    """     
 }
 
 process INFER_LIANA {
@@ -38,65 +44,75 @@ process INFER_LIANA {
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_file
+    tuple val(sample_id), path(input_file)
     path interactions_db
     val annot
     val n_perm
+    val min_cells
+    val min_pct
 
     output:
-
-    tuple val(sample_id), val(input_file.simpleName), path("201_cci_liana/liana__${input_file.simpleName}.rds"), emit: liana_obj
+    tuple val(sample_id), path("201_cci_liana/liana__${sample_id}.rds"), emit: liana_obj
 
     script:
-    def filename_without_ext = input_file.simpleName
-    def chunks = filename_without_ext.split( '__' )
-    sample_id=chunks[0]
     """
     #!/usr/bin/env bash
     Rscript "${projectDir}/scripts/201_cci_liana.R" \
-    --gene_expr \$PWD/${input_file} \
-    --output_dir "\$PWD/201_cci_liana" \
-    --resource \$PWD/${interactions_db} \
-    --ident_col ${annot} \
-    --n_perm ${n_perm}
-
+        --n_perm ${n_perm} \
+        --interactions_db \$PWD/${interactions_db} \
+        --annot ${annot} \
+        --gene_expr \$PWD/${input_file} \
+        --min_cells ${min_cells} \
+        --min_pct ${min_pct} \
+        --output_dir "\$PWD/201_cci_liana"
     """
+
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 201_cci_liana
+    touch "201_cci_liana/liana__${sample_id}.rds"
+    """     
 }
 
 process INFER_CELL2CELL {
-    label 'mem_16G'
-    label 'time_8h'
+    label 'mem_32G'
+    label 'time_12h'
 
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_dir
+    tuple val(sample_id), path(barcodes), 
+    path(genes), path(matrix)
     path meta
     path interactions_db
     val annot
     val n_perm
 
     output:
-    path "202_cci_cell2cell/cell2cell__${input_dir.simpleName}.pickle"
-    tuple val(sample_id), val(input_dir.simpleName), path("202_cci_cell2cell/cell2cell__${input_dir.simpleName}.csv"), emit: cell2cell_obj
+    tuple val(sample_id), path("202_cci_cell2cell/cell2cell__${sample_id}.pickle")
+    tuple val(sample_id), path("202_cci_cell2cell/cell2cell__${sample_id}.csv"), emit: cell2cell_obj
 
     script:
-    def filename_without_ext = input_dir.simpleName
-    def chunks = filename_without_ext.split( '__' )
-    sample_id=chunks[0]
     """
     #!/usr/bin/env bash
-
     python3 "${projectDir}/Python/202_cci_cell2cell.py" \
-    --input_dir \$PWD/${input_dir} \
-    --output_dir "\$PWD/202_cci_cell2cell" \
-    --annot ${annot} \
-    --meta \$PWD/${meta} \
-    --interactions \$PWD/${interactions_db} \
-    --nperm ${n_perm} \
-    --sample_id ${input_dir.simpleName}
-
+        --input_dir \$PWD \
+        --n_perm ${n_perm} \
+        --interactions_db \$PWD/${interactions_db} \
+        --annot ${annot} \
+        --sample_id ${sample_id} \
+        --meta \$PWD/${meta} \
+        --output_dir "\$PWD/202_cci_cell2cell"
     """
+
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 202_cci_cell2cell
+    touch "202_cci_cell2cell/cell2cell__${sample_id}.pickle"
+    touch "202_cci_cell2cell/cell2cell__${sample_id}.csv"
+    """  
 }
 
 process INFER_CPDB {
@@ -107,7 +123,8 @@ process INFER_CPDB {
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_dir
+    tuple val(sample_id), path(barcodes), 
+    path(genes), path(matrix)
     path meta
     path interactions_db
     val annot
@@ -115,34 +132,49 @@ process INFER_CPDB {
     val min_pct
 
     output:
-
-    tuple val(sample_id), val(input_dir.simpleName), 
-    path("203_cci_cpdb/statistical_analysis_interaction_scores__${input_dir.simpleName}.txt"), 
-    path("203_cci_cpdb/statistical_analysis_pvalues__${input_dir.simpleName}.txt"), 
-    path("203_cci_cpdb/statistical_analysis_significant_means__${input_dir.simpleName}.txt"), 
-    path("203_cci_cpdb/statistical_analysis_deconvoluted__${input_dir.simpleName}.txt"), 
-    path("203_cci_cpdb/statistical_analysis_deconvoluted_percents__${input_dir.simpleName}.txt"), 
-    path("203_cci_cpdb/statistical_analysis_means__${input_dir.simpleName}.txt"), emit: cpdb_obj
-    path "203_cci_cpdb/${input_dir.simpleName}_counts.h5ad"
-    path "203_cci_cpdb/${input_dir.simpleName}_metadata.tsv"
+    tuple val(sample_id), 
+    path("203_cci_cpdb/statistical_analysis_interaction_scores__${sample_id}.txt"), 
+    path("203_cci_cpdb/statistical_analysis_pvalues__${sample_id}.txt"), 
+    path("203_cci_cpdb/statistical_analysis_significant_means__${sample_id}.txt"),
+    path("203_cci_cpdb/statistical_analysis_means__${sample_id}.txt"), emit: cpdb_obj
+    path "203_cci_cpdb/statistical_analysis_deconvoluted__${sample_id}.txt"
+    path "203_cci_cpdb/statistical_analysis_deconvoluted_percents__${sample_id}.txt"
+    path "203_cci_cpdb/${sample_id}_counts.h5ad"
+    path "203_cci_cpdb/${sample_id}_metadata.tsv"
 
     script:
-    def filename_without_ext = input_dir.simpleName
-    def chunks = filename_without_ext.split( '__' )
-    sample_id=chunks[0]
     """
     #!/usr/bin/env bash
-    python3 "${projectDir}/Python/203_cci_cpdb.py" \
-    --output_dir \$PWD/203_cci_cpdb \
-    --meta \$PWD/$meta \
-    --annot $annot \
-    --cpdb_file_path \$PWD/$interactions_db \
-    --n_perm $n_perm \
-    --input_dir \$PWD/$input_dir \
-    --min_pct $min_pct \
-    --threads ${task.cpus} \
-    --sample_id ${input_dir.simpleName}
 
+    mkdir -p ${sample_id}
+
+    mv ${barcodes} ${sample_id}/barcodes.tsv
+    mv ${genes} ${sample_id}/genes.tsv
+    mv ${matrix} ${sample_id}/matrix.mtx
+
+    python3 "${projectDir}/Python/203_cci_cpdb.py" \
+        --input_dir \$PWD/${sample_id} \
+        --n_perm ${n_perm} \
+        --interactions_db \$PWD/${interactions_db} \
+        --annot ${annot} \
+        --sample_id ${sample_id} \
+        --meta \$PWD/${meta} \
+        --min_pct ${min_pct} \
+        --n_cores ${task.cpus} \
+        --output_dir \$PWD/203_cci_cpdb
     """
 
+    stub:
+    """
+    #!/usr/bin/env bash
+    mkdir -p 203_cci_cpdb
+    touch "203_cci_cpdb/statistical_analysis_interaction_scores__${sample_id}.txt"
+    touch "203_cci_cpdb/statistical_analysis_pvalues__${sample_id}.txt"
+    touch "203_cci_cpdb/statistical_analysis_significant_means__${sample_id}.txt"
+    touch "203_cci_cpdb/statistical_analysis_means__${sample_id}.txt"
+    touch "203_cci_cpdb/statistical_analysis_deconvoluted__${sample_id}.txt
+    touch "203_cci_cpdb/statistical_analysis_deconvoluted_percents__${sample_id}.txt"
+    touch "203_cci_cpdb/${sample_id}_counts.h5ad"
+    touch "203_cci_cpdb/${sample_id}_metadata.tsv"
+    """      
 }
