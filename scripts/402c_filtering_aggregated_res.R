@@ -15,9 +15,9 @@ if (!interactive()) {
         description = "Combine aggregation by sample (p-value combi) + aggregation by patient",
     )
     parser$add_argument("--input_dir", default = "", help = "Directory called 402_aggregation")
-    parser$add_argument("--interactions_agg_binarized", default = "", help = "Path to 402a_aggregation_binarized.rds")
-    parser$add_argument("--interactions_agg_continuous", default = "", help = "Path to 402b_aggregation_continuous.rds")
-    parser$add_argument("--condition_varname", default = "", help = "Condition, e.g. mutation, region")
+    parser$add_argument("--interactions_agg_binarized", default = "", help = "Path to 402a_filtering_detect_in_multi_samples.rds")
+    parser$add_argument("--interactions_agg_continuous", default = "", help = "Path to 402b_aggregation_samples.rds")
+    parser$add_argument("--condition_var", default = "", help = "Condition, e.g. mutation, region")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -26,7 +26,7 @@ if (!interactive()) {
     run_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only"
     args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/{run_name}/402_aggregation")
     args$input_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/{run_name}/402_aggregation")
-    args$condition_varname <- "Region"
+    args$condition_var <- "Region"
 }
 
 # Set up logging
@@ -42,10 +42,10 @@ create_dir(args$output_dir)
 # Load additional libraries
 if (file.exists(args$input_dir)) {
     log_info("Load interactions after aggregation: binarized...")
-    interactions_binarized <- readRDS(glue("{args$input_dir}/402a_aggregation_binarized.rds"))
+    interactions_binarized <- readRDS(glue("{args$input_dir}/402a_filtering_detect_in_multi_samples.rds"))
 
     log_info("Load interactions after aggregation: continuous...")
-    interactions_continuous <- readRDS(glue("{args$input_dir}/402b_aggregation_continuous.rds"))
+    interactions_continuous <- readRDS(glue("{args$input_dir}/402b_aggregation_samples.rds"))
 } else {
     log_info("Load interactions after aggregation: binarized...")
     interactions_binarized <- readRDS(args$interactions_agg_binarized)
@@ -55,11 +55,11 @@ if (file.exists(args$input_dir)) {
 }
 
 log_info("Combine...")
-combi <- merge(interactions_continuous, interactions_binarized, by = c(args$condition_varname, "complex_interaction", "source_target"), all = TRUE) %>%
+combi <- merge(interactions_continuous, interactions_binarized, by = c(args$condition_var, "complex_interaction", "source_target"), all = TRUE) %>%
     distinct() %>%
     filter(!is.na(lenient_condition))
 
 log_info("Save results...")
-saveRDS(combi, glue("{args$output_dir}/402c_aggregation_integration.rds"))
+saveRDS(combi, glue("{args$output_dir}/402c_filtering_aggregated_res.rds"))
 
 log_info("COMPLETED!")

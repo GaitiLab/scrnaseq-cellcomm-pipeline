@@ -1,5 +1,5 @@
 
-include { CONSENSUS; COMBINE_SAMPLES } from "../nf-modules/consensus.nf"
+include { consensus_and_rra; collect_all_results } from "../nf-modules/consensus.nf"
 include { AGGREGATION_CCI } from '../nf-subworkflows/aggregation_cci.nf'
 
 workflow CCI_CONSENSUS {
@@ -8,24 +8,24 @@ workflow CCI_CONSENSUS {
     metadata_rds
 
     main: 
-    CONSENSUS(
+    consensus_and_rra(
         matched_cci, 
         alpha           = params.alpha
     )
 
-    COMBINE_SAMPLES(
-        CONSENSUS.out.mvoted_interactions.collect(), 
-        CONSENSUS.out.signif_interactions.collect(),
-        CONSENSUS.out.interactions_agg_rank.collect(), 
+    collect_all_results(
+        consensus_and_rra.out.mvoted_interactions.collect(), 
+        consensus_and_rra.out.signif_interactions.collect(),
+        consensus_and_rra.out.interactions_agg_rank.collect(), 
         metadata            = metadata_rds, 
-        condition_varname   = params.condition_varname, 
-        sample_varname      = params.split_varname, 
-        patient_varname     = params.patient_varname
+        condition_var   = params.condition_var, 
+        sample_var          = params.sample_var, 
+        patient_var     = params.patient_var
     )
 
     AGGREGATION_CCI(
-        mvoted_interactions     = COMBINE_SAMPLES.out.mvoted_interactions,
-        interactions_agg_rank   = COMBINE_SAMPLES.out.interactions_agg_rank
+        mvoted_interactions     = collect_all_results.out.mvoted_interactions,
+        interactions_agg_rank   = collect_all_results.out.interactions_agg_rank
     )
 
     emit: 

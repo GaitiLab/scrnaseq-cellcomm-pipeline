@@ -7,7 +7,7 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
-#SBATCH --time=00:30:00
+#SBATCH --time=02:00:00
 #SBATCH --output=slurm_out/%x_%j.out
 #SBATCH --error=slurm_out/%x_%j.out
 
@@ -25,17 +25,19 @@ input_file="${project_dir}/data/example_data.rds"
 # Output directory
 output_dir="${project_dir}/test_pipeline"
 
+init_step=1
 
 # Pre-processing
-split_varname="Sample"
+sample_var="Sample"
 annot="seurat_annotations"
-condition_varname="Condition"
-patient_varname="Patient"
+condition_var="Condition"
+patient_var="Patient"
 min_patients=2
 min_cells=70
+is_confident=0
 
 # Cell-cell interactions
-n_perm=100
+n_perm=10
 min_pct=0.10
 alpha=0.05
 
@@ -52,24 +54,27 @@ outdir="${project_dir}/nf-logs"
 
 # Create directories
 mkdir -p "${output_dir}"
-mkdir -p "${project_dir}/nf-logs"
+mkdir -p "${outdir}"
 
 echo "Running pipeline..."
 # # Start the pipeline
 # ${nf_exec} run ${project_dir} -with-report -with-trace \
-${nf_exec} run ${project_dir} -resume \
+${nf_exec} run ${project_dir} \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
-    --split_varname ${split_varname} \
+    --sample_var ${sample_var} \
     --annot ${annot} \
     --min_cells ${min_cells} \
     --n_perm ${n_perm} \
     --min_pct ${min_pct} \
     --alpha $alpha \
-    --condition_varname $condition_varname \
-    --patient_varname $patient_varname \
+    --init_step $init_step \
+    --condition_var $condition_var \
+    --patient_var $patient_var \
     --min_patients $min_patients \
+    --is_confident ${is_confident} \
+    --outdir ${outdir} \
     --output_dir ${output_dir}
 
 echo "Done!"

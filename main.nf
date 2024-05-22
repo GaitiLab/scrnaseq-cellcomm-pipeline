@@ -7,7 +7,7 @@ Workflow for cell-cell-interactions
 nextflow.enable.dsl=2
 
 // Include modules
-include { COLLECT_RESULTS } from './nf-modules/consensus.nf'
+include { save_as_xlsx } from './nf-modules/consensus.nf'
 
 // Include subworkflows
 include { PREP_DATA } from './nf-subworkflows/prep_data.nf'
@@ -64,7 +64,7 @@ workflow {
         | map ( get_sample_id )
         matched_cci = cci_cellchat.join(cci_liana).join(cci_cell2cell).join(cci_cpdb)
     }
-    cci_aggregation_integration = params.init_step == 5 ? file("${output_dir}/402_aggregation/402c_aggregation_integration.rds") : Channel.empty()
+    cci_aggregation_integration = params.init_step == 5 ? file("${output_dir}/402_aggregation_and_filtering/402c_filtering_aggregated_res.rds") : Channel.empty()
     
 
     println """\
@@ -87,7 +87,7 @@ workflow {
     ---- PRE-PROCESSING --------------------------------------------------------------------------
     Annotation:         ${params.annot}
     Min. cells:         ${params.min_cells}
-    Split varname:      ${params.split_varname}
+    Split varname:      ${params.sample_var}
 
     ---- DATABASES --------------------------------------------------------------------------------
     CellphoneDB:        ${cellphone_db}
@@ -101,9 +101,9 @@ workflow {
     Min. pct:           ${params.min_pct}
     Alpha (sign level): ${params.alpha}
     N permutations:     ${params.n_perm}
-    Condition:          ${params.condition_varname}
+    Condition:          ${params.condition_var}
     Min.patients:       ${params.min_patients}
-    Patient varname:    ${params.patient_varname}
+    Patient varname:    ${params.patient_var}
     """.stripIndent()
 
     // // Setup modules
@@ -140,9 +140,9 @@ workflow {
         cci_aggregation_integration         = CCI_CONSENSUS.out.aggregation_integration
     } 
     if (params.init_step <= 5) {
-        COLLECT_RESULTS(
+        save_as_xlsx(
             interactions_agg_integration    = cci_aggregation_integration, 
-            condition_varname               = params.condition_varname, 
+            condition_var               = params.condition_var, 
             alpha                           = params.alpha, 
             output_name                     = params.interactions_excel_name
         )

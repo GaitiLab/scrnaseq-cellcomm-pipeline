@@ -1,4 +1,4 @@
-process GET_METADATA {
+process extract_metadata {
     label 'mem_32G'
     label 'time_10m'
     publishDir params.output_dir, mode: "copy"
@@ -27,7 +27,7 @@ process GET_METADATA {
     """   
 }
 
-process REDUCE_SEURAT_OBJECT_SIZE {
+process reduce_seurat_object_size {
     label 'mem_32G'
     label 'time_30m'
     // Commented, cause we probably do not need this object afterwards + takes a lot of space
@@ -57,7 +57,7 @@ process REDUCE_SEURAT_OBJECT_SIZE {
     """   
 }
 
-process SPLIT_SEURAT_OBJECT {
+process split_seurat_object_into_samples {
     label 'mem_32G'
     label 'time_30m'
 
@@ -65,35 +65,35 @@ process SPLIT_SEURAT_OBJECT {
 
     input:
     path input_file
-    val split_varname
+    val sample_var
 
     output:
-    path "000_data/split_by_${split_varname}/*.rds"
+    path "000_data/split_by_${sample_var}/*.rds"
 
     script:
     """
     #!/usr/bin/env bash
     Rscript "${projectDir}/scripts/002_split_seurat_object.R" \
     --input_file "\$PWD/${input_file}" \
-    --output_dir "\$PWD/000_data/split_by_${split_varname}" \
-    --split_varname ${split_varname}
+    --output_dir "\$PWD/000_data/split_by_${sample_var}" \
+    --sample_var ${sample_var}
 
     """
 
     stub:
     """
     #!/usr/bin/env bash
-    mkdir -p 000_data/split_by_${split_varname}
-    touch "000_data/split_by_${split_varname}/Sample_1.rds"
-    touch "000_data/split_by_${split_varname}/Sample_2.rds"
-    touch "000_data/split_by_${split_varname}/Sample_3.rds"
-    touch "000_data/split_by_${split_varname}/Sample_4.rds"
-    touch "000_data/split_by_${split_varname}/Sample_5.rds"
-    touch "000_data/split_by_${split_varname}/Sample_6.rds"
+    mkdir -p 000_data/split_by_${sample_var}
+    touch "000_data/split_by_${sample_var}/Sample_1.rds"
+    touch "000_data/split_by_${sample_var}/Sample_2.rds"
+    touch "000_data/split_by_${sample_var}/Sample_3.rds"
+    touch "000_data/split_by_${sample_var}/Sample_4.rds"
+    touch "000_data/split_by_${sample_var}/Sample_5.rds"
+    touch "000_data/split_by_${sample_var}/Sample_6.rds"
     """   
 }
 
-process PREPROCESSING {
+process sample_preprocessing {
     label 'mem_8G'
     label 'time_10m'
 

@@ -1,5 +1,5 @@
-include { INFER_CELLCHAT; INFER_LIANA; INFER_CELL2CELL; INFER_CPDB } from "../nf-modules/infer_interactions.nf"
-include { POSTPROCESSING_CELLCHAT; POSTPROCESSING_LIANA; POSTPROCESSING_CELL2CELL; POSTPROCESSING_CPDB } from "../nf-modules/filtering.nf"
+include { infer_cellchat; infer_liana; infer_cell2cell; infer_cpdb } from "../nf-modules/infer_interactions.nf"
+include { formatting_cellchat; formatting_liana; formatting_cell2cell; formatting_cpdb } from "../nf-modules/formatting_cci.nf"
 
 workflow CELLCHAT {
     take: 
@@ -8,7 +8,7 @@ workflow CELLCHAT {
     ref_db 
 
     main: 
-    INFER_CELLCHAT(
+    infer_cellchat(
         preprocessing_seurat_obj, 
         interactions_db     = cellchat_db, 
         annot               = params.annot,
@@ -16,13 +16,13 @@ workflow CELLCHAT {
         min_cells           = params.min_cells
     )
 
-    POSTPROCESSING_CELLCHAT(
-        INFER_CELLCHAT.out.cellchat_obj, 
+    formatting_cellchat(
+        infer_cellchat.out.cellchat_obj, 
         interactions_db     = ref_db
     )
 
     emit: 
-    POSTPROCESSING_CELLCHAT.out
+    formatting_cellchat.out
 }
 
 workflow CPDB {
@@ -33,7 +33,7 @@ workflow CPDB {
     ref_db
     
     main: 
-    INFER_CPDB(
+    infer_cpdb(
         preprocessing_mtx_dir,
         meta                = metadata_csv, 
         interactions_db     = cellphone_db, 
@@ -42,13 +42,13 @@ workflow CPDB {
         min_pct             = params.min_pct, 
     )
 
-    POSTPROCESSING_CPDB(
-        INFER_CPDB.out.cpdb_obj, 
+    formatting_cpdb(
+        infer_cpdb.out.cpdb_obj, 
         interactions_db     = ref_db
     )
 
     emit: 
-    POSTPROCESSING_CPDB.out
+    formatting_cpdb.out
 }
 
 workflow LIANA {
@@ -58,7 +58,7 @@ workflow LIANA {
     ref_db
     
     main: 
-    INFER_LIANA(
+    infer_liana(
         preprocessing_seurat_obj, 
         interactions_db     = liana_db, 
         annot               = params.annot, 
@@ -67,13 +67,13 @@ workflow LIANA {
         min_pct             = params.min_pct, 
     )
 
-    POSTPROCESSING_LIANA(
-    INFER_LIANA.out.liana_obj, 
+    formatting_liana(
+    infer_liana.out.liana_obj, 
         ref_db              = ref_db
     )
 
     emit: 
-    POSTPROCESSING_LIANA.out
+    formatting_liana.out
 }
 
 workflow CELL2CELL {
@@ -84,7 +84,7 @@ workflow CELL2CELL {
     ref_db
     
     main: 
-    INFER_CELL2CELL(
+    infer_cell2cell(
         preprocessing_mtx_dir,
         meta                = metadata_csv, 
         interactions_db     = cell2cell_db, 
@@ -92,12 +92,12 @@ workflow CELL2CELL {
         n_perm              = params.n_perm
     )
     
-    POSTPROCESSING_CELL2CELL( 
-        INFER_CELL2CELL.out.cell2cell_obj,
+    formatting_cell2cell( 
+        infer_cell2cell.out.cell2cell_obj,
         ref_db              = ref_db
     )
 
     emit: 
-    POSTPROCESSING_CELL2CELL.out
+    formatting_cell2cell.out
 
 }

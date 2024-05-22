@@ -20,7 +20,7 @@ if (!interactive()) {
         type = "character",
         default = NULL, help = "Path to input directory"
     )
-    parser$add_argument("-n", "--split_varname", type = "character", default = "Sample", help = "Name of sample variable, necessary for splitting")
+    parser$add_argument("-n", "--sample_var", type = "character", default = "Sample", help = "Name of sample variable, necessary for splitting")
     parser$add_argument("--downsampling_sheet", type = "character", default = "", help = "Path to RDS file with the cell ids for downsampling")
     args <- parser$parse_args()
 } else {
@@ -29,7 +29,7 @@ if (!interactive()) {
     args$log_level <- 5
     args$input_file <- glue("{here::here()}/output/CCI_CellClass_L1_conf_min50/000_data/split_by_Sample/6419_cortex.rds")
     args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation")
-    args$split_varname <- "Sample"
+    args$sample_var <- "Sample"
     args$downsampling_sheet <- glue("{here::here()}/output/downsampling_info.rds")
 }
 
@@ -56,7 +56,7 @@ run_ids <- NULL
 log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$input_file)
 print(seurat_obj)
-obj_list <- SplitObject(seurat_obj, split.by = args$split_varname)
+obj_list <- SplitObject(seurat_obj, split.by = args$sample_var)
 obj_ids <- names(obj_list)
 
 log_info("Load downsampling sheet...")
@@ -65,7 +65,7 @@ if (file.exists(args$downsampling_sheet)) {
     run_ids <- names(downsampling_sheet)
 }
 # obj_id <- obj_ids[1]
-log_info(glue("Split object by {args$split_varname}..."))
+log_info(glue("Split object by {args$sample_var}..."))
 for (obj_id in obj_ids) {
     log_info(glue("Sample: {obj_id}..."))
     obj <- obj_list[[obj_id]]
@@ -79,11 +79,11 @@ for (obj_id in obj_ids) {
             ix <- str_split(run_id, "__", simplify = TRUE)[3]
             log_info(glue("Downsampling run: {ix}..."))
             obj_subset <- subset(obj, cells = downsampling_sheet[[run_id]])
-            log_info(glue("Saving {args$split_varname}: {obj_id}"))
+            log_info(glue("Saving {args$sample_var}: {obj_id}"))
             saveRDS(obj_subset, glue("{args$output_dir}/{run_id}.rds"))
         }
     } else {
-        log_info(glue("Saving {args$split_varname}: {obj_id}"))
+        log_info(glue("Saving {args$sample_var}: {obj_id}"))
         saveRDS(
             obj,
             glue("{output_dir}/{obj_id}.rds")
