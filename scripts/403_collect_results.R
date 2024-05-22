@@ -15,19 +15,19 @@ if (!interactive()) {
     parser <- setup_default_argparser(
         description = "Create ExcelSheet with interactions from post-filtered data",
     )
-    parser$add_argument("--interactions_agg_integration", type = "character", help = "path to 402c_aggregation_integration.rds")
-    parser$add_argument("--condition_varname", type = "character", help = "Condition variablem e.g. mutation or region")
+    parser$add_argument("--interactions_agg_integration", type = "character", help = "path to 402c_filtering_aggregated_res.rds")
+    parser$add_argument("--condition_var", type = "character", help = "Condition variablem e.g. mutation or region")
     parser$add_argument("--alpha", type = "numeric", help = "Alpha for additional filtering (default = 1.01, e.g. keeping all)", default = 1.01)
-    parser$add_argument("--output_name", type = "character", default = "interactions", help = "filename without extension for saving interactions in an Excel file.")
+    parser$add_argument("--output_name", type = "character", default = "interactions_summary", help = "filename without extension for saving interactions in an Excel file.")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only")
-    args$interactions_agg_integration <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/402_aggregation/402c_aggregation_integration.rds"
-    args$output_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only"
-    args$condition_varname <- "Region"
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL")
+    args$interactions_agg_integration <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/402_aggregation_and_filtering/402c_filtering_aggregated_res.rds"
+    args$output_name <- "CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL"
+    args$condition_var <- "Region"
 }
 
 # Set up logging
@@ -51,7 +51,7 @@ if (file.exists(output_filename)) {
 obj <- readRDS(args$interactions_agg_integration)
 obj_filtered <- obj %>%
     filter(!is.na(lenient_condition), lenient_condition, pval < 0.05) %>%
-    select(!!sym(args$condition_varname), source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval, LIANA_score, CellPhoneDB_score, CellChat_score) %>%
+    select(!!sym(args$condition_var), source_target, complex_interaction, lenient_condition_n_patients, lenient_condition_n_samples, lenient_condition_samples, lenient_condition_patients, pval, LIANA_score, CellPhoneDB_score, CellChat_score) %>%
     distinct() %>%
     as.data.frame()
 

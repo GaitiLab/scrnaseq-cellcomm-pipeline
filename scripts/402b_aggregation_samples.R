@@ -16,15 +16,15 @@ if (!interactive()) {
         description = "Aggregate interactions by sample (combine p-values)",
     )
     parser$add_argument("--input_file", type = "character", help = "Input from 401_combine_samples.R, name should be 401_samples_interactions_agg_rank.rds", default = "")
-    parser$add_argument("--condition_varname", default = "Region_Grouped", type = "character", help = "Grouping variable")
+    parser$add_argument("--condition_var", default = "Region_Grouped", type = "character", help = "Grouping variable")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples/402_aggregation")
-    args$input_file <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples/401_samples_interactions_agg_rank.rds")
-    args$condition_varname <- "Region"
+    args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/402_aggregation")
+    args$input_file <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/401_combine_samples/401_samples_interactions_agg_rank.rds")
+    args$condition_var <- "Region"
 }
 
 
@@ -49,12 +49,17 @@ obj <- readRDS(args$input_file) %>%
     mutate(
         LIANA_score = ifelse(is.na(LIANA_score), 0, LIANA_score),
         CellPhoneDB_score = ifelse(is.na(CellPhoneDB_score), 0, CellPhoneDB_score),
-        CellChat_score = ifelse(is.na(CellChat_score), 1, CellChat_score)
+        CellChat_score = ifelse(is.na(CellChat_score), 0, CellChat_score)
     ) %>%
-    select(!!sym(args$condition_varname), complex_interaction, pval, LIANA_score, CellPhoneDB_score, CellChat_score, source_target) %>%
-    group_by(!!sym(args$condition_varname), source_target, complex_interaction) %>%
+    select(!!sym(args$condition_var), complex_interaction, pval, LIANA_score, CellPhoneDB_score, CellChat_score, source_target) %>%
+    group_by(!!sym(args$condition_var), source_target, complex_interaction) %>%
     # Combine p-values and interaction scores (CellChat, LIANA, CellphoneDB) across samples
-    mutate(pval = combine.test(pval), LIANA_score = mean(LIANA_score), CellPhoneDB_score = mean(CellPhoneDB_score), CellChat_score = mean(CellChat_score))
+    mutate(
+        pval = combine.test(pval),
+        LIANA_score = mean(LIANA_score),
+        CellPhoneDB_score = mean(CellPhoneDB_score),
+        CellChat_score = mean(CellChat_score)
+    )
 # r$> head(obj)
 # # A tibble: 6 × 7
 # # Groups:   Region, source_target, complex_interaction [6]
@@ -68,6 +73,6 @@ obj <- readRDS(args$input_file) %>%
 # 6 PT     DSCAM__DCC          0.0000000760        0.917             100         0.00296  Invasive-high OPC/NPC1__Invasive-high OPC/NPC1
 
 log_info("Save results...")
-saveRDS(obj, glue("{args$output_dir}/402b_aggregation_continuous.rds"))
+saveRDS(obj, glue("{args$output_dir}/402b_aggregation_samples.rds"))
 
 log_info("COMPLETED!")

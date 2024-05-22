@@ -13,7 +13,7 @@ if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
         description = "Determine consensus for a sample",
-        default_output = "400_consensus"
+        default_output = "400_consensus_and_RRA.R"
     )
     parser$add_argument("-a", "--alpha",
         type = "numeric",
@@ -50,7 +50,7 @@ if (!interactive()) {
     args$run_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only")
 
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/400_consensus")
+    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/400_consensus_and_RRA.R")
     args$sample_id <- "6234_2895153_A"
     args$alpha <- 0.05
     args$cellchat_obj <- glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
@@ -76,7 +76,6 @@ create_dir(output_dir)
 
 pacman::p_load(RobustRankAggreg)
 
-
 log_info("Load postprocessed objects from CCIs...")
 common_cols <- c("source_target", "complex_interaction", "pval", "method", "Sample")
 # Pre-filtering on p-value, only impacts when downsampling is done (pval == NA, if interaction not detected in each downsampling run)
@@ -84,20 +83,19 @@ obj_cellchat <- readRDS(ifelse(file.exists(args$cellchat_obj),
     args$cellchat_obj,
     glue("{args$run_dir}/300_postproc_cellchat/cellchat__{args$sample_id}__postproc.rds")
 ))
-# select(all_of(common_cols)) %>%
-# filter(!is.na(pval))
+
 obj_liana <- readRDS(ifelse(file.exists(args$liana_obj),
     args$liana_obj,
     glue("{args$run_dir}/301_postproc_liana/liana__{args$sample_id}__postproc.rds")
 ))
-# select(all_of(common_cols)) %>%
-# filter(!is.na(pval))
+
 obj_cell2cell <- readRDS(ifelse(file.exists(args$cell2cell_obj), args$cell2cell_obj, glue("{args$run_dir}/302_postproc_cell2cell/cell2cell__{args$sample_id}__postproc.rds")))
-# select(all_of(common_cols)) %>%
-# filter(!is.na(pval))
-obj_cpdb <- readRDS(ifelse(file.exists(args$cpdb_obj), args$cpdb_obj, glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds")))
-# select(all_of(common_cols)) %>%
-# filter(!is.na(pval))
+
+obj_cpdb <- readRDS(ifelse(
+    file.exists(args$cpdb_obj),
+    args$cpdb_obj,
+    glue("{args$run_dir}/303_postproc_cpdb/cpdb__{args$sample_id}__postproc.rds")
+))
 
 log_info(glue("Number of interactions in CellChat BEFORE filtering: {nrow(obj_cellchat)}"))
 log_info(glue("Number of interactions in LIANA BEFORE filtering: {nrow(obj_liana)}"))
@@ -158,18 +156,36 @@ obj_cpdb <- obj_cpdb %>%
 # Grab all source-target pairs
 source_target_pairs <- unique(c(obj_cellchat %>% pull(source_target) %>% unique(), obj_liana %>% pull(source_target) %>% unique(), obj_cell2cell %>% pull(source_target) %>% unique(), obj_cpdb %>% pull(source_target) %>% unique()))
 
-
-aggregated_ranks <- lapply(source_target_pairs, rank_interactions, connectome = connectome, sca = sca, cytotalk = cytotalk, natmi = natmi, logfc = logfc, obj_cellchat = obj_cellchat, obj_cell2cell = obj_cell2cell, obj_cpdb = obj_cpdb)
+# Robust Rank Aggregation across all methods
+aggregated_ranks <- lapply(
+    source_target_pairs,
+    rank_interactions,
+    connectome = connectome,
+    sca = sca, cytotalk = cytotalk,
+    natmi = natmi,
+    logfc = logfc,
+    obj_cellchat = obj_cellchat,
+    obj_cell2cell = obj_cell2cell,
+    obj_cpdb = obj_cpdb
+)
 
 interactions_df_aggregated <- do.call(rbind, aggregated_ranks) %>%
     rename(complex_interaction = Name, pval = Score) %>%
     mutate(Sample = obj_liana %>% pull(Sample) %>% unique()) %>%
     remove_rownames() %>%
     # Adding individual p-values
-    left_join(obj_cellchat %>% rename(cellchat = pval) %>% select(Sample, source_target, complex_interaction, cellchat, CellChat_score)) %>%
-    left_join(obj_cell2cell %>% rename(cell2cell = pval) %>% select(Sample, source_target, complex_interaction, cell2cell)) %>%
-    left_join(obj_liana %>% rename(liana = pval) %>% select(Sample, source_target, complex_interaction, liana, LIANA_score)) %>%
-    left_join(obj_cpdb %>% rename(cpdb = pval) %>% select(Sample, source_target, complex_interaction, cpdb, CellPhoneDB_score))
+    left_join(obj_cellchat %>%
+        rename(cellchat = pval) %>%
+        select(Sample, source_target, complex_interaction, cellchat, CellChat_score)) %>%
+    left_join(obj_cell2cell %>%
+        rename(cell2cell = pval) %>%
+        select(Sample, source_target, complex_interaction, cell2cell)) %>%
+    left_join(obj_liana %>%
+        rename(liana = pval) %>%
+        select(Sample, source_target, complex_interaction, liana, LIANA_score)) %>%
+    left_join(obj_cpdb %>%
+        rename(cpdb = pval) %>%
+        select(Sample, source_target, complex_interaction, cpdb, CellPhoneDB_score))
 
 #  ===== APPROACH 2: FILTERING BASED ON SIGNIFICANCE ===== #
 log_info(glue("Filter by significance... (alpha = {args$alpha})"))

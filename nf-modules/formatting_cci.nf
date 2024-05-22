@@ -1,4 +1,4 @@
-process POSTPROCESSING_CELLCHAT {
+process formatting_cellchat {
     label 'time_10m'
     label 'mem_4G'
 
@@ -30,7 +30,7 @@ process POSTPROCESSING_CELLCHAT {
     """    
 }
 
-process POSTPROCESSING_LIANA {
+process formatting_liana {
     label 'time_10m'
     label 'mem_4G'
 
@@ -64,7 +64,7 @@ process POSTPROCESSING_LIANA {
 }
 
 
-process POSTPROCESSING_CELL2CELL {
+process formatting_cell2cell {
     label 'time_10m'
     label 'mem_4G'
 
@@ -96,7 +96,7 @@ process POSTPROCESSING_CELL2CELL {
     """ 
 }
 
-process POSTPROCESSING_CPDB {
+process formatting_cpdb {
     label 'time_10m'
     label 'mem_4G'
 

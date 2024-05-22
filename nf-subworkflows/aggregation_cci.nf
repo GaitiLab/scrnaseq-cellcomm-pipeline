@@ -1,4 +1,4 @@
-include { AGGREGATION_BINARIZED; AGGREGATION_CONTINUOUS; AGGREGATION_INTEGRATION } from "../nf-modules/consensus.nf"
+include { filtering_detect_in_multi_samples; aggregation_samples; filtering_aggregated_results } from "../nf-modules/consensus.nf"
 
 workflow AGGREGATION_CCI {
     take: 
@@ -6,23 +6,23 @@ workflow AGGREGATION_CCI {
     interactions_agg_rank
 
     main:
-    AGGREGATION_BINARIZED(
+    filtering_detect_in_multi_samples(
         input_file                      = mvoted_interactions, 
         annot                           = params.annot, 
-        condition_varname               = params.condition_varname, 
+        condition_var               = params.condition_var, 
         min_patients                    = params.min_patients
     )
-    AGGREGATION_CONTINUOUS(
+    aggregation_samples(
         input_file                      = interactions_agg_rank, 
-        condition_varname               = params.condition_varname
+        condition_var               = params.condition_var
     )
-    AGGREGATION_INTEGRATION(
-        interactions_agg_binarized      = AGGREGATION_BINARIZED.out, 
-        interactions_agg_continuous     = AGGREGATION_CONTINUOUS.out, 
-        condition_varname               = params.condition_varname
+    filtering_aggregated_results(
+        interactions_agg_binarized      = filtering_detect_in_multi_samples.out, 
+        interactions_agg_continuous     = aggregation_samples.out, 
+        condition_var               = params.condition_var
     )
 
     emit: 
-    aggregation_integration = AGGREGATION_INTEGRATION.out.aggregation_integration
+    aggregation_integration = filtering_aggregated_results.out.aggregation_integration
 
 }

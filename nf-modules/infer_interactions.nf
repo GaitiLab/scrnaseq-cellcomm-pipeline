@@ -1,4 +1,4 @@
-process INFER_CELLCHAT {
+process infer_cellchat {
     label 'mem_32G'
     label 'time_12h'
 
@@ -37,7 +37,7 @@ process INFER_CELLCHAT {
     """     
 }
 
-process INFER_LIANA {
+process infer_liana {
     label 'mem_8G'
     label 'time_30m'
 
@@ -75,9 +75,9 @@ process INFER_LIANA {
     """     
 }
 
-process INFER_CELL2CELL {
-    label 'mem_32G'
-    label 'time_12h'
+process infer_cell2cell {
+    label 'mem_64G'
+    label 'time_24h'
 
     publishDir params.output_dir, mode: "copy"
 
@@ -115,7 +115,7 @@ process INFER_CELL2CELL {
     """  
 }
 
-process INFER_CPDB {
+process infer_cpdb {
     label 'cpdb_env'
     label 'mem_16G'
     label 'time_1h'

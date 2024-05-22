@@ -19,24 +19,24 @@ if (!interactive()) {
     parser$add_argument("--celltype_oi", type = "character", help = "Celltype of interest", default = NULL)
     parser$add_argument("--metadata", type = "character", help = "Path to metadata", default = NULL)
     parser$add_argument("--meta_vars_oi", type = "character", help = "Path to metadata variables of interest", default = "")
-    parser$add_argument("--sample_varname", type = "character", help = "Name of sample variable", default = "")
-    parser$add_argument("--condition_varname", type = "character", help = "Name of condition variable", default = "")
-    parser$add_argument("--patient_varname", type = "character", help = "Name of patient variable", default = "")
+    parser$add_argument("--sample_var", type = "character", help = "Name of sample variable", default = "")
+    parser$add_argument("--condition_var", type = "character", help = "Name of condition variable", default = "")
+    parser$add_argument("--patient_var", type = "character", help = "Name of patient variable", default = "")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
     run_dir <- "CCI_CellClass_L2_2_reassigned_samples"
-    args$input_dir <- glue("output/CCI_CellClass_L2_2_reassigned_samples/400_consensus")
+    args$input_dir <- glue("output/CCI_CellClass_L2_2_reassigned_samples/400_consensus_and_RRA.R")
     args$output_dir <- glue("output/CCI_CellClass_L2_2_reassigned_samples/401_combine_samples")
     args$celltype_oi <- NULL
     args$metadata <- glue("output/CCI_CellClass_L2_2_reassigned_samples/000_data/gbm_regional_study__metadata.rds")
     # args$meta_vars_oi <- glue("{here::here()}/000_misc_local/meta_vars_oi.txt")
     args$meta_vars_oi <- ""
-    args$sample_varname <- "Sample"
-    args$condition_varname <- "Region"
-    args$patient_varname <- "Patient"
+    args$sample_var <- "Sample"
+    args$condition_var <- "Region"
+    args$patient_var <- "Patient"
 }
 
 # Set up logging
@@ -123,7 +123,7 @@ if (file.exists(args$meta_vars_oi)) {
         pull(V1)
 } else {
     log_info("No metadata variables of interest provided. Using default variables (Sample)...")
-    cols_oi <- unique(c(args$sample_varname, args$condition_varname, args$patient_varname))
+    cols_oi <- unique(c(args$sample_var, args$condition_var, args$patient_var))
 }
 metadata <- readRDS(args$metadata)
 cols <- colnames(metadata)
@@ -147,10 +147,10 @@ log_info("Add metadata...")
 # TODO: maybe make this optional?
 all_mvoted <- all_mvoted %>%
     # All post-processed interaction results have the same column names, e.g. "Sample"
-    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
+    left_join(metadata, by = c("Sample" = args$sample_var)) %>%
     ungroup()
 
-if (args$sample_varname == args$patient_varname) {
+if (args$sample_var == args$patient_var) {
     all_mvoted <- all_mvoted %>% mutate(Patient = Sample)
 }
 
@@ -167,7 +167,7 @@ if (args$sample_varname == args$patient_varname) {
 # 6 6234_2895153_A Malignant__Malignant ADAM10__IL6R                1        0           0            1       0 FALSE          FALSE            TE
 all_sign_interactions <- all_sign_interactions %>%
     # All post-processed interaction results have the same column names, e.g. "Sample"
-    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
+    left_join(metadata, by = c("Sample" = args$sample_var)) %>%
     ungroup()
 # r$> head(all_sign_interactions)
 # # A tibble: 6 × 9
@@ -183,8 +183,15 @@ all_sign_interactions <- all_sign_interactions %>%
 
 
 interactions_agg_rank <- interactions_agg_rank %>%
-    left_join(metadata, by = c("Sample" = args$sample_varname)) %>%
+    left_join(metadata, by = c("Sample" = args$sample_var)) %>%
     ungroup()
+
+# In case there is no condition given, put all samples into one group.
+if (args$condition_var == "Condition_dummy") {
+    all_mvoted <- all_mvoted %>% mutate(Condition_dummy == 1)
+    all_sign_interactions <- all_sign_interactions %>% mutate(Condition_dummy == 1)
+    interactions_agg_rank <- interactions_agg_rank %>% mutate(Condition_dummy == 1)
+}
 
 log_info("Save...")
 saveRDS(all_mvoted, file = glue("{output_dir}/401_samples_interactions_mvoted.rds"))

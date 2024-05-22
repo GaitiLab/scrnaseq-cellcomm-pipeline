@@ -23,7 +23,7 @@ if (!interactive()) {
         help = "Annotation to use for filtering"
     )
     parser$add_argument("--min_patients", type = "integer", default = 2, help = "Minimum number of patients for an interaction to be kept")
-    parser$add_argument("--condition_varname", type = "character", help = "Name of condition variable", default = "Region_Grouped")
+    parser$add_argument("--condition_var", type = "character", help = "Name of condition variable", default = "Region_Grouped")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -33,7 +33,7 @@ if (!interactive()) {
     run_name <- "CCI_CellClass_L2_2_reassigned_samples"
     args$output_dir <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/402_aggregation")
     args$input_file <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/401_combine_samples/401_samples_interactions_mvoted.rds")
-    args$condition_varname <- "Region"
+    args$condition_var <- "Region"
     args$min_patients <- 2
 }
 
@@ -67,7 +67,7 @@ input_file <- readRDS(args$input_file)
 # 5 6234_2895153_A Microglia__Microglia ADAM10__CD44                2        0           0            1       1 FALSE          FALSE            TE
 # 6 6234_2895153_A Microglia__Microglia ADAM10__GPNMB               4        1           1            1       1 TRUE           TRUE             TE
 
-cols_oi <- c("Patient", "Sample", args$condition_varname, "source_target", "complex_interaction")
+cols_oi <- c("Patient", "Sample", args$condition_var, "source_target", "complex_interaction")
 
 if (sum(str_detect(colnames(input_file), "Patient")) == 0) {
     log_info("Patient column missing, assuming Patient = Sample...")
@@ -79,7 +79,7 @@ if (sum(str_detect(colnames(input_file), "Patient")) == 0) {
 lenient_voting <- input_file %>%
     filter(lenient_voting) %>%
     select(all_of(cols_oi)) %>%
-    group_by_at(vars((c(args$condition_varname, "Patient", "source_target", "complex_interaction")))) %>%
+    group_by_at(vars((c(args$condition_var, "Patient", "source_target", "complex_interaction")))) %>%
     reframe(lenient_detected_same_patient = paste0(Sample, collapse = ", "), lenient_N_samples_same_patient = n())
 head(lenient_voting %>% arrange(desc(lenient_N_samples_same_patient)))
 # # A tibble: 6 × 6
@@ -94,7 +94,7 @@ head(lenient_voting %>% arrange(desc(lenient_N_samples_same_patient)))
 
 
 lenient_voting_by_region <- lenient_voting %>%
-    group_by_at(vars((c(args$condition_varname, "source_target", "complex_interaction")))) %>%
+    group_by_at(vars((c(args$condition_var, "source_target", "complex_interaction")))) %>%
     reframe(
         lenient_condition_patients = paste0(Patient, collapse = ", "), lenient_condition_n_patients = n(),
         lenient_condition_n_samples = sum(lenient_N_samples_same_patient),
@@ -133,7 +133,9 @@ log_info(glue("After filtering: {n_after}"))
 stringent_voting <- input_file %>%
     filter(stringent_voting) %>%
     select(all_of(cols_oi)) %>%
-    group_by_at(vars((c(args$condition_varname, "Patient", "source_target", "complex_interaction")))) %>%
+    group_by_at(vars(
+        (c(args$condition_var, "Patient", "source_target", "complex_interaction"))
+    )) %>%
     reframe(stringent_detected_same_patient = paste0(Sample, collapse = ", "), stringent_N_samples_same_patient = n())
 # # A tibble: 6 × 6
 #   Region_Grouped Patient source_target        complex_interaction stringent_detected_same_patient stringent_N_samples_same_patient
@@ -146,7 +148,7 @@ stringent_voting <- input_file %>%
 # 6 PT             6234    Microglia__Microglia ADAM10__NOTCH1      6234_2895153_B                                                 1
 
 stringent_voting_by_region <- stringent_voting %>%
-    group_by_at(vars((c(args$condition_varname, "source_target", "complex_interaction")))) %>%
+    group_by_at(vars((c(args$condition_var, "source_target", "complex_interaction")))) %>%
     reframe(stringent_condition_patients = paste0(Patient, collapse = ", "), stringent_condition_n_patients = n(), stringent_condition_n_samples = sum(stringent_N_samples_same_patient), stringent_condition_samples = paste0(stringent_detected_same_patient, collapse = ", "))
 # r$> head(stringent_voting_by_region)
 # # A tibble: 6 × 7
@@ -185,7 +187,7 @@ log_info("Combine stringent and lenient voting...")
 lenient_voting_by_region <- lenient_voting_by_region %>% mutate(lenient_condition = TRUE)
 stringent_voting_by_region <- stringent_voting_by_region %>% mutate(stringent_condition = TRUE)
 
-combined_voting <- merge(lenient_voting_by_region, stringent_voting_by_region, by = c(args$condition_varname, "source_target", "complex_interaction"), all = TRUE)
+combined_voting <- merge(lenient_voting_by_region, stringent_voting_by_region, by = c(args$condition_var, "source_target", "complex_interaction"), all = TRUE)
 # r$> head(combined_voting)
 #   Region_Grouped        source_target complex_interaction lenient_condition_patients lenient_condition_n_patients lenient_condition_n_samples                                       lenient_condition_samples stringent_condition_patients stringent_condition_n_patients
 # 1             PT Astrocyte__Astrocyte       ALDH1A1__RORB  6237, 6419, 6509                            3                           4 6237_2222190_A, 6419_cortex, 6419_enhancing_border, 6509_cortex    6237, 6419, 6509                              3
@@ -202,4 +204,5 @@ combined_voting <- merge(lenient_voting_by_region, stringent_voting_by_region, b
 # 5                            NA                                                            <NA>
 # 6                             2                                     6237_2222190_A, 6419_cortex
 log_info("Save results...")
-saveRDS(combined_voting, glue("{args$output_dir}/402a_aggregation_binarized.rds"))
+saveRDS(combined_voting, glue("{args$output_dir}/402a_filtering_detect_in_multi_samples.rds"))
+log_info("COMPLETED!")

@@ -16,47 +16,218 @@ Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data 
 
 ## Workflow
 
-![workflow](src/workflow.svg)
+![workflow](src/workflow.png)
 
-> Please note that only the main outputs are shown in the workflow. For each step, intermediate results are generated as well.  
+> Please note that only the main outputs are shown in the workflow. For each step, intermediate results are generated as well.
 
 1. **Prepare Data.** Prepare the Seurat object with the scRNAseq data for inference.
 2. **CCI Inference.** Per-sample
-   
-   a. Inference. Run tools with given user parameters.
-   
+    a. Inference. Run tools with given user parameters.
+
    b. Standardize. Format CCI results for each tool.
 
    c. Collect into a single file. Combine the results for all tools into one file.
 
-3. **CCI Filtering & Merging.** 
-    > NOTE: with the continuous approach, no information (interactions) are lost.
-
-    a. **Binary approach**
-
-   - **Sample-wise.** Keep only significant interactions (p < 0.05) in at least LIANA and 2 other tools, this is done for each unique 'interaction' - 'cell type pair' combination.
-   - **Conservation across samples.** Keep only interactions that are found in at least N samples (or patients, in case sample = patient) for each condition level.
-
-    
-    b. **Continuous approach**
-
+3. **CCI Aggregation.**
     - **Robust Rank Aggregation (RRA) across methods.** Rank the interactions (each unique 'interaction' - 'cell type pair' combination) based on all tools using the Robust Rank Aggregation method (also used in LIANA). The obtained ranks can be interpreted as p-values. **(sample-wise)**
-    - **Combine interactions by condition.** Summarize interactions by condition, using Fisher combine for the ranks obtained with 3b and averaging the interaction scores for CellPhoneDB, CellChat & LIANA. 
-    
-    c. **Merge.** Use left-join to merge the results from approach 3a with 3b, i.e. adding a p-value and scores for each interaction in 3a. An Excel file with these results is generated. 
+    - **Combine interactions by condition.** Summarize interactions by condition, using Fisher combine for the ranks obtained with RRA and averaging the interaction scores for CellPhoneDB, CellChat & LIANA (interaction scores).
+
+4. **CCI Filtering.**
+
+   * **Consensus across methods.** Keep only significant interactions (p < 0.05) in at least LIANA and 2 other tools, this is done for each unique 'interaction' - 'cell type pair' combination.
+   * **Conservation across samples.** Keep only interactions that are found in at least N samples (or patients, in case sample = patient) for each condition level.
+
+5. **Final filtering step.** Using the 'forced' filtering in step 4, the results from step 3 are filtered, i.e. only the interactions from step 4 are kept and consequently saved as an Excel file.
 
 ### Parameter Configuration
 
-The pipeline contains various parameters that can be set. These can be found in [nf_template.sh](nf_template.sh) or in [nextflow.config](nextflow.config). The latter contains also the default values. 
+The pipeline contains various parameters that can be set. These can be found in [nf_template.sh](nf_template.sh) or in [nextflow.config](nextflow.config). The latter contains also the default values.
 
 <!-- The pipeline contains several modules, consequently you can start the pipeline from each module. These modules correspond to the three main steps described in Workflow.  -->
 
 Required inputs:
 
-* `input_file`. This is your Seurat object (RDS file) with the scRNAseq data for your cohort.
-* `split_varname` (default="Sample")
-* `condition` (default="").  Used for **CCI Filtering & Merging** for comparison of multiple conditions (or groups).
-* `Patient` (default=""). In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample.
+* `input_file` This is your (integrated) Seurat object (RDS file) with the scRNAseq data for your cohort.
+* `sample_var` (default="Sample")
+* `Patient` (default="Patient"). In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample.
+* `condition` (default="Condition_dummy"). Used for **3. CCI Aggregation & 4. CCI Filtering** for comparison of multiple conditions (or groups). If there is no 'condition' for your dataset, use the default. Then aggregation/filtering will be done based on Patient (or Sample, in case Patient = Sample).
+* `annot` Variable in metadata with your cell type labels.
+* `min_cells` (default = 100) Minimum number of cells required in each cell group for cell-cell communication
+* `min_pct` (default = 0.10 = 10%) Minimum percentage of cells expressing a gene
+* `n_perm` (default = 1000) Number of iterations for permutation testing
+* `min_patients` Minimum number of patients for an interaction to be kept (used in **4. CCI Filtering**)
+* `alpha` (default = 0.05) threshold used for **4. CCI Filtering**
+* `output_dir` directory for saving output files.
+
+### Outputs
+
+Example of created output files for a Seurat object containing 6 samples, where one sample 'Sample 1' does not have at least two cell types with the min. number of cells. Therefore in no CCI results for 'Sample 1'.
+
+```{shell}
+output
+├── 000_data
+│   ├── example_data__metadata.csv
+│   ├── example_data__metadata.rds
+│   ├── example_data_reduced_size.rds
+│   └── split_by_Sample
+│       ├── Sample_1.rds
+│       ├── Sample_2.rds
+│       ├── Sample_3.rds
+│       ├── Sample_4.rds
+│       ├── Sample_5.rds
+│       └── Sample_6.rds
+├── 100_preprocessing
+│   ├── mtx
+│   │   ├── Sample_1
+│   │   │   ├── barcodes.tsv
+│   │   │   ├── genes.tsv
+│   │   │   └── matrix.mtx
+│   │   ├── Sample_2
+│   │   │   ├── barcodes.tsv
+│   │   │   ├── genes.tsv
+│   │   │   └── matrix.mtx
+│   │   ├── Sample_3
+│   │   │   ├── barcodes.tsv
+│   │   │   ├── genes.tsv
+│   │   │   └── matrix.mtx
+│   │   ├── Sample_4
+│   │   │   ├── barcodes.tsv
+│   │   │   ├── genes.tsv
+│   │   │   └── matrix.mtx
+│   │   ├── Sample_5
+│   │   │   ├── barcodes.tsv
+│   │   │   ├── genes.tsv
+│   │   │   └── matrix.mtx
+│   │   └── Sample_6
+│   │       ├── barcodes.tsv
+│   │       ├── genes.tsv
+│   │       └── matrix.mtx
+│   └── seurat
+│       ├── Sample_1.rds
+│       ├── Sample_2.rds
+│       ├── Sample_3.rds
+│       ├── Sample_4.rds
+│       ├── Sample_5.rds
+│       └── Sample_6.rds
+├── 200_cci_cellchat
+│   ├── cellchat__Sample_2.rds
+│   ├── cellchat__Sample_2__raw_obj.rds
+│   ├── cellchat__Sample_3.rds
+│   ├── cellchat__Sample_3__raw_obj.rds
+│   ├── cellchat__Sample_4.rds
+│   ├── cellchat__Sample_4__raw_obj.rds
+│   ├── cellchat__Sample_5.rds
+│   ├── cellchat__Sample_5__raw_obj.rds
+│   ├── cellchat__Sample_6.rds
+│   └── cellchat__Sample_6__raw_obj.rds
+├── 201_cci_liana
+│   ├── liana__Sample_2.rds
+│   ├── liana__Sample_3.rds
+│   ├── liana__Sample_4.rds
+│   ├── liana__Sample_5.rds
+│   └── liana__Sample_6.rds
+├── 202_cci_cell2cell
+│   ├── cell2cell__Sample_2.csv
+│   ├── cell2cell__Sample_2.pickle
+│   ├── cell2cell__Sample_3.csv
+│   ├── cell2cell__Sample_3.pickle
+│   ├── cell2cell__Sample_4.csv
+│   ├── cell2cell__Sample_4.pickle
+│   ├── cell2cell__Sample_5.csv
+│   ├── cell2cell__Sample_5.pickle
+│   ├── cell2cell__Sample_6.csv
+│   └── cell2cell__Sample_6.pickle
+├── 203_cci_cpdb
+│   ├── Sample_2_counts.h5ad
+│   ├── Sample_2_metadata.tsv
+│   ├── Sample_3_counts.h5ad
+│   ├── Sample_3_metadata.tsv
+│   ├── Sample_4_counts.h5ad
+│   ├── Sample_4_metadata.tsv
+│   ├── Sample_5_counts.h5ad
+│   ├── Sample_5_metadata.tsv
+│   ├── Sample_6_counts.h5ad
+│   ├── Sample_6_metadata.tsv
+│   ├── statistical_analysis_deconvoluted__Sample_2.txt
+│   ├── statistical_analysis_deconvoluted__Sample_3.txt
+│   ├── statistical_analysis_deconvoluted__Sample_4.txt
+│   ├── statistical_analysis_deconvoluted__Sample_5.txt
+│   ├── statistical_analysis_deconvoluted__Sample_6.txt
+│   ├── statistical_analysis_deconvoluted_percents__Sample_2.txt
+│   ├── statistical_analysis_deconvoluted_percents__Sample_3.txt
+│   ├── statistical_analysis_deconvoluted_percents__Sample_4.txt
+│   ├── statistical_analysis_deconvoluted_percents__Sample_5.txt
+│   ├── statistical_analysis_deconvoluted_percents__Sample_6.txt
+│   ├── statistical_analysis_interaction_scores__Sample_2.txt
+│   ├── statistical_analysis_interaction_scores__Sample_3.txt
+│   ├── statistical_analysis_interaction_scores__Sample_4.txt
+│   ├── statistical_analysis_interaction_scores__Sample_5.txt
+│   ├── statistical_analysis_interaction_scores__Sample_6.txt
+│   ├── statistical_analysis_means__Sample_2.txt
+│   ├── statistical_analysis_means__Sample_3.txt
+│   ├── statistical_analysis_means__Sample_4.txt
+│   ├── statistical_analysis_means__Sample_5.txt
+│   ├── statistical_analysis_means__Sample_6.txt
+│   ├── statistical_analysis_pvalues__Sample_2.txt
+│   ├── statistical_analysis_pvalues__Sample_3.txt
+│   ├── statistical_analysis_pvalues__Sample_4.txt
+│   ├── statistical_analysis_pvalues__Sample_5.txt
+│   ├── statistical_analysis_pvalues__Sample_6.txt
+│   ├── statistical_analysis_significant_means__Sample_2.txt
+│   ├── statistical_analysis_significant_means__Sample_3.txt
+│   ├── statistical_analysis_significant_means__Sample_4.txt
+│   ├── statistical_analysis_significant_means__Sample_5.txt
+│   └── statistical_analysis_significant_means__Sample_6.txt
+├── 300_postproc_cellchat
+│   ├── cellchat__Sample_2__postproc.rds
+│   ├── cellchat__Sample_3__postproc.rds
+│   ├── cellchat__Sample_4__postproc.rds
+│   ├── cellchat__Sample_5__postproc.rds
+│   └── cellchat__Sample_6__postproc.rds
+├── 301_postproc_liana
+│   ├── liana__Sample_2__postproc.rds
+│   ├── liana__Sample_3__postproc.rds
+│   ├── liana__Sample_4__postproc.rds
+│   ├── liana__Sample_5__postproc.rds
+│   └── liana__Sample_6__postproc.rds
+├── 302_postproc_cell2cell
+│   ├── cell2cell__Sample_2__postproc.rds
+│   ├── cell2cell__Sample_3__postproc.rds
+│   ├── cell2cell__Sample_4__postproc.rds
+│   ├── cell2cell__Sample_5__postproc.rds
+│   └── cell2cell__Sample_6__postproc.rds
+├── 303_postproc_cpdb
+│   ├── cpdb__Sample_2__postproc.rds
+│   ├── cpdb__Sample_3__postproc.rds
+│   ├── cpdb__Sample_4__postproc.rds
+│   ├── cpdb__Sample_5__postproc.rds
+│   └── cpdb__Sample_6__postproc.rds
+├── 400_consensus_and_RRA
+│   ├── Sample_2__interactions_agg_rank.rds
+│   ├── Sample_2__interactions_mvoted.rds
+│   ├── Sample_2__signif_interactions.rds
+│   ├── Sample_3__interactions_agg_rank.rds
+│   ├── Sample_3__interactions_mvoted.rds
+│   ├── Sample_3__signif_interactions.rds
+│   ├── Sample_4__interactions_agg_rank.rds
+│   ├── Sample_4__interactions_mvoted.rds
+│   ├── Sample_4__signif_interactions.rds
+│   ├── Sample_5__interactions_agg_rank.rds
+│   ├── Sample_5__interactions_mvoted.rds
+│   ├── Sample_5__signif_interactions.rds
+│   ├── Sample_6__interactions_agg_rank.rds
+│   ├── Sample_6__interactions_mvoted.rds
+│   └── Sample_6__signif_interactions.rds
+├── 401_combine_samples
+│   ├── 401_samples_interactions_agg_rank.rds
+│   ├── 401_samples_interactions_mvoted.rds
+│   └── 401_samples_sign_interactions.rds
+├── 402_aggregation_and_filtering
+│   ├── 402a_filtering_detect_in_multi_samples.rds
+│   ├── 402b_aggregation_samples.rds
+│   └── 402c_filtering_aggregated_res.rds
+└── interactions_summary.xlsx
+```
 
 ### Interactions Database
 
