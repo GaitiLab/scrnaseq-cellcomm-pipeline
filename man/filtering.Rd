@@ -4,7 +4,7 @@
 \alias{filtering}
 \title{Filtering the Seurat object to reduce size of object}
 \usage{
-filtering(seurat_obj, annot, min_cells, genes_oi)
+filtering(seurat_obj, annot, min_cells)
 }
 \arguments{
 \item{(Seurat)}{seurat_obj Seurat object}

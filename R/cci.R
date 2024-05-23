@@ -76,17 +76,3 @@ rank_interactions <- function(cell_type_pair, connectome, sca, cytotalk, natmi, 
     # ICAM1__ITGAM:ITGB2 ICAM1__ITGAM:ITGB2 1.620285e-05
     return(ranked_interactions %>% mutate(source_target = cell_type_pair))
 }
-
-#' @title Combine p-values
-#' @description Combine p-values using Fisher's method
-#' @param p_values vector of p-values
-#' @return combined p-value
-#' @export
-#' @importFrom metap sumlog
-get_p <- function(x) {
-    if (length(x) > 1) {
-        return(sumlog(x)$p)
-    } else {
-        return(x)
-    }
-}
