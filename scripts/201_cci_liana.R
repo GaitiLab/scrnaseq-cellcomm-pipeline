@@ -3,7 +3,6 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
-# require(GBMutils)
 # Set working directory
 set_wd()
 
@@ -44,11 +43,14 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_dowsampling_implementation/201_cci_liana")
-    args$annot <- "CCI_CellClass_L1"
+    args$output_dir <- glue("{here::here()}/output/TESTING")
+    args$annot <- "finalcelltype"
     args$n_perm <- 10
     args$interactions_db <- glue("{here::here()}/data/interactions_db/liana_db.rds")
-    args$gene_expr <- glue("{here::here()}/output/test_pipeline/100_preprocessing/seurat/6419_cortex__run__1.rds")
+    args$gene_expr <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/minusBSO2_barcode/100_preprocessing/seurat/1215768.rds")
+    # args$gene_expr <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/100_preprocessing/seurat/6237_2222190_F.rds"
+    args$min_pct <- 0.10
+    args$min_cells <- 20
 }
 
 # Set up logging
@@ -79,6 +81,9 @@ assay <- "RNA"
 # ---- Loading data ----
 log_info("Loading Seurat object...")
 seurat_obj <- readRDS(args$gene_expr)
+
+# # Temporary fix
+# seurat_obj@meta.data[, args$annot] <- str_replace_all(seurat_obj@meta.data[, args$annot], c(" " = "_", "\\/" = ""))
 
 log_info("Loading database with interactions...")
 custom_resource <- readRDS(args$interactions_db)

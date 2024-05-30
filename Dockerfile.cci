@@ -1,0 +1,11 @@
+FROM --platform=linux/amd64 mambaorg/micromamba:jammy
+
+COPY --chown=$MAMBA_USER:$MAMBA_USER env/cci_h4h.yml /tmp/cci_h4h.yml
+
+ARG MAMBA_DOCKERFILE_ACTIVATE=1
+RUN micromamba install -y -n base --file /tmp/cci_h4h.yml \
+    && micromamba clean --all --yes
+
+COPY --chown=$MAMBA_USER:$MAMBA_USER env/install.R /tmp/install.R
+
+RUN Rscript "/tmp/install.R"

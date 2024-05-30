@@ -7,16 +7,16 @@
 filtering(seurat_obj, annot, min_cells)
 }
 \arguments{
-\item{(Seurat)}{seurat_obj Seurat object}
+\item{seurat_obj}{Seurat object}
 
-\item{(character)}{annot Annotation to use for filtering}
+\item{annot}{Annotation to use for filtering}
 
-\item{(integer)}{min_cells Minimum number of cells per annotation}
+\item{min_cells}{Minimum number of cells per annotation}
 
-\item{(array)}{genes_oi list of genes of interest from database}
+\item{genes_oi}{list of genes of interest from database}
 }
 \value{
-(Seurat) seurat_obj Filtered seurat object
+seurat_obj Filtered seurat object
 }
 \description{
 \enumerate{
@@ -24,5 +24,5 @@ filtering(seurat_obj, annot, min_cells)
 }
 }
 \examples{
-seurat_obj <- filtering(seurat_obj, "custom_annot", 300, genes_oi)
+dontrun{seurat_obj <- filtering(seurat_obj, "custom_annot", 300, genes_oi)}
 }

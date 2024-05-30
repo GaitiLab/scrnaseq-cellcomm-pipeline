@@ -3,7 +3,6 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
-# require(GBMutils)
 # Set working directory
 set_wd()
 
@@ -44,15 +43,16 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/")
-    args$annot <- "finalcelltype"
-    # args$annot <- "CCI_CellClass_L2"
+    args$output_dir <- glue("{here::here()}/output/TESTING")
+    # args$annot <- "finalcelltype"
+    args$annot <- "CCI_CellClass_L2"
     args$n_perm <- 3
-    args$interactions_db <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
-    # args$gene_expr <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/100_preprocessing/seurat/6237_2222190_A.rds")
-    args$gene_expr <- "/Users/joankant/Desktop/gaitigroup/Users/Jiaoyi/analysis/CCI/scrnaseq-cellcomm/output/CCI_Curtis_May23/100_preprocessing/seurat/1215768.rds"
+    # args$interactions_db <- glue("{here::here()}/data/interactions_db/cellchat_db.rds")
+    args$interactions_db <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/wip_interactions_db/cellchat_db.rds"
+    args$gene_expr <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/100_preprocessing/seurat/6237_2222190_A.rds")
+    # args$gene_expr <- "/Users/joankant/Desktop/gaitigroup/Users/Jiaoyi/analysis/CCI/scrnaseq-cellcomm/output/CCI_Curtis_May23/100_preprocessing/seurat/1215768.rds"
     args$n_cores <- 1
-    args$min_cells <- 20
+    args$min_cells <- 50
 }
 
 # Set up logging
@@ -76,10 +76,6 @@ seurat_obj <- readRDS(args$gene_expr)
 log_info("Extract gene expression and convert to matrix...")
 mat <- as.matrix(seurat_obj@assays$RNA@data)
 meta <- seurat_obj@meta.data
-# FIX: Error in computeCommunProb(cellchat, nboot = args$n_perm, population.size = TRUE) :
-#   Please check `unique(object@idents)` and ensure that the factor levels are correct!
-#          You may need to drop unused levels using 'droplevels' function. e.g.,
-#          `meta$labels = droplevels(meta$labels, exclude = setdiff(levels(meta$labels),unique(meta$labels)))`
 meta[, args$annot] <- factor(meta[, args$annot])
 
 log_info("Create CellChat object...")

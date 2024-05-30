@@ -31,10 +31,10 @@ output_dir="${base_dir}/GBM_CCI_Analysis/output/${run_name}"
 init_step=1
 
 # Pre-processing
-split_varname="Sample"
+sample_var="Sample"
 annot="CCI_CellClass_L2_2"
-condition_varname="Region"
-patient_varname="Patient"
+condition_var="Region"
+patient_var="Patient"
 min_patients=2
 min_cells=50
 is_confident=1
@@ -64,15 +64,15 @@ ${nf_exec} run ${project_dir} -with-report -with-trace -resume \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
-    --split_varname ${split_varname} \
+    --sample_var ${sample_var} \
     --annot ${annot} \
     --min_cells ${min_cells} \
     --n_perm ${n_perm} \
     --min_pct ${min_pct} \
     --alpha $alpha \
     --init_step $init_step \
-    --condition_varname $condition_varname \
-    --patient_varname $patient_varname \
+    --condition_var $condition_var \
+    --patient_var $patient_var \
     --min_patients $min_patients \
     --is_confident ${is_confident} \
     --outdir ${outdir} \

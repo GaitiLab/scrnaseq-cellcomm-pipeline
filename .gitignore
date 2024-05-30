@@ -93,12 +93,13 @@ nf-config-local
 notebooks/
 *.rds
 
-scripts/INACTIVE/
 002_WIP_Figures
 
 nf-work
 test_pipeline*
 
 002_WIP_Figures
+*/INACTIVE
 scripts/INACTIVE
 
+test

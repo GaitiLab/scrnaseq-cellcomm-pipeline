@@ -3,7 +3,6 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
-# require(GBMutils)
 # Set working directory
 set_wd()
 
@@ -23,10 +22,10 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/301_postproc_liana")
-    args$input_interactions <- glue("{here::here()}/output/CCI_CellClass_L2_2_reassigned_samples_confident_only/201_cci_liana/liana__6509_cortex.rds")
+    args$output_dir <- glue("{here::here()}/output/TESTING")
+    args$input_interactions <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/nf-work/75/6343a6564f353b601a5cc8b90be961/201_cci_liana/liana__1215768.rds")
     args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "6509_cortex"
+    args$sample_id <- "1215768"
 }
 
 # Set up logging

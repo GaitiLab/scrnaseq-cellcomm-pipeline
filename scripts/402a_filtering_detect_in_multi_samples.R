@@ -48,7 +48,7 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-pacman::p_load(xlsx, metap)
+pacman::p_load(xlsx)
 
 # TODO might need to change this to too, to not get a skewed view of the data
 glob_min_samples <- 1

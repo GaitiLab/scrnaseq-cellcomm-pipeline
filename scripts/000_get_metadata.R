@@ -3,7 +3,6 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
-# require(GBMutils)
 # Set working directory
 set_wd()
 
@@ -56,3 +55,5 @@ saveRDS(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__me
 write.csv(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__metadata.csv"))
 
 log_info("COMPLETED!")
+
+get_name()
