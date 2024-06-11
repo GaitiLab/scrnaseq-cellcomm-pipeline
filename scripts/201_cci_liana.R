@@ -3,25 +3,25 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
+
 # Set working directory
 set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
-devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Inferring CCIs using LIANA",
+        description = "Inferring CCIs using LIANA", default_output = "output/201_cci_liana"
     )
     parser$add_argument("-p", "--n_perm",
         type = "integer",
         default = 1000,
-        help = "Number of permutations for permutation testing"
+        help = "Number of permutations for permutation testing (default = 1000)"
     )
     parser$add_argument("-db", "--interactions_db",
-        type = "character", default = "",
-        help = "Path to custom database with interactions (RDS)"
+        type = "character", default = "data/interactions_db/liana_db.rds",
+        help = "Path to custom database with interactions an rds file (default = 'data/interactions_db/liana_db.rds')"
     )
     parser$add_argument("-a", "--annot",
         type = "character", default = "cell_type",
@@ -29,28 +29,27 @@ if (!interactive()) {
     )
     parser$add_argument("-g", "--gene_expr",
         type = "character",
-        default = NULL, help = "Seurat object with the gene expression (RDS file)"
+        default = "", help = "Seurat object with the gene expression (RDS file)"
     )
     parser$add_argument("-n", "--min_cells",
-        type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication"
+        type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication (default = 5)"
     )
     parser$add_argument("-mp", "--min_pct",
         type = "numeric",
-        default = 0.1, help = "Minimum percentage of cells expressing a gene"
+        default = 0.1, help = "Minimum percentage of cells expressing a gene (default = 0.1; 10%)"
     )
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/TESTING")
-    args$annot <- "finalcelltype"
-    args$n_perm <- 10
-    args$interactions_db <- glue("{here::here()}/data/interactions_db/liana_db.rds")
-    args$gene_expr <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/output/minusBSO2_barcode/100_preprocessing/seurat/1215768.rds")
-    # args$gene_expr <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/GBM_CCI_Analysis/output/CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL/100_preprocessing/seurat/6237_2222190_F.rds"
-    args$min_pct <- 0.10
-    args$min_cells <- 20
+    args$gene_expr <- "output/test_individual_scripts/100_preprocessing/seurat/Sample_6.rds"
+    args$output_dir <- "output/test_individual_scripts/201_cci_liana"
+    args$annot <- "seurat_annotations"
+    args$min_cells <- 5
+    args$interactions_db <- "data/interactions_db/liana_db.rds"
+    args$n_perm <- 5
+    args$min_pct <- 0.1
 }
 
 # Set up logging
@@ -63,47 +62,19 @@ log_info(ifelse(interactive(),
 log_info("Create output directory...")
 output_dir <- glue("{args$output_dir}")
 create_dir(output_dir)
+options(Seurat.object.assay.version = "v4")
 
 # Load additional libraries
 log_info("Loading libraries...")
-pacman::p_load(OmnipathR)
-pacman::p_load_gh("saezlab/liana")
 
-# ---- Constants ----
-# TODO add "cytotalk" later after finishing nextflow pipeline
-methods <- c("natmi", "connectome", "logfc", "sca", "cytotalk")
-supp_columns <- c("ligand.expr", "receptor.expr")
-permutation_params <- list(
-    nperms = args$n_perm
-)
-assay <- "RNA"
-
-# ---- Loading data ----
-log_info("Loading Seurat object...")
-seurat_obj <- readRDS(args$gene_expr)
-
-# # Temporary fix
-# seurat_obj@meta.data[, args$annot] <- str_replace_all(seurat_obj@meta.data[, args$annot], c(" " = "_", "\\/" = ""))
-
-log_info("Loading database with interactions...")
-custom_resource <- readRDS(args$interactions_db)
-
-# ---- Run LIANA ----
-liana_obj <- liana_wrap(seurat_obj,
-    method = methods,
-    resource = "custom",
-    external_resource = custom_resource,
-    idents_col = args$annot,
-    supp_columns = supp_columns,
-    return_all = TRUE,
-    permutation.params = permutation_params,
-    assay = assay,
+log_info("Run LIANA...")
+scrnaseq.cellcomm::run_liana(
+    gene_expr = args$gene_expr,
+    interactions_db = args$interactions_db,
+    output_dir = args$output_dir,
     min_cells = args$min_cells,
-    expr_prop = args$min_pct
-)
-log_info("Save LIANA results...")
-saveRDS(liana_obj,
-    file = glue("{args$output_dir}/liana__{get_name(args$gene_expr)}.rds")
+    min_pct = args$min_pct,
+    n_perm = args$n_perm, annot = args$annot
 )
 
-log_info("COMPLETED!")
+log_info("Finished!")

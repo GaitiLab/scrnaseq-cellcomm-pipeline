@@ -1,5 +1,5 @@
 
-include { consensus_and_rra; collect_all_results } from "../nf-modules/consensus.nf"
+include { consensus_and_rra; combine_samples } from "../nf-modules/consensus.nf"
 include { AGGREGATION_CCI } from '../nf-subworkflows/aggregation_cci.nf'
 
 workflow CCI_CONSENSUS {
@@ -13,7 +13,7 @@ workflow CCI_CONSENSUS {
         alpha           = params.alpha
     )
 
-    collect_all_results(
+    combine_samples(
         consensus_and_rra.out.mvoted_interactions.collect(), 
         consensus_and_rra.out.signif_interactions.collect(),
         consensus_and_rra.out.interactions_agg_rank.collect(), 
@@ -24,8 +24,8 @@ workflow CCI_CONSENSUS {
     )
 
     AGGREGATION_CCI(
-        mvoted_interactions     = collect_all_results.out.mvoted_interactions,
-        interactions_agg_rank   = collect_all_results.out.interactions_agg_rank
+        mvoted_interactions     = combine_samples.out.mvoted_interactions,
+        interactions_agg_rank   = combine_samples.out.interactions_agg_rank
     )
 
     emit: 

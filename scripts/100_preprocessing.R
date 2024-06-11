@@ -8,11 +8,10 @@ set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
-devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Preprocessing for CCIs",
+        description = "Preprocessing for CCIs", default_output = "output/100_preprocessing"
     )
     parser$add_argument("--input_file",
         type = "character",
@@ -26,15 +25,36 @@ if (!interactive()) {
         type = "integer", default = 5, help = "Minimum number of cells required in each cell group for cell-cell communication"
     )
     parser$add_argument("--is_confident", type = "numeric", default = 0, help = "Filter confident cells (1) or not (0); only relevant for internal project")
+    parser$add_argument("--sample_id", type = "character", default = NULL, help = "Sample ID")
+
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_downsampling_implementation/100_preprocessing")
-    args$input_file <- glue("{here::here()}/output/test_downsampling_implementation/split_by_Sample/6419_cortex__run__3.rds")
-    args$annot <- "CellClass_L1"
+    # args$input_file <- "output/test_individual_scripts/000_data/split_by_Sample/Sample_6.rds"
+    # args$output_dir <- "output/test_individual_scripts/100_preprocessing"
+    # args$annot <- "seurat_annotations"
+    # args$is_confident <- FALSE
+    # args$min_cells <- 5
+
+
+    # args$input_file <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/output/LP_IMM_perSample/000_data/split_by_Sample/BRCA1_3815608.rds"
+    # args$output_dir <- "output/testing"
+    # args$annot <- "CellClass_L3_LP"
+    # args$is_confident <- FALSE
+    # args$min_cells <- 5
+    # args$sample_id <- "Sample_X"
+
+
+  args$input_file <- "output/LP_IMM_perSample/000_data/split_by_Sample/mutneg_3702003.rds"
+    args$output_dir <- "output/testing"
+    args$annot <- "CellClass_L3_LP"
+    args$is_confident <- FALSE
     args$min_cells <- 5
+    args$sample_id <- "Sample_X"
+
+
 }
 
 # Set up logging
@@ -43,65 +63,17 @@ log_info(ifelse(interactive(),
     "Running interactively...",
     "Running from command line/terminal..."
 ))
+options(Seurat.object.assay.version = "v4")
 
 log_info("Loading Seurat object...")
-seurat_obj <- readRDS(args$input_file)
-
-log_info("Create output directory...")
-output_seurat <- glue("{args$output_dir}/seurat")
-output_mtx <- glue("{args$output_dir}/mtx")
-create_dir(output_seurat)
-create_dir(output_mtx)
-
-# Load additional libraries
-log_info("Loading additional libraries...")
-pacman::p_load(Seurat, DropletUtils)
-
-# ---- Constants ----
-# Need at least 2 cell types for communication
-min_cells <- 5
-
-log_info("Loading Seurat object...")
-seurat_obj <- readRDS(args$input_file)
-
-# TODO remove before commit (only for GBM project)
-if (args$is_confident) {
-    seurat_obj <- subset(seurat_obj, subset = Confident_Annotation)
-}
-log_info(glue("Only keep cell type groups with at least {args$min_cells} cells"))
-if (args$min_cells >= min_cells) {
-    seurat_obj <- filtering(
-        seurat_obj,
-        annot = args$annot,
-        min_cells = args$min_cells
-    )
-}
-
-log_info(glue(
-    "Check number of cell types after filtering (>= {args$min_cell_types})..."
-))
-
-n_cell_types <- length(unique(seurat_obj@meta.data[[args$annot]]))
-
-output_name <- str_split(
-    get_name(args$input_file), "__",
-    simplify = TRUE
+create_dir(args$output_dir)
+log_info("Prepare data...")
+scrnaseq.cellcomm::prepare_data(
+    input_file = args$input_file,
+    annot = args$annot,
+    output_dir = args$output_dir,
+    is_confident = args$is_confident,
+    min_cells = args$min_cells,
+    sample_id = args$sample_id
 )
-
-if (n_cell_types > 1) {
-    log_info("Normalizing data...")
-    seurat_obj <- NormalizeData(seurat_obj)
-
-    log_info("Saving Seurat object...")
-    saveRDS(
-        seurat_obj,
-        glue("{output_seurat}/{output_name}.rds")
-    )
-    log_info("Convert to mtx format (for Cell2Cell)...")
-    mat <- seurat_obj[["RNA"]]@data
-    write10xCounts(
-        glue("{output_mtx}/{output_name}"),
-        mat
-    )
-}
-log_info("COMPLETED!")
+log_info("Finished!")

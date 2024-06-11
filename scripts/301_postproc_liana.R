@@ -8,24 +8,23 @@ set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
-devtools::load_all("./", export_all = FALSE)
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Post-processing LIANA results",
+        description = "Post-processing LIANA results", default_output = "output/301_postproc_liana"
     )
-    parser$add_argument("--input_interactions", type = "character", default = NULL, help = "Path to LIANA results")
-    parser$add_argument("--ref_db", type = "character", default = NULL, help = "Path to reference database")
+    parser$add_argument("--input_interactions", type = "character", default = "", help = "Path to LIANA results")
     parser$add_argument("--sample_id", type = "character", default = NULL, help = "Sample ID")
+    parser$add_argument("--ref_db", type = "character", help = "Path to interactions database", default = "data/interactions_db/ref_db.rds")
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/TESTING")
-    args$input_interactions <- glue("/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/nf-work/75/6343a6564f353b601a5cc8b90be961/201_cci_liana/liana__1215768.rds")
-    args$ref_db <- glue("{here::here()}/data/interactions_db/ref_db.rds")
-    args$sample_id <- "1215768"
+    args$output_dir <- "output/test_individual_scripts/301_postproc_liana"
+    args$input_interactions <- "output/test_individual_scripts/201_cci_liana/liana__Sample_6.rds"
+    args$sample_id <- "Sample_6"
+    args$ref_db <- "data/interactions_db/ref_db.rds"
 }
 
 # Set up logging
@@ -38,55 +37,11 @@ log_info(ifelse(interactive(),
 log_info("Create output directory...")
 create_dir(args$output_dir)
 
-# Load additional libraries
-pacman::p_load(reshape2)
-pacman::p_load_gh("saezlab/liana")
-
-log_info("Load data...")
-interactions <- readRDS(args$input_interactions)
-
-log_info("Load reference database...")
-ref_db <- readRDS(args$ref_db) %>%
-    select(
-        simple_interaction,
-        complex_interaction, interaction
-    )
-
-# Setting sample + run id depending on downsampling or not
-split_sample_id <- str_split(args$sample_id, "__", simplify = TRUE)
-sample_id <- split_sample_id[1]
-run_id <- NA
-if (length(split_sample_id) > 2) {
-    run_id <- split_sample_id[3]
-}
-
-
-log_info(glue("Processing sample={args$sample_id}..."))
-# FIX temporary solution of bug cytotalk (duplicate interactions)
-interactions$cytotalk <- interactions$cytotalk %>% distinct(source, target, ligand.complex, receptor.complex, .keep_all = TRUE)
-
-interactions <- interactions %>%
-    liana::liana_aggregate() %>%
-    dplyr::rename(
-        pval = aggregate_rank
-    ) %>%
-    mutate(LIANA_score = sca.LRscore) %>%
-    # select(source, target, ligand.complex, receptor.complex, pval, interaction_score) %>%
-    unite(interaction, ligand.complex, receptor.complex, sep = "_") %>%
-    left_join(ref_db, by = "interaction") %>%
-    select(-interaction) %>%
-    unite(source_target, source, target, sep = "__") %>%
-    mutate(method = "LIANA", Sample = sample_id, run_id = run_id)
-# # A tibble: 6 × 8
-#   source_target                 pval interaction_score simple_interaction complex_interaction method Sample         run_id
-#   <chr>                        <dbl>             <dbl> <chr>              <chr>               <chr>  <chr>          <chr>
-# 1 Microglia__Microglia 0.00000000723             0.901 C3__ITGAX          C3__ITGAX           LIANA  6234_2895153_A 3
-# 2 Microglia__Microglia 0.0000000387              0.890 C3__ITGAX          C3__ITGAX:ITGB2     LIANA  6234_2895153_A 3
-# 3 Microglia__Microglia 0.0000000433              0.873 C3__ITGB2          C3__ITGB2           LIANA  6234_2895153_A 3
-# 4 Microglia__Microglia 0.000000106               0.833 PECAM1__PECAM1     PECAM1__PECAM1      LIANA  6234_2895153_A 3
-# 5 Microglia__Microglia 0.000000121               0.893 C3__NRP1           C3__NRP1            LIANA  6234_2895153_A 3
-# 6 Microglia__Microglia 0.000000137               0.785 ICAM1__ITGAX       ICAM1__ITGAX        LIANA  6234_2895153_A 3
-
-log_info("Save output...")
-saveRDS(interactions, glue("{args$output_dir}/liana__{args$sample_id}__postproc.rds"))
-log_info("COMPLETED!")
+log_info("Standardize format of LIANA results...")
+scrnaseq.cellcomm::format_liana(
+    input_interactions = args$input_interactions,
+    output_dir = args$output_dir,
+    sample_id = args$sample_id,
+    ref_db = args$ref_db
+)
+log_info("Finished!")

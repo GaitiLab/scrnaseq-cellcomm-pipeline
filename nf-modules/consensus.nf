@@ -40,7 +40,7 @@ process consensus_and_rra {
     """
 }
 
-process collect_all_results {
+process combine_samples {
     label "mem_4G"
     label "time_10m"
 
@@ -92,7 +92,6 @@ process filtering_detect_in_multi_samples {
 
     input:
     path input_file
-    val annot
     val condition_var
     val min_patients
 
@@ -106,7 +105,6 @@ process filtering_detect_in_multi_samples {
     Rscript "${projectDir}/scripts/402a_filtering_detect_in_multi_samples.R" \
     --output_dir \$PWD/402_aggregation_and_filtering \
     --input_file \$PWD/${input_file} \
-    --annot ${annot} \
     --condition_var ${condition_var} \
     --min_patients ${min_patients}
     """

@@ -1,43 +1,39 @@
 #!/usr/bin/env bash
-#SBATCH -J launch_cci_pipeline
+#SBATCH -J launch_cci_pipeline_LP_IMM_10x
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=joan.kant@uhn.ca
-##SBATCH --partition=long
+#SBATCH --mail-user=jiaoyi.chen@uhn.ca
+#SBATCH --partition=long
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=1G
-#SBATCH --time=01:00:00
+#SBATCH --time=7-00:00:00
 #SBATCH --output=slurm_out/%x_%j.out
 #SBATCH --error=slurm_out/%x_%j.out
-
 module load java/18
 
-
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
-# base_dir="/Users/joankant/Desktop/gaitigroup/Users/Joan"
 project_dir="${base_dir}/scrnaseq-cellcomm-pipeline"
 
 # ---- PIPELINE CONFIGURATION ---- #
 # Input seurat file
-input_file="${project_dir}/data/example_data.rds"
+input_file=/cluster/projects/gaitigroup/Users/Jiaoyi/analysis/Annotations/LP_IMM_3B13mut_annotation_scvi.rds
 
 # Output directory
-output_dir="${project_dir}/test_pipeline-June4th"
+output_dir="${project_dir}/output/LP_IMM_perSample"
 
 init_step=1
 
 # Pre-processing
 sample_var="Sample"
-annot="seurat_annotations"
-condition_var="Condition"
-patient_var="Patient"
+annot="CellClass_L3_LP"
+condition_var="Mutation"
+patient_var="Sample"
 min_patients=2
-min_cells=70
-is_confident=0
+min_cells=5
 
 # Cell-cell interactions
-n_perm=10
+n_perm=1000
 min_pct=0.10
 alpha=0.05
 
@@ -73,7 +69,6 @@ ${nf_exec} run ${project_dir} -resume \
     --condition_var $condition_var \
     --patient_var $patient_var \
     --min_patients $min_patients \
-    --is_confident ${is_confident} \
     --outdir ${outdir} \
     --output_dir ${output_dir}
 

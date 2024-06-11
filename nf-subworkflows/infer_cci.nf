@@ -68,7 +68,7 @@ workflow LIANA {
     )
 
     formatting_liana(
-    infer_liana.out.liana_obj, 
+        infer_liana.out.liana_obj, 
         ref_db              = ref_db
     )
 

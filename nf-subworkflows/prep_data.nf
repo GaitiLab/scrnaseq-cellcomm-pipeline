@@ -11,8 +11,7 @@ workflow PREP_DATA {
 
     if (!params.skip_reduction) {
         reduce_seurat_object_size(
-            input_file      = input_file, 
-            annot           = params.annot
+            input_file      = input_file
         ).set { input_file }
     }
 
@@ -20,6 +19,9 @@ workflow PREP_DATA {
         input_file          = input_file, 
         sample_var          = params.sample_var
     )
+    split_seurat_object_into_samples.out
+                                .flatten()
+                                .map(file -> tuple(file.simpleName, file)).view()
 
     sample_preprocessing(
         input_file          = split_seurat_object_into_samples.out

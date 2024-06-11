@@ -3,17 +3,17 @@ rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
+
 # Set working directory
 set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
-devtools::load_all("./", export_all = FALSE)
 
 if (!interactive()) {
     # Define input arguments when running from bash
     parser <- setup_default_argparser(
-        description = "Get metadata from Seurat object",
+        description = "Get metadata from Seurat object", default_output = "output/000_data"
     )
     parser$add_argument("-i", "--input_file",
         type = "character",
@@ -24,8 +24,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$input_file <- glue("{here::here()}/data/test_seurat_obj_10x.rds")
-    args$output_dir <- glue("{here::here()}/test_output/000_misc")
+    args$input_file <- glue("{here::here()}/data/example_data.rds")
+    args$output_dir <- glue("{here::here()}/test_individual_scripts/000_data")
 }
 
 # Set up logging
@@ -39,21 +39,9 @@ log_info("Create output directory...")
 output_dir <- paste0(args$output_dir)
 create_dir(output_dir)
 
-# Load additional libraries
-pacman::p_load(Seurat)
-
-log_info("Load seurat_object")
-seurat_obj <- readRDS(args$input_file)
-
-# REMARK: Only relevant for GBM project.
-# log_info(glue("Number of cells in object, BEFORE: {ncol(seurat_obj)}"))
-# seurat_obj <- subset(seurat_obj, subset = Confident_Annotation == TRUE)
-# log_info(glue("Number of cells in object, After: {ncol(seurat_obj)}"))
-
-log_info("Saving metadata...")
-saveRDS(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__metadata.rds"))
-write.csv(seurat_obj@meta.data, glue("{output_dir}/{get_name(args$input_file)}__metadata.csv"))
-
-log_info("COMPLETED!")
-
-get_name()
+log_info("Get metadata...")
+scrnaseq.cellcomm::get_metadata(
+    input_file = args$input_file,
+    output_dir = args$output_dir
+)
+log_info("Finished!")

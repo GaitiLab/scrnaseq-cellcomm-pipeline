@@ -1,4 +1,4 @@
-Package: scrnaq.cellcomm
+Package: scrnaq.cellcomm.pipeline
 Title: What the Package Does (One Line, Title Case)
 Version: 0.0.0.9000
 Authors@R:
@@ -57,5 +57,5 @@ Suggests:
 Remotes:
     immunogenomics/presto,
     jinworks/CellChat,
-    saezlab/liana
+    saezlab/liana,
     saezlab/OmnipathR
