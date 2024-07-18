@@ -7,7 +7,7 @@ process consensus_and_rra {
     input:
     tuple val(sample_id), path(cellchat_obj), path(liana_obj), path(cell2cell_obj), path(cpdb_obj)
     val alpha
-
+    val n_perm
     output:
     path("400_consensus_and_RRA/${sample_id}__interactions_mvoted.rds"
     ), emit: mvoted_interactions
@@ -26,7 +26,8 @@ process consensus_and_rra {
     --cellchat_obj \$PWD/${cellchat_obj} \
     --liana_obj \$PWD/${liana_obj} \
     --cell2cell_obj \$PWD/${cell2cell_obj} \
-    --cpdb_obj \$PWD/${cpdb_obj}
+    --cpdb_obj \$PWD/${cpdb_obj} \
+    --n_perm ${n_perm}
     """
 
     stub: 

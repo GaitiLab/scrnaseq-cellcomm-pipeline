@@ -10,7 +10,8 @@ workflow CCI_CONSENSUS {
     main: 
     consensus_and_rra(
         matched_cci, 
-        alpha           = params.alpha
+        alpha           = params.alpha,
+        n_perm          = params.n_perm
     )
 
     combine_samples(
@@ -18,9 +19,9 @@ workflow CCI_CONSENSUS {
         consensus_and_rra.out.signif_interactions.collect(),
         consensus_and_rra.out.interactions_agg_rank.collect(), 
         metadata            = metadata_rds, 
-        condition_var   = params.condition_var, 
+        condition_var       = params.condition_var, 
         sample_var          = params.sample_var, 
-        patient_var     = params.patient_var
+        patient_var         = params.patient_var
     )
 
     AGGREGATION_CCI(

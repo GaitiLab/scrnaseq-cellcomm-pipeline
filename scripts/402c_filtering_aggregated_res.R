@@ -31,10 +31,9 @@ if (!interactive()) {
     args$condition_var <- "Condition"
 
 
-        args$output_dir <- "output/LP_IMM_perSample/402_aggregation_and_filtering"
-        args$input_dir <- args$output_dir
+    args$output_dir <- "output/LP_IMM_perSample/402_aggregation_and_filtering"
+    args$input_dir <- args$output_dir
     args$condition_var <- "Mutation"
-
 }
 
 # Set up logging

@@ -23,7 +23,7 @@ project_dir="${base_dir}/scrnaseq-cellcomm-pipeline"
 input_file="${project_dir}/data/example_data.rds"
 
 # Output directory
-output_dir="${project_dir}/test_pipeline-June4th"
+output_dir="${project_dir}/test_pipeline-July18th"
 
 init_step=1
 

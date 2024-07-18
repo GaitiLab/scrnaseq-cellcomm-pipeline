@@ -14,16 +14,19 @@ if (!interactive()) {
         description = "Post-process Cell2Cell",
         default_output = "output/302_postproc_cell2cell"
     )
-    parser$add_argument("-i", "--input_interactions",
+    parser$add_argument("-is", "--input_interactions_scores",
         type = "character", default = NULL,
-        help = "Directory or file with Cell2Cell results"
+        help = "CSV file with interaction scores from cell2cell"
+    )
+    parser$add_argument("-ip", "--input_interactions_pval",
+        type = "character", default = NULL,
+        help = "CSV file with pvalues from cell2cell"
     )
     parser$add_argument("-s", "--sample_id",
         type = "character", default = NULL,
         help = "Sample ID"
     )
     parser$add_argument("--ref_db", type = "character", default = NULL, help = "Path to interactions database")
-
     args <- parser$parse_args()
 } else {
     # Provide arguments here for local runs
@@ -46,10 +49,12 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 log_info("Standardize format of Cell2Cell results...")
-scrnaseq.cellcomm::format_cell2cell(
-    input_interactions = args$input_interactions,
+scrnaseq.cellcomm::format_cell2cell_wrapper(
+    input_interactions_scores = args$input_interactions_scores,
+    input_interactions_pval = args$input_interactions_pval,
     output_dir = args$output_dir,
     sample_id = args$sample_id,
     ref_db = args$ref_db
 )
+
 log_info("Finished!")

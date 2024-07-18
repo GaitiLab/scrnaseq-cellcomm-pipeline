@@ -91,7 +91,7 @@ process infer_cell2cell {
 
     output:
     tuple val(sample_id), path("202_cci_cell2cell/cell2cell__${sample_id}.pickle")
-    tuple val(sample_id), path("202_cci_cell2cell/cell2cell__${sample_id}.csv"), emit: cell2cell_obj
+    tuple val(sample_id), path("202_cci_cell2cell/cell2cell__${sample_id}__pvalues.csv"), path("202_cci_cell2cell/cell2cell__${sample_id}__interaction_scores.csv"), emit: cell2cell_obj
 
     script:
     """
@@ -111,7 +111,8 @@ process infer_cell2cell {
     #!/usr/bin/env bash
     mkdir -p 202_cci_cell2cell
     touch "202_cci_cell2cell/cell2cell__${sample_id}.pickle"
-    touch "202_cci_cell2cell/cell2cell__${sample_id}.csv"
+    touch "202_cci_cell2cell/cell2cell__${sample_id}__pvalues.csv"
+    touch "202_cci_cell2cell/cell2cell__${sample_id}__interaction_scores.csv"
     """  
 }
 
