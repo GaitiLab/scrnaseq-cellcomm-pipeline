@@ -20,8 +20,8 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/wip_interactions_db_test")
-    args$source_cpdb_dir <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm/000_misc_local/references/cellphonedb_v5.0.0"
+    args$output_dir <- glue("{here::here()}/data/interactions_db_v2_2")
+    args$source_cpdb_dir <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/000_misc_local/references/cellphonedb_v5.0.0"
 }
 
 # Set up logging
@@ -35,11 +35,7 @@ log_info("Create output directory...")
 create_dir(args$output_dir)
 
 # Load additional libraries
-file.copy(glue("{args$source_cpdb_dir}/sources"), glue("{args$output_dir}"), recursive = TRUE)
-
-file.copy(glue("{args$output_dir}/sources/transcription_factor_input.csv"), glue("{args$output_dir}/transcription_factor_input.csv"))
-create_db(
+scrnaseq.cellcomm::create_db(
     output_dir = args$output_dir,
-    source_cpdb_dir = args$source_cpdb_dir,
-    work_dir = getwd()
+    source_cpdb_dir = args$source_cpdb_dir
 )
