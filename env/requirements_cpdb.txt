@@ -1,0 +1,5 @@
+cellphonedb==5.0.0
+pandas
+scprep
+scanpy==1.9.6
+h5py==3.10.0

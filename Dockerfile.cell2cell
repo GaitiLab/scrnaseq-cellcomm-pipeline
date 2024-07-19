@@ -1,0 +1,18 @@
+FROM --platform=linux/arm64 ubuntu:20.04
+
+RUN apt-get update && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository ppa:deadsnakes/ppa -y && \
+    apt-get install -y python3.8 && \
+    ln -s /usr/bin/python3.8 /usr/bin/python && \
+    apt-get install -y python3-pip
+
+# Set up python environment #
+RUN apt install python3.8-venv
+RUN python3 -m venv /cell2cell python=3.8
+RUN . cell2cell/bin/activate
+
+COPY env/requirements_cell2cell.txt /tmp/requirements_cell2cell.txt
+RUN pip3 install --upgrade pip && pip3 install -r /tmp/requirements_cell2cell.txt
+
+WORKDIR /

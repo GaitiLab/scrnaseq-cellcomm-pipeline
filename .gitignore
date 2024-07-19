@@ -93,12 +93,22 @@ nf-config-local
 notebooks/
 *.rds
 
-scripts/INACTIVE/
 002_WIP_Figures
 
 nf-work
 test_pipeline*
 
 002_WIP_Figures
+*/INACTIVE
 scripts/INACTIVE
 
+test
+
+nf_**.sh
+!nf_template.sh
+output/
+
+!liana_db.rds
+!ref_db.rds
+!cell2cell_db.csv
+!cellchat_db.rds

@@ -71,7 +71,7 @@ process formatting_cell2cell {
     publishDir params.output_dir, mode: "copy"
 
     input:
-    tuple val(sample_id), path(input_interactions)
+    tuple val(sample_id), path(input_interactions_scores), path(input_interactions_pval)
     path ref_db
 
     output:
@@ -83,7 +83,8 @@ process formatting_cell2cell {
 
     Rscript "${projectDir}/scripts/302_postproc_cell2cell.R" \
     --output_dir "\$PWD/302_postproc_cell2cell/" \
-    --input_interactions \$PWD/$input_interactions \
+    --input_interactions_scores \$PWD/$input_interactions_scores \
+    --input_interactions_pval \$PWD/$input_interactions_pval \
     --sample_id ${sample_id} \
     --ref_db \$PWD/${ref_db}
     """

@@ -77,8 +77,13 @@ def main(args):
                                                 fdr_correction=True,
                                                 verbose=True)
     logging.info("Save results...")
+    # Save p-values
     interactions.ccc_permutation_pvalues.to_csv(
-        f"{args.output_dir}/cell2cell__{args.sample_id}.csv", sep="\t")
+        f"{args.output_dir}/cell2cell__{args.sample_id}__pvalues.csv", sep="\t")
+
+    # Save interaction scores
+    interactions.interaction_space.interaction_elements["communication_matrix"].to_csv(
+        f"{args.output_dir}/cell2cell__{args.sample_id}__interaction_scores.csv", sep="\t")
 
     logging.info("Save interactions object as pickle...")
     with open(f"{args.output_dir}/cell2cell__{args.sample_id}.pickle", "wb") as handle:

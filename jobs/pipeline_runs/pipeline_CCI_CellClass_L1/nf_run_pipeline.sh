@@ -34,10 +34,10 @@ approach=6
 input_file="/cluster/projects/gaitigroup/Data/GBM/processed_data/gbm_regional_study.rds"
 
 # Pre-processing
-split_varname="Sample"
+sample_var="Sample"
 annot="CCI_CellClass_L1"
-condition_varname="Region_Grouped"
-patient_varname="Patient"
+condition_var="Region_Grouped"
+patient_var="Patient"
 min_patients=2
 min_cells=100
 min_cell_types=2
@@ -68,7 +68,7 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \
-    --split_varname ${split_varname} \
+    --sample_var ${sample_var} \
     --annot ${annot} \
     --min_cells ${min_cells} \
     --min_cell_types ${min_cell_types} \
@@ -83,9 +83,9 @@ ${nf_exec} run ${project_dir} -with-report -with-trace \
     --alpha $alpha \
     --meta_vars_oi $meta_vars_oi \
     --approach $approach \
-    --condition_varname $condition_varname \
+    --condition_var $condition_var \
     --aggregate_patients \
-    --patient_varname $patient_varname \
+    --patient_var $patient_var \
     --min_patients $min_patients \
     --skip_downsampling
 echo "Done!"

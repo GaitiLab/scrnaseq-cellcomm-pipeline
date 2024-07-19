@@ -108,11 +108,9 @@ if __name__ == "__main__":
                         default=1000, help="Number of permutations for permutation testing")
     parser.add_argument("-db", "--interactions_db", type=str,
                         help="Path to custom database with interactions (zip)")
-
     parser.add_argument("-a", "--annot", type=str,
                         help="Column in metadata containing the cell type labels")
     parser.add_argument("-id", "--sample_id", type=str, default="")
-
     parser.add_argument("-o", "--output_dir", type=str,
                         default="output", help="Output directory")
     parser.add_argument("-m", "--meta", type=str,

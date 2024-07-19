@@ -7,7 +7,7 @@ process consensus_and_rra {
     input:
     tuple val(sample_id), path(cellchat_obj), path(liana_obj), path(cell2cell_obj), path(cpdb_obj)
     val alpha
-
+    val n_perm
     output:
     path("400_consensus_and_RRA/${sample_id}__interactions_mvoted.rds"
     ), emit: mvoted_interactions
@@ -26,7 +26,8 @@ process consensus_and_rra {
     --cellchat_obj \$PWD/${cellchat_obj} \
     --liana_obj \$PWD/${liana_obj} \
     --cell2cell_obj \$PWD/${cell2cell_obj} \
-    --cpdb_obj \$PWD/${cpdb_obj}
+    --cpdb_obj \$PWD/${cpdb_obj} \
+    --n_perm ${n_perm}
     """
 
     stub: 
@@ -40,7 +41,7 @@ process consensus_and_rra {
     """
 }
 
-process collect_all_results {
+process combine_samples {
     label "mem_4G"
     label "time_10m"
 
@@ -92,7 +93,6 @@ process filtering_detect_in_multi_samples {
 
     input:
     path input_file
-    val annot
     val condition_var
     val min_patients
 
@@ -106,7 +106,6 @@ process filtering_detect_in_multi_samples {
     Rscript "${projectDir}/scripts/402a_filtering_detect_in_multi_samples.R" \
     --output_dir \$PWD/402_aggregation_and_filtering \
     --input_file \$PWD/${input_file} \
-    --annot ${annot} \
     --condition_var ${condition_var} \
     --min_patients ${min_patients}
     """

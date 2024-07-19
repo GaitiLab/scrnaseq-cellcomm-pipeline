@@ -1,4 +1,4 @@
-# scrnaq-cellcomm
+# scrnaq-cellcomm-pipeline
 
 Modular pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are currently implemented:
 

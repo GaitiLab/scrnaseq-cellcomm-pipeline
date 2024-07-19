@@ -35,7 +35,6 @@ process reduce_seurat_object_size {
 
     input:
     path input_file
-    val annot
 
     output:
     path "000_data/${input_file.simpleName}_reduced_size.rds"
@@ -45,8 +44,7 @@ process reduce_seurat_object_size {
     #!/usr/bin/env bash
     Rscript "${projectDir}/scripts/001_reduce_seurat_object_size.R" \
     --input_file "\$PWD/${input_file}" \
-    --output_dir "\$PWD/000_data" \
-    --annot ${annot}
+    --output_dir "\$PWD/000_data"
     """
 
     stub:
@@ -122,7 +120,8 @@ process sample_preprocessing {
         --annot "${annot}" \
         --min_cells ${min_cells} \
         --is_confident ${is_confident} \
-        --output_dir "\$PWD/100_preprocessing" 
+        --output_dir "\$PWD/100_preprocessing" \
+        --sample_id ${sample_id}
 
     // Create empty files
     if [ -f "${seurat_dummy}" ]; then
