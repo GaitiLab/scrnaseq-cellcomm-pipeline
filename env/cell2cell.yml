@@ -77,4 +77,5 @@ dependencies:
   - xz=5.2.6
   - zeromq=4.3.5
   - zipp=3.17.0
-prefix: /cluster/home/t119972uhn/miniforge3/envs/cell2cell
+  - pip:
+      - cell2cell

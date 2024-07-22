@@ -1,6 +1,7 @@
 name: cci
 channels:
   - conda-forge
+  - bioconda
 dependencies:
   - bioconductor-biocneighbors
   - bioconductor-biocversion=3.16.0
@@ -59,4 +60,3 @@ dependencies:
   - r-xlsx=0.6.5
   - bioconductor-gsva
   - bioconductor-ggtree
-prefix: /cluster/home/t119972uhn/miniforge3/envs/cci

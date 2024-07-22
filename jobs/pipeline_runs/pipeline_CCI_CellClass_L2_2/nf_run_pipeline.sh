@@ -14,11 +14,11 @@
 module load java/18
 
 base_dir="/cluster/projects/gaitigroup/Users/Joan/"
-project_dir="${base_dir}/scrnaseq-cellcomm"
+project_dir="${base_dir}/scrnaseq-cellcomm-pipeline"
 
 echo "PIPELINE CONFIGURATION..."
 # General
-run_name="CCI_CellClass_L2_2_reassigned_samples_confident_only_FINAL"
+run_name="CCI_CellClass_L2_2_rerun"
 
 # ---- PIPELINE CONFIGURATION ---- #
 # Input seurat file
