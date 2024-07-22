@@ -31,7 +31,7 @@ process reduce_seurat_object_size {
     label 'mem_32G'
     label 'time_30m'
     // Commented, cause we probably do not need this object afterwards + takes a lot of space
-    publishDir params.output_dir, mode: "copy"
+    // publishDir params.output_dir, mode: "symlink"
 
     input:
     path input_file

@@ -54,5 +54,5 @@ dependencies:
   - urllib3=2.1.0
   - wheel=0.42.0
   - xz=5.2.6
-
-prefix: /cluster/home/t119972uhn/miniforge3/envs/cpdb
+  - pip:
+      - cellphonedb

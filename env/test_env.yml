@@ -1,7 +1,0 @@
-name: test_env
-channels:
-  - conda-forge
-dependencies:
-  - r-dplyr
-  - python
-  - radian

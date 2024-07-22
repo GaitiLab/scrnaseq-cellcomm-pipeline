@@ -112,3 +112,7 @@ output/
 !ref_db.rds
 !cell2cell_db.csv
 !cellchat_db.rds
+
+TMP-**
+*.zip
+!cellphonedb.zip

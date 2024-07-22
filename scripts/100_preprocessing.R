@@ -47,14 +47,12 @@ if (!interactive()) {
     # args$sample_id <- "Sample_X"
 
 
-  args$input_file <- "output/LP_IMM_perSample/000_data/split_by_Sample/mutneg_3702003.rds"
+    args$input_file <- "output/LP_IMM_perSample/000_data/split_by_Sample/mutneg_3702003.rds"
     args$output_dir <- "output/testing"
     args$annot <- "CellClass_L3_LP"
     args$is_confident <- FALSE
     args$min_cells <- 5
     args$sample_id <- "Sample_X"
-
-
 }
 
 # Set up logging
