@@ -1,6 +1,6 @@
 # scrnaq-cellcomm-pipeline
 
-Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are currently implemented:
+Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are implemented:
 
 * LIANA (0.1.12)
 * CellPhoneDB v5 (5.0.0)
@@ -76,6 +76,8 @@ Required inputs:
 * `min_patients` Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**)
 * `alpha` (default = 0.05) threshold used for **3. CCI Filtering**
 * `output_dir` directory for saving output files.
+
+> NOTE: ensure that the metadata of your Seurat object, does **not** have a column `cell_type` if `annot` is **not** "cell_type".
 
 ### Outputs
 
