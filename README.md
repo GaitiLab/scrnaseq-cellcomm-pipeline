@@ -1,6 +1,6 @@
 # scrnaq-cellcomm-pipeline
 
-Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are currently implemented:
+Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using multiple publicly available tools. The following tools are implemented:
 
 * LIANA (0.1.12)
 * CellPhoneDB v5 (5.0.0)
@@ -21,6 +21,10 @@ Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using mu
 2. Installing [Nextflow](https://github.com/nextflow-io/nextflow/releases/download/v23.04.3/nextflow-23.04.3-all).
 3. Setup the required conda environments with `cd env && setup_env.sh`
 4. Use `nf_template.sh` to run the pipeline.
+
+### Nextflow configuration profile
+
+The directory [ `nf-config` ](nf-config) contains the configuration profiles used in the pipeline. `gaitilab.config` is adapted for in-house use with SLURM/HPC. Therefore changes may be needed to `base.config` , `gaitilab.config` or a new config file needs to be created. For help with this, feel free to create a new issue.
 
 ## Workflow
 
@@ -76,6 +80,8 @@ Required inputs:
 * `min_patients` Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**)
 * `alpha` (default = 0.05) threshold used for **3. CCI Filtering**
 * `output_dir` directory for saving output files.
+
+> NOTE: ensure that the metadata of your Seurat object, does **not** have a column `cell_type` if `annot` is **not** "cell_type".
 
 ### Outputs
 
