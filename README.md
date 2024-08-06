@@ -22,6 +22,10 @@ Pipeline for inferring cell-cell interactions (CCIs) from scRNAseq data using mu
 3. Setup the required conda environments with `cd env && setup_env.sh`
 4. Use `nf_template.sh` to run the pipeline.
 
+### Nextflow configuration profile
+
+The directory [ `nf-config` ](nf-config) contains the configuration profiles used in the pipeline. `gaitilab.config` is adapted for in-house use with SLURM/HPC. Therefore changes may be needed to `base.config` , `gaitilab.config` or a new config file needs to be created. For help with this, feel free to create a new issue.
+
 ## Workflow
 
 ![workflow](assets/workflow.png)
