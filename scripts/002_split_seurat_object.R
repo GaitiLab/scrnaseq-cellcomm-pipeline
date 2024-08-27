@@ -25,10 +25,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$input_file <-
-        "output/test_individual_scripts/000_data/example_data_reduced_size.rds"
-    args$output_dir <- "output/test_individual_scripts/000_data/split_by_Sample"
-    args$sample_var <- "Sample"
 }
 
 # Set up logging

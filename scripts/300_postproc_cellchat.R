@@ -24,10 +24,7 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- "output/test_individual_scripts/300_postproc_cellchat"
-    args$input_interactions <- "output/test_individual_scripts/200_cci_cellchat/cellchat__Sample_6.rds"
-    args$sample_id <- "Sample_6"
-    args$ref_db <- "data/interactions_db/ref_db.rds"
+
 }
 
 # Set up logging

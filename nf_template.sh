@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #SBATCH -J launch_cci_pipeline
 #SBATCH --mail-type=END,FAIL
-#SBATCH --mail-user=joan.kant@uhn.ca
-##SBATCH --partition=long
+#SBATCH --mail-user=JohnDoe@mail.com
+#SBATCH --partition=long
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
@@ -13,17 +13,14 @@
 
 module load java/18
 
-
-base_dir="/cluster/projects/gaitigroup/Users/Joan/"
-# base_dir="/Users/joankant/Desktop/gaitigroup/Users/Joan"
-project_dir="${base_dir}/scrnaseq-cellcomm-pipeline"
+project_dir="scrnaseq-cellcomm-pipeline"
 
 # ---- PIPELINE CONFIGURATION ---- #
 # Input seurat file
 input_file="${project_dir}/data/example_data.rds"
 
 # Output directory
-output_dir="${project_dir}/test_pipeline-July18th"
+output_dir="${project_dir}/output"
 
 init_step=1
 
@@ -57,9 +54,7 @@ mkdir -p "${output_dir}"
 mkdir -p "${outdir}"
 
 echo "Running pipeline..."
-# # Start the pipeline
-# ${nf_exec} run ${project_dir} -with-report -with-trace \
-${nf_exec} run ${project_dir} -resume \
+${nf_exec} run ${project_dir} -with-report -with-trace \
     -profile ${nf_profile} \
     -w ${work_dir} \
     --input_file $input_file \

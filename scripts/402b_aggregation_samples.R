@@ -22,14 +22,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    # args$output_dir <- "output/test_individual_scripts/402_aggregation_and_filtering"
-    # args$input_file <- "output/test_individual_scripts/401_combine_samples/401_samples_interactions_agg_rank.rds"
-    # args$condition_var <- "Condition"
-
-    args$output_dir <- "output/LP_IMM_perSample/402_aggregation_and_filtering"
-    args$input_file <- "output/LP_IMM_perSample/401_combine_samples/401_samples_interactions_agg_rank.rds"
-    args$condition_var <- "Mutation"
-
 }
 
 

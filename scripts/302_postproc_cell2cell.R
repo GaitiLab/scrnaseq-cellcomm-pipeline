@@ -32,10 +32,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- "output/test_individual_scripts/302_postproc_cell2cell"
-    args$input_interactions <- "output/test_pipeline/202_cci_cell2cell/cell2cell__Sample_6.csv"
-    args$sample_id <- "Sample_6"
-    args$ref_db <- "data/interactions_db/ref_db.rds"
 }
 
 # Set up logging

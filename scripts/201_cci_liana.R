@@ -43,13 +43,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$gene_expr <- "output/test_individual_scripts/100_preprocessing/seurat/Sample_6.rds"
-    args$output_dir <- "output/test_individual_scripts/201_cci_liana"
-    args$annot <- "seurat_annotations"
-    args$min_cells <- 5
-    args$interactions_db <- "data/interactions_db/liana_db.rds"
-    args$n_perm <- 5
-    args$min_pct <- 0.1
 }
 
 # Set up logging

@@ -24,15 +24,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- "output/test_individual_scripts/"
-    args$interactions_agg_integration <- "output/test_individual_scripts/402_aggregation_and_filtering/402c_filtering_aggregated_res.rds"
-    args$output_name <- "interactions_summary"
-    args$condition_var <- "Condition"
-    args$alpha <- 0.05
-
-    args$interactions_agg_integration <- "output/LP_IMM_perSample/402_aggregation_and_filtering/402c_filtering_aggregated_res.rds"
-    args$condition_var <- "Mutation"
-    args$output_dir <- "output/LP_IMM_perSample"
 }
 
 # Set up logging

@@ -8,7 +8,6 @@ set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)
-devtools::load_all("./", export_all = FALSE)
 
 if (!interactive()) {
     # Define input arguments when running from bash
@@ -20,8 +19,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/data/interactions_db_v2_2")
-    args$source_cpdb_dir <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/000_misc_local/references/cellphonedb_v5.0.0"
 }
 
 # Set up logging

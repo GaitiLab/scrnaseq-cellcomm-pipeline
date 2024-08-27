@@ -32,27 +32,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    # args$input_file <- "output/test_individual_scripts/000_data/split_by_Sample/Sample_6.rds"
-    # args$output_dir <- "output/test_individual_scripts/100_preprocessing"
-    # args$annot <- "seurat_annotations"
-    # args$is_confident <- FALSE
-    # args$min_cells <- 5
-
-
-    # args$input_file <- "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/output/LP_IMM_perSample/000_data/split_by_Sample/BRCA1_3815608.rds"
-    # args$output_dir <- "output/testing"
-    # args$annot <- "CellClass_L3_LP"
-    # args$is_confident <- FALSE
-    # args$min_cells <- 5
-    # args$sample_id <- "Sample_X"
-
-
-    args$input_file <- "output/LP_IMM_perSample/000_data/split_by_Sample/mutneg_3702003.rds"
-    args$output_dir <- "output/testing"
-    args$annot <- "CellClass_L3_LP"
-    args$is_confident <- FALSE
-    args$min_cells <- 5
-    args$sample_id <- "Sample_X"
 }
 
 # Set up logging

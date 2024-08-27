@@ -116,3 +116,7 @@ output/
 TMP-**
 *.zip
 !cellphonedb.zip
+
+jobs-local
+
+INFO-*

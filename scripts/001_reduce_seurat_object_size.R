@@ -24,8 +24,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$output_dir <- glue("{here::here()}/output/test_individual_scripts/000_data")
-    args$input_file <- glue("{here::here()}/data/example_data.rds")
 }
 
 # Set up logging

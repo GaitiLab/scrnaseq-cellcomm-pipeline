@@ -26,12 +26,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$input_dir <- "output/test_pipeline/400_consensus_and_RRA"
-    args$output_dir <- "output/test_individual_scripts/401_combine_samples"
-    args$metadata <- "output/test_individual_scripts/000_data/example_data__metadata.rds"
-    args$sample_var <- "Sample"
-    args$condition_var <- "Condition"
-    args$patient_var <- "Patient"
 }
 
 # Set up logging

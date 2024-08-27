@@ -41,13 +41,6 @@ if (!interactive()) {
     # Provide arguments here for local runs
     args <- list()
     args$log_level <- 5
-    args$sample_id <- "Sample_6"
-    args$output_dir <- "output/test_individual_scripts/303_postproc_cpdb"
-    args$interaction_scores <- glue("output/test_pipeline/203_cci_cpdb/statistical_analysis_interaction_scores__{args$sample_id}.txt")
-    args$pval <- glue("output/test_pipeline/203_cci_cpdb/statistical_analysis_pvalues__{args$sample_id}.txt")
-    args$sign_means <- glue("output/test_pipeline/203_cci_cpdb/statistical_analysis_significant_means__{args$sample_id}.txt")
-    args$means <- glue("output/test_pipeline/203_cci_cpdb/statistical_analysis_means__{args$sample_id}.txt")
-    args$ref_db <- "data/interactions_db/ref_db.rds"
 }
 
 # Set up logging
