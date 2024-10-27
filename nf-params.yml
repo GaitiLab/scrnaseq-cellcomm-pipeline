@@ -1,0 +1,24 @@
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     GaitiLab/scrnaseq-cellcomm-pipeline 1.0dev
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##     This is an example parameter file to pass to the `-params-file` option
+##     of nextflow run with the GaitiLab/scrnaseq-cellcomm-pipeline pipeline.
+##
+##     Uncomment lines with a single '#' if you want to pass the parameter to
+##     the pipeline.
+## -----------------------------------------------------------------------------
+input_file: "data/example_data.rds"
+annot: "seurat_annotations"
+min_cells: 50
+sample_var: "Sample"
+
+min_pct: 0.1
+n_perm: 5
+condition_var: "Condition"
+patient_var: "Patient"
+is_confident: false
+
+min_patients: 2
+alpha: 0.05
+
+skip_reduction: false
