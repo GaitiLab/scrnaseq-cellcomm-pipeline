@@ -2,7 +2,6 @@ process EXTRACT_METADATA {
     label 'mem_32G'
     label 'time_10m'
 
-
     input:
     path input_file
 
@@ -12,8 +11,7 @@ process EXTRACT_METADATA {
 
     script:
     """
-    #!/usr/bin/env bash
-    Rscript "${projectDir}/bin/000_get_metadata.R" \
+    000_get_metadata.R \
     --input_file "${input_file}" \
     --output_dir "\$PWD" \
     """

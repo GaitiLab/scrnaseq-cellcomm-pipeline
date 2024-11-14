@@ -1,10 +1,9 @@
-process formatting_cellchat {
+process FORMAT_CELLCHAT {
     label 'time_10m'
     label 'mem_4G'
 
-
     input:
-    tuple val(sample_id), path(input_interactions)
+    tuple val(sample_id), path(input_interactions), path(_raw_interactions)
     path ref_db
 
     output:
@@ -12,12 +11,10 @@ process formatting_cellchat {
 
     script:
     """
-    #!/usr/bin/env bash
-
-    Rscript "${projectDir}/bin/300_postproc_cellchat.R" \
-    --output_dir "\$PWD/" \
-    --input_interactions \$PWD/$input_interactions \
-    --ref_db \$PWD/${ref_db} \
+    300_postproc_cellchat.R \
+    --output_dir "\$PWD" \
+    --input_interactions ${input_interactions} \
+    --ref_db ${ref_db} \
     --sample_id ${sample_id}
     """
 

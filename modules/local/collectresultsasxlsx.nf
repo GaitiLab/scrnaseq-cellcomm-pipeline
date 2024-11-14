@@ -13,12 +13,10 @@ process COLLECT_RESULTS_AS_XLSX {
 
     script:
     """
-    #!/usr/bin/env bash
-
-    Rscript "${projectDir}/bin/403_collect_results.R" \
+    403_collect_results.R \
     --output_dir \$PWD \
     --output_name ${output_name} \
-    --interactions_agg_integration \$PWD/${interactions_agg_integration} \
+    --interactions_agg_integration ${interactions_agg_integration} \
     --condition_var ${condition_var} \
     --alpha ${alpha}
     """

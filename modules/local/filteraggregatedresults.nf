@@ -1,4 +1,3 @@
-
 process FILTER_AGGREGATED_RESULTS {
     label "mem_4G"
     label "time_10m"
@@ -13,9 +12,8 @@ process FILTER_AGGREGATED_RESULTS {
 
     script:
     """
-    #!/usr/bin/env bash
 
-    Rscript "${projectDir}/bin/402c_filtering_aggregated_res.R" \
+    402c_filtering_aggregated_res.R \
     --output_dir \$PWD \
     --interactions_agg_binarized \$PWD/${interactions_agg_binarized} \
     --interactions_agg_continuous \$PWD/${interactions_agg_continuous} \
@@ -28,4 +26,3 @@ process FILTER_AGGREGATED_RESULTS {
     touch "402c_filtering_aggregated_res.rds"
     """
 }
-

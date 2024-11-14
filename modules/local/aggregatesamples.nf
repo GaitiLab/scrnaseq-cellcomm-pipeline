@@ -1,23 +1,19 @@
-
-
 process AGGREGATE_SAMPLES {
     label "mem_4G"
     label "time_10m"
 
     input:
-    path input_file
+    tuple path(_interactions_mvoted), path(_signif_interactions), path(interactions_agg_rank)
     val condition_var
 
     output:
-    path "402b_aggregation_samples.rds", emit:rds
+    path "402b_aggregation_samples.rds", emit: rds
 
     script:
     """
-    #!/usr/bin/env bash
-
-    Rscript "${projectDir}/bin/402b_aggregation_samples.R" \
+    402b_aggregation_samples.R \
     --output_dir \$PWD \
-    --input_file \$PWD/${input_file} \
+    --input_file ${interactions_agg_rank} \
     --condition_var ${condition_var}
     """
 

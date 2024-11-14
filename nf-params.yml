@@ -7,6 +7,7 @@
 ##     Uncomment lines with a single '#' if you want to pass the parameter to
 ##     the pipeline.
 ## -----------------------------------------------------------------------------
+scrnaseqcellcomm_modules: "prep_data,run_cci,consensus,aggregation,export_as_excel"
 input_file: "data/example_data.rds"
 annot: "seurat_annotations"
 min_cells: 50
@@ -16,7 +17,7 @@ min_pct: 0.1
 n_perm: 5
 condition_var: "Condition"
 patient_var: "Patient"
-is_confident: false
+is_confident: 0
 
 min_patients: 2
 alpha: 0.05

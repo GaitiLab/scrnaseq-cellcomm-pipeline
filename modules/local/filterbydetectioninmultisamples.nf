@@ -1,12 +1,10 @@
-
 process FILTER_BY_DETECTION_IN_MULTI_SAMPLES {
     label "mem_4G"
     label "time_10m"
-
     publishDir params.output_dir, mode: "copy"
 
     input:
-    path input_file
+    tuple path(interactions_mvoted), path(_signif_interactions), path(_interactions_agg_rank)
     val condition_var
     val min_patients
 
@@ -15,11 +13,9 @@ process FILTER_BY_DETECTION_IN_MULTI_SAMPLES {
 
     script:
     """
-    #!/usr/bin/env bash
-
-    Rscript "${projectDir}/bin/402a_filter_by_detection_in_multi_samples.R" \
+    402a_filter_by_detection_in_multi_samples.R \
     --output_dir \$PWD \
-    --input_file \$PWD/${input_file} \
+    --input_file ${interactions_mvoted} \
     --condition_var ${condition_var} \
     --min_patients ${min_patients}
     """

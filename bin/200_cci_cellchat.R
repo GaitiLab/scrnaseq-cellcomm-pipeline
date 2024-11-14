@@ -1,10 +1,10 @@
+#!/usr/bin/env Rscript
+
 # Unload all previously loaded packages + remove previous environment
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
 require(GaitiLabUtils)
-# Set working directory
-set_wd()
 
 # Load libraries
 pacman::p_load(glue, data.table, tidyverse, stringr)

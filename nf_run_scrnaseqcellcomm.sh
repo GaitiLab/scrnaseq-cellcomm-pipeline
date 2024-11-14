@@ -32,4 +32,4 @@ module load apptainer
 # nextflow run ${PWD} -profile apptainer,h4h,slurm -params-file "nf-params-tcga.yml" -c "gaitilab.config" -resume \
 #     --outdir "output"
 
-nextflow run ${PWD} -profile conda -params-file "nf-params.yml" --outdir "output"
+nextflow run ${PWD} -profile conda,slurm -params-file "nf-params.yml" --outdir "output" -c "gaitilab.config"

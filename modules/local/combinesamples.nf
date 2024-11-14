@@ -12,18 +12,14 @@ process COMBINE_SAMPLES {
     val patient_var
 
     output:
-    tuple path("401_samples_interactions_mvoted.rds"),
-    path("401_samples_sign_interactions.rds"),
-    path("401_samples_interactions_agg_rank.rds"), emit: rds
+    tuple path("401_samples_interactions_mvoted.rds"), path("401_samples_sign_interactions.rds"), path("401_samples_interactions_agg_rank.rds"), emit: rds
 
     script:
     """
-    #!/usr/bin/env bash
-
-    Rscript "${projectDir}/bin/401_combine_samples.R" \
+    401_combine_samples.R \
     --output_dir \$PWD \
     --input_dir \$PWD \
-    --metadata \$PWD/${metadata} \
+    --metadata ${metadata} \
     --condition_var ${condition_var} \
     --sample_var ${sample_var} \
     --patient_var ${patient_var}

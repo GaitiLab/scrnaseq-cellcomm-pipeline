@@ -1,0 +1,227 @@
+
+ N E X T F L O W   ~  version 24.04.4
+
+WARNING: Could not load nf-core/config profiles: "${params.custom_config_base}/nfcore_custom.config
+WARNING: Could not load nf-core/config/scrnaseqcellcomm profiles: ${params.custom_config_base}/pipeline/scrnaseqcellcomm.config
+Launching `/cluster/projects/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/main.nf` [evil_becquerel] DSL2 - revision: 5d391ace40
+
+WARN: Nextflow version 24.04.4 does not match workflow required version: 23.04.3 -- Execution will continue, but things may break!
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA -
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE -
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA | 0 of 1
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[-        ] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+executor >  slurm (1)
+[-        ] NFC…PREP_DATA:EXTRACT_METADATA | 0 of 1
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[75/44ea39] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+executor >  slurm (2)
+[fe/cfeaba] NFC…PREP_DATA:EXTRACT_METADATA | 0 of 1
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[75/44ea39] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+executor >  slurm (2)
+[fe/cfeaba] NFC…PREP_DATA:EXTRACT_METADATA | 0 of 1
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[75/44ea39] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+WARN: Access to undefined parameter `output_dir` -- Initialise it to a default value eg. `params.output_dir = some_value`
+
+executor >  slurm (2)
+[fe/cfeaba] NFC…PREP_DATA:EXTRACT_METADATA | 0 of 1
+[-        ] NFC…P_DATA:CREATE_SAMPLE_SHEET -
+[75/44ea39] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+
+
+executor >  slurm (3)
+[fe/cfeaba] NFC…PREP_DATA:EXTRACT_METADATA | 1 of 1 ✔
+[8e/b490e2] NFC…P_DATA:CREATE_SAMPLE_SHEET | 0 of 1
+[75/44ea39] NFC…:REDUCE_SEURAT_OBJECT_SIZE | 0 of 1
+[-        ] NFC…SEURAT_OBJECT_INTO_SAMPLES -
+[-        ] NFC…_DATA:SAMPLE_PREPROCESSING -
+[-        ] NFC…MM:CELL2CELL:RUN_CELL2CELL -
+[-        ] NFC…CELL2CELL:FORMAT_CELL2CELL -
+[-        ] NFC…COMM:CELLCHAT:RUN_CELLCHAT -
+[-        ] NFC…M:CELLCHAT:FORMAT_CELLCHAT -
+[-        ] NFC…ASEQCELLCOMM:CPDB:RUN_CPDB -
+[-        ] NFC…QCELLCOMM:CPDB:FORMAT_CPDB -
+[-        ] NFC…EQCELLCOMM:LIANA:RUN_LIANA -
+[-        ] NFC…ELLCOMM:LIANA:FORMAT_LIANA -
+[-        ] NFC…ASEQCELLCOMM:CONSENSUS:RRA -
+[-        ] NFC…:CONSENSUS:COMBINE_SAMPLES -
+[-        ] NFC…DETECTION_IN_MULTI_SAMPLES -
+[-        ] NFC…REGATION:AGGREGATE_SAMPLES -
+[-        ] NFC…:FILTER_AGGREGATED_RESULTS -
+[-        ] NFC…MM:COLLECT_RESULTS_AS_XLSX -
+

@@ -1,8 +1,6 @@
-
 process RUN_LIANA {
     label 'mem_8G'
     label 'time_30m'
-
 
     input:
     tuple val(sample_id), path(input_file)
@@ -17,15 +15,14 @@ process RUN_LIANA {
 
     script:
     """
-    #!/usr/bin/env bash
-    Rscript "${projectDir}/bin/201_cci_liana.R" \
+    201_cci_liana.R \
         --n_perm ${n_perm} \
-        --interactions_db \$PWD/${interactions_db} \
+        --interactions_db ${interactions_db} \
         --annot ${annot} \
-        --gene_expr \$PWD/${input_file} \
+        --gene_expr ${input_file} \
         --min_cells ${min_cells} \
         --min_pct ${min_pct} \
-        --output_dir "\$PWD"
+        --output_dir \${PWD}
     """
 
     stub:

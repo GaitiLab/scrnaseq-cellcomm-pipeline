@@ -1,11 +1,9 @@
-
 process RUN_CELL2CELL {
     label 'mem_64G'
     label 'time_24h'
 
     input:
-    tuple val(sample_id), path(barcodes),
-    path(genes), path(matrix)
+    tuple val(sample_id), path(barcodes), path(genes), path(matrix)
     path meta
     path interactions_db
     val annot
@@ -17,14 +15,14 @@ process RUN_CELL2CELL {
 
     script:
     """
-    #!/usr/bin/env bash
-    python3 "${projectDir}/Python/202_cci_cell2cell.py" \
+
+    202_cci_cell2cell.py \
         --input_dir \$PWD \
         --n_perm ${n_perm} \
-        --interactions_db \$PWD/${interactions_db} \
+        --interactions_db ${interactions_db} \
         --annot ${annot} \
         --sample_id ${sample_id} \
-        --meta \$PWD/${meta} \
+        --meta ${meta} \
         --output_dir "\$PWD"
     """
 

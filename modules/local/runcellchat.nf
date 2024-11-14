@@ -10,16 +10,15 @@ process RUN_CELLCHAT {
     val min_cells
 
     output:
-    tuple val(sample_id), path("cellchat__${sample_id}.rds"), path "cellchat__${sample_id}__raw_obj.rds", emit:rds
+    tuple val(sample_id), path("cellchat__${sample_id}.rds"), path("cellchat__${sample_id}__raw_obj.rds"), emit: rds
 
     script:
     """
-    #!/usr/bin/env bash
-    Rscript "${projectDir}/bin/200_cci_cellchat.R" \
+    200_cci_cellchat.R \
         --n_perm ${n_perm} \
-        --interactions_db \$PWD/${interactions_db} \
+        --interactions_db ${interactions_db} \
         --annot ${annot} \
-        --gene_expr \$PWD/${input_file} \
+        --gene_expr ${input_file} \
         --min_cells ${min_cells} \
         --output_dir "\$PWD" \
         --n_cores ${task.cpus}

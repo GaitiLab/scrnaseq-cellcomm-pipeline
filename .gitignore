@@ -59,3 +59,5 @@ omnipathr-log
 # Python
 Python/__pycache__
 output/
+gaitilab.config
+nf_run_scrnaseqcellcomm.sh
