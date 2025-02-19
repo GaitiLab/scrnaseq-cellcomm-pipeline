@@ -1,3 +1,12 @@
+.nextflow*
+work/
+data/
+results/
+.DS_Store
+testing/
+testing*
+*.pyc
+
 # History files
 .Rhistory
 .Rapp.history
@@ -38,7 +47,7 @@ vignettes/*.pdf
 # R Environment Variables
 .Renviron
 
-# Coding environment 
+# Coding environment
 .vscode
 
 # Other files (cache, etc)
@@ -50,3 +59,6 @@ omnipathr-log
 # Python
 Python/__pycache__
 output/
+gaitilab.config
+nf_run_scrnaseqcellcomm.sh
+slurm_out/*
