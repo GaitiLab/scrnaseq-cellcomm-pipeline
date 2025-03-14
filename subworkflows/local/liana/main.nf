@@ -1,31 +1,36 @@
-include { RUN_LIANA } from "../../../modules/local/runliana.nf"
-include { FORMAT_LIANA } from "../../../modules/local/formatliana.nf"
+include { LIANA_RUN    } from '../../../modules/local/liana/run'
+include { LIANA_FORMAT } from '../../../modules/local/liana/format'
 
 workflow LIANA {
     take:
     seurat_obj_prepped
-    liana_db
-    ref_db
     annot
     n_perm
     min_cells
     min_pct
 
     main:
-    RUN_LIANA(
-        seurat_obj_prepped,
-        liana_db,
+    ch_versions = Channel.empty()
+    ch_liana_db = Channel.fromPath(file(params.liana_db))
+
+    ch_ref_db = Channel.fromPath(file(params.ref_db))
+    ch_input = seurat_obj_prepped.combine(ch_liana_db)
+
+    LIANA_RUN(
+        ch_input,
         annot,
         n_perm,
         min_cells,
-        min_pct
+        min_pct,
     )
+    ch_versions = ch_versions.mix(LIANA_RUN.out.versions.first())
 
-    FORMAT_LIANA(
-        RUN_LIANA.out.rds,
-        ref_db
+    LIANA_FORMAT(
+        LIANA_RUN.out.rds.combine(ch_ref_db)
     )
+    ch_versions = ch_versions.mix(LIANA_FORMAT.out.versions.first())
 
     emit:
-    rds = FORMAT_LIANA.out.rds
+    rds      = LIANA_FORMAT.out.rds
+    versions = ch_versions
 }

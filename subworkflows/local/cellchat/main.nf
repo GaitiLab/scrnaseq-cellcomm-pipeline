@@ -1,29 +1,34 @@
-include { RUN_CELLCHAT } from "../../../modules/local/runcellchat.nf"
-include { FORMAT_CELLCHAT } from "../../../modules/local/formatcellchat.nf"
+include { CELLCHAT_RUN    } from "../../../modules/local/cellchat/run"
+include { CELLCHAT_FORMAT } from "../../../modules/local/cellchat/format"
 
 workflow CELLCHAT {
     take:
     seurat_obj_prepped
-    cellchat_db
-    ref_db
     annot
     n_perm
     min_cells
 
     main:
-    RUN_CELLCHAT(
-        seurat_obj_prepped,
-        cellchat_db,
+    ch_versions = Channel.empty()
+    ch_cellchat_db = Channel.fromPath(file(params.cellchat_db))
+    ch_ref_db = Channel.fromPath(file(params.ref_db))
+
+    ch_input = seurat_obj_prepped.combine(ch_cellchat_db)
+
+    CELLCHAT_RUN(
+        ch_input,
         annot,
         n_perm,
-        min_cells
+        min_cells,
     )
+    ch_versions = ch_versions.mix(CELLCHAT_RUN.out.versions.first())
 
-    FORMAT_CELLCHAT(
-        RUN_CELLCHAT.out.rds,
-        ref_db
+    CELLCHAT_FORMAT(
+        CELLCHAT_RUN.out.rds.combine(ch_ref_db)
     )
+    ch_versions = ch_versions.mix(CELLCHAT_FORMAT.out.versions.first())
 
     emit:
-    rds = FORMAT_CELLCHAT.out.rds
+    rds      = CELLCHAT_FORMAT.out.rds
+    versions = ch_versions
 }

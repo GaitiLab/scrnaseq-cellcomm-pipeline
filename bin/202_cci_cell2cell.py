@@ -14,6 +14,7 @@ from pathlib import Path
 import cell2cell as c2c
 import pandas as pd
 import scprep
+import utils
 
 
 def get_args():
@@ -53,7 +54,13 @@ def get_args():
     )
     parser.add_argument("-m", "--meta", type=str, help="Path to metadata file (CSV)")
 
-    parser.add_argument("--version", action="version", version="0.1.0")
+    parser.add_argument(
+        "--nf_process_id",
+        type=str,
+        help="Nextflow process ID",
+        default=None,
+        dest="nf_process_id",
+    )
     arg = parser.parse_args()
     arg.output_dir = abspath(arg.output_dir)
     arg.input_dir = abspath(arg.input_dir)
@@ -67,13 +74,6 @@ def get_args():
         if arg.n_cores is None:
             arg.n_cores = multiprocessing.cpu_count()
     return arg
-
-
-def parse_path(p):
-    if os.path.islink(p):
-        return os.readlink(p)
-    else:
-        return p
 
 
 def run_cell2cell(
@@ -165,6 +165,13 @@ def main(args):
         n_perm=args.n_perm,
         interactions_db=args.interactions_db,
     )
+
+    if args.nf_process_id is not None:
+        utils.generate_versions_yml(
+            ["scprep", "pandas", "cell2cell"],
+            task_id=args.nf_process_id,
+            output_dir=args.output_dir,
+        )
 
 
 if __name__ == "__main__":
