@@ -1,14 +1,12 @@
 # GaitiLab/scrnaseq-cellcomm-pipeline
 
-[![GitHub Actions CI Status](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/ci.yml)
-[![GitHub Actions Linting Status](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/linting.yml/badge.svg)](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/linting.yml)[![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX)
-[![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com)
+<!-- [![GitHub Actions CI Status](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/ci.yml/badge.svg)](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/ci.yml) -->
+<!-- [![GitHub Actions Linting Status](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/linting.yml/badge.svg)](https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline/actions/workflows/linting.yml) -->
+<!-- [![Cite with Zenodo](http://img.shields.io/badge/DOI-10.5281/zenodo.XXXXXXX-1073c8?labelColor=000000)](https://doi.org/10.5281/zenodo.XXXXXXX) -->
+<!-- [![nf-test](https://img.shields.io/badge/unit_tests-nf--test-337ab7.svg)](https://www.nf-test.com) -->
 
-[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.04.2-23aa62.svg)](https://www.nextflow.io/)
-[![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/)
-[![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/)
-[![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
-[![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline)
+[![Nextflow](https://img.shields.io/badge/nextflow%20DSL2-%E2%89%A524.04.2-23aa62.svg)](https://www.nextflow.io/) [![run with conda](http://img.shields.io/badge/run%20with-conda-3EB049?labelColor=000000&logo=anaconda)](https://docs.conda.io/en/latest/) [![run with docker](https://img.shields.io/badge/run%20with-docker-0db7ed?labelColor=000000&logo=docker)](https://www.docker.com/) [![run with singularity](https://img.shields.io/badge/run%20with-singularity-1d355c.svg?labelColor=000000)](https://sylabs.io/docs/)
+<!-- [![Launch on Seqera Platform](https://img.shields.io/badge/Launch%20%F0%9F%9A%80-Seqera%20Platform-%234256e7)](https://cloud.seqera.io/launch?pipeline=https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline) -->
 
 ## Introduction
 
@@ -29,47 +27,42 @@
 > [!NOTE]
 > If you are new to Nextflow and nf-core, please refer to [this page](https://nf-co.re/docs/usage/installation) on how to set-up Nextflow.
 
-<!-- TODO nf-core: Describe the minimum required steps to execute the pipeline, e.g. how to prepare samplesheets.
-     Explain what rows and columns represent. For instance (please edit as appropriate):
+First, clone this GitHub repository:
 
-First, prepare a samplesheet with your input data that looks as follows:
-
-`samplesheet.csv`:
-
-```csv
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
+```bash
+git clone https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline.git
 ```
 
-Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
+Then specify the parameters in `params.yml`, which contains the minimal parameters that need to be set:
 
--->
+- `input_file`, a Seurat object containing multiple samples.
+- `annot`, column in Seurat object's metadata containing the annotation labels.
+- `sample_var`, column in Seurat object's metadata containing the sample IDs.
 
 Now, you can run the pipeline using:
 
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run GaitiLab/scrnaseq-cellcomm-pipeline \
+nextflow run scrnaseq-cellcomm-pipeline \
    -profile <docker/singularity/.../institute> \
-   --input samplesheet.csv \
-   --outdir <OUTDIR>
+   --outdir <OUTDIR> -params-file "params.yml" 
 ```
 
 > [!WARNING]
 > Please provide pipeline parameters via the CLI or Nextflow `-params-file` option. Custom config files including those provided by the `-c` Nextflow option can be used to provide any configuration _**except for parameters**_; see [docs](https://nf-co.re/docs/usage/getting_started/configuration#custom-configuration-files).
 
-## Credits
+<!-- ## Credits
 
 GaitiLab/scrnaseq-cellcomm-pipeline was originally written by Joan Kant.
 
-We thank the following people for their extensive assistance in the development of this pipeline:
+We thank the following people for their extensive assistance in the development of this pipeline: -->
 
 <!-- TODO nf-core: If applicable, make list of people who have also contributed -->
 
-## Contributions and Support
+<!-- ## Contributions and Support
 
-If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md).
+If you would like to contribute to this pipeline, please see the [contributing guidelines](.github/CONTRIBUTING.md). -->
 
 ## Citations
 
