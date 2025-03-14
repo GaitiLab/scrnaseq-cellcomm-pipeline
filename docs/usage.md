@@ -2,79 +2,84 @@
 
 > _Documentation of pipeline parameters is generated automatically from the pipeline schema and can no longer be found in markdown files._
 
+- [GaitiLab/scrnaseq-cellcomm-pipeline: Usage](#gaitilabscrnaseq-cellcomm-pipeline-usage)
+  - [Introduction](#introduction)
+    - [Modules](#modules)
+    - [Interactions Database](#interactions-database)
+  - [Running the pipeline](#running-the-pipeline)
+    - [Parameters](#parameters)
+    - [Reproducibility](#reproducibility)
+  - [Core Nextflow arguments](#core-nextflow-arguments)
+    - [`-profile`](#-profile)
+    - [`-resume`](#-resume)
+    - [`-c`](#-c)
+  - [Custom configuration](#custom-configuration)
+    - [Resource requests](#resource-requests)
+    - [Custom Containers](#custom-containers)
+    - [Custom Tool Arguments](#custom-tool-arguments)
+  - [Running in the background](#running-in-the-background)
+  - [Nextflow memory requirements](#nextflow-memory-requirements)
+
 ## Introduction
 
 <!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
 
+### Modules
+
+![workflow](../assets/workflow_2.png)
+
+> Please note that only the main outputs are shown in the workflow. For each step, intermediate results are generated as well.
+
+1. **Prepare Data (`prep_data`).** Prepare the Seurat object with the scRNAseq data for inference.
+    - Filtering out cell types that have less than `min_cells` cells.  (default=100)
+    - Normalize data using Seurat's  `NormalizeData`.
+
+2. **CCI Inference (`run_cci`).** Per-sample
+
+    1. Inference. Run tools with given user-specified parameters.
+    2. Standardize. Format CCI results for each tool.
+    3. Collect into a single file. Combine the results for all tools into one file.
+
+3. **CCI Filtering/Consensus (`consensus`).**
+   - **Consensus across methods.** Keep only significant interactions (p < 0.05) detected in at least LIANA and 2 other tools, this is done for each unique 'interaction' - 'cell type pair' combination. **(sample-wise)**
+   - **Conservation across samples.** Keep only interactions that are found in at least N (default=2) samples (or patients, in case sample=patient) for each condition level.
+
+4. **CCI Aggregation (`aggregation`).**
+    - **Robust Rank Aggregation (RRA) across methods.** Rank the interactions (outputs of the tools), using RRA  **(sample-wise)**.
+  
+      1. LIANA is split into the outputs of the individually implemented tools (connectome, logfc, NATMI, SCA and Cytotalk).
+      2. Ranking the interactions in each tool. For CellChat, CellPhoneDB and Cell2Cell this was done based on -log10(p-val) x interaction score. For the tools implemented in LIANA, the rankings were already provided.
+      3. The ranked interactions are used to create a rankmatrix, where missing values are replaced with the max. rank. Then the ranks are scaled to a (0, 1) range.  
+      4. The rankmatrix is used as input for the `aggregateRanks` a function implemented in R-package `RobustRankAggreg`, returning a single ranking of the interactions as p-values.
+
+    - **Combine interactions by condition (group).** Summarize interactions by condition (group), using Fisher's  test to combine p-values as implemented in R-package `survcomp` and averaging the interaction scores for CellPhoneDB, CellChat Ce2llCell & LIANA (SCA score). Finally, the p-values are adjusted using BH.
+
+5. **Final filtering step.** The remaining list of interactions from module 3 can be further filtered by removing the interactions from module 4 that are insignificant (p-adj >= 0.05).
+
 ### Interactions Database
 
-To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [data/interactions_db](data/interactions_db). The database contains close to 7K interactions. The database is constructed using the following existing databases:
+To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [assets/interactions_db](../assets/interactions_db). The database contains close to 7K interactions. The database is constructed using the following existing databases:
 
-* LIANA: Consensus (N=4701) + Ramilowski 2015 (N=1889)
-* CellPhoneDB v5 (N=2911)
-* CellChat v2 (N=3233)
+- LIANA: Consensus (N=4701) + Ramilowski 2015 (N=1889)
+- CellPhoneDB v5 (N=2911)
+- CellChat v2 (N=3233)
 
 Venn diagram below shows the overlap between the databases after formatting, filtering & combining, with a total number of interactions captured of 6938 interactions, coming from:  
 
-* LIANA: Consensus (N=4675) + Ramilowski 2015 (N=1876)
-* CellPhoneDB v5 (N=2892)
-* CellChat v2 (N=3208)
+- LIANA: Consensus (N=4675) + Ramilowski 2015 (N=1876)
+- CellPhoneDB v5 (N=2892)
+- CellChat v2 (N=3208)
 
 > Disclaimer: By unifying these different databases, some of the interactions may be lost due to formatting.
 
 ![workflow](../assets/overlap_db.png)
-
-
-## Samplesheet input
-
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
-
-```bash
---input '[path to samplesheet file]'
-```
-
-### Multiple runs of the same sample
-
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
-```
-
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
 ## Running the pipeline
 
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run GaitiLab/scrnaseq-cellcomm-pipeline --input ./samplesheet.csv --outdir ./results  -profile docker
+nextflow run scrnaseq-cellcomm-pipeline --outdir ./results  -profile apptainer -params-file "params.yml" 
 ```
 
 This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
@@ -111,13 +116,23 @@ outdir: './results/'
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
-### Updating the pipeline
+### Parameters
 
-When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
-
-```bash
-nextflow pull GaitiLab/scrnaseq-cellcomm-pipeline
-```
+- `scrnaseqcellcomm_modules` available modules in scrnaseq-cellcomm-pipeline as described above. Use a single string to specify modules and separate modules by a comma (default='prep_data,run_cci,consensus,aggregation').
+  > Note, `consensus`and `aggregation`can only be run if `cci_tools` includes all available CCI tools.
+- `cci_tools` Tools to run, string with tools separated by a comma (default='cell2cell,cellchat,cellphonedb,liana').
+- `export_as_excel` Save the final list of interactions an Excel file (default=false)
+- `input_file` (integrated) Seurat object (RDS file) with the scRNAseq data for multiple samples.
+- `sample_var` Column in metadata of Seurat object with the sample IDs (default="Sample").
+- `Patient` (default="Patient"). In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample.
+- `condition` (default="Condition_dummy"). Used for **3. CCI Filtering & 4. CCI Aggregation** for comparison of multiple conditions (or groups). If there is no 'condition' for your dataset, use the default. Then aggregation/filtering will be done based on Patient (or Sample, in case Patient = Sample).
+- `annot` Column in metadata of Seurat object with your cell type labels.
+- `min_cells` (default = 100) Minimum number of cells required in each cell group for cell-cell communication
+- `min_pct` (default = 0.10 = 10%) Minimum percentage of cells expressing a gene (should be a value between 0 and 1)
+- `n_perm` (default = 1000) Number of iterations for permutation testing
+- `min_patients` Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**)
+- `alpha` (default = 0.05) threshold used for **3. CCI Filtering**
+- `outdir` directory for saving output files.
 
 ### Reproducibility
 
@@ -150,6 +165,7 @@ Note that multiple profiles can be loaded, for example: `-profile test,docker` -
 They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
 If `-profile` is not specified, the pipeline will run locally and expect all software to be installed and available on the `PATH`. This is _not_ recommended, since it can lead to different results on different machines dependent on the computer environment.
+
 - `docker`
   - A generic configuration profile to be used with [Docker](https://docker.com/)
 - `singularity`
@@ -163,7 +179,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `apptainer`
   - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
 - `wave`
-  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow ` 24.03.0-edge` or later).
+  - A generic configuration profile to enable [Wave](https://seqera.io/wave/) containers. Use together with one of the above (requires Nextflow `24.03.0-edge` or later).
 - `conda`
   - A generic configuration profile to be used with [Conda](https://conda.io/docs/). Please only use Conda as a last resort i.e. when it's not possible to run the pipeline with Docker, Singularity, Podman, Shifter, Charliecloud, or Apptainer.
 
