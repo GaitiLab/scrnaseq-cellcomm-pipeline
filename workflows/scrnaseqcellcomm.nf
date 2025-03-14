@@ -26,9 +26,9 @@ workflow SCRNASEQCELLCOMM {
     main:
 
     // Create channels for inputs
-    input_file = Channel.fromPath(file(params.input_file))
-    metadata_csv = file(params.metadata_csv).name == "NO_FILE" ? Channel.empty() : Channel.fromPath(file(params.metadata_csv))
-    metadata_rds = file(params.metadata_rds) ? Channel.empty() : Channel.fromPath(file(params.metadata_rds))
+    ch_input_file = Channel.fromPath(params.input_file)
+    ch_metadata_csv = file(params.metadata_csv) ? Channel.empty() : Channel.fromPath(params.metadata_csv)
+    ch_metadata_rds = file(params.metadata_rds) ? Channel.empty() : Channel.fromPath(params.metadata_rds)
 
     // Create channels
     ch_versions = Channel.empty()
@@ -44,15 +44,15 @@ workflow SCRNASEQCELLCOMM {
 
     if (scrnaseqcellcomm_modules.contains("prep_data")) {
         PREP_DATA(
-            input_file,
+            ch_input_file,
             params.sample_var,
             params.annot,
             params.min_cells,
             params.skip_reduction,
         )
 
-        metadata_csv = PREP_DATA.out.metadata_csv
-        metadata_rds = PREP_DATA.out.metadata_rds
+        ch_metadata_csv = PREP_DATA.out.metadata_csv
+        ch_metadata_rds = PREP_DATA.out.metadata_rds
         mtx_dir_prepped = PREP_DATA.out.mtx_dir
         seurat_obj_prepped = PREP_DATA.out.seurat_obj
         ch_versions = ch_versions.mix(PREP_DATA.out.versions)
@@ -62,9 +62,10 @@ workflow SCRNASEQCELLCOMM {
         RUN_CCI(
             mtx_dir_prepped,
             seurat_obj_prepped,
-            metadata_csv,
+            ch_metadata_csv,
         )
         ch_cci = RUN_CCI.out.cci
+        ch_versions = ch_versions.mix(RUN_CCI.out.versions)
     }
 
     // All CCI tools need to be run for the consensus and aggregation
@@ -73,7 +74,7 @@ workflow SCRNASEQCELLCOMM {
         if (scrnaseqcellcomm_modules.contains("consensus")) {
             CONSENSUS(
                 ch_cci,
-                metadata_rds,
+                ch_metadata_rds,
                 params.alpha,
                 params.n_perm,
                 params.condition_var,

@@ -11,9 +11,9 @@ workflow LIANA {
 
     main:
     ch_versions = Channel.empty()
-    ch_liana_db = Channel.fromPath(file(params.liana_db))
+    ch_liana_db = Channel.fromPath(params.liana_db)
 
-    ch_ref_db = Channel.fromPath(file(params.ref_db))
+    ch_ref_db = Channel.fromPath(params.ref_db)
     ch_input = seurat_obj_prepped.combine(ch_liana_db)
 
     LIANA_RUN(

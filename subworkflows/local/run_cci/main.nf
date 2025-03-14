@@ -66,5 +66,6 @@ workflow RUN_CCI {
     }
 
     emit:
-    cci = ch_cell2cell.join(ch_cellchat).join(ch_cellphonedb).join(ch_liana)
+    cci      = ch_cell2cell.join(ch_cellchat).join(ch_cellphonedb).join(ch_liana)
+    versions = ch_versions
 }

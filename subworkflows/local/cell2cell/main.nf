@@ -10,10 +10,10 @@ workflow CELL2CELL {
 
     main:
     ch_versions = Channel.empty()
-    ch_ref_db = Channel.fromPath(file(params.ref_db))
-    cell2cell_db = Channel.fromPath(file(params.cell2cell_db))
+    ch_ref_db = Channel.fromPath(params.ref_db)
+    ch_cell2cell_db = Channel.fromPath(params.cell2cell_db)
 
-    ch_input = mtx_dir_prepped.combine(metadata_csv).combine(cell2cell_db)
+    ch_input = mtx_dir_prepped.combine(metadata_csv).combine(ch_cell2cell_db)
 
     CELL2CELL_RUN(
         ch_input,

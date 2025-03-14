@@ -14,7 +14,7 @@ workflow PREP_DATA {
     skip_reduction
 
     main:
-    seurat_obj = Channel.empty()
+    ch_seurat_obj = Channel.empty()
     ch_versions = Channel.empty()
 
     UTILS_EXTRACT_METADATA(input_file)
@@ -28,7 +28,6 @@ workflow PREP_DATA {
     )
     ch_versions = ch_versions.mix(UTILS_CREATE_SAMPLESHEET.out.versions)
 
-
     sample_sheet = UTILS_CREATE_SAMPLESHEET.out.csv
         | splitCsv(header: true)
         | map { row -> [sample_id: row.Sample] }
@@ -38,18 +37,17 @@ workflow PREP_DATA {
         ch_versions = ch_versions.mix(SEURAT_REDUCE_OBJECT_SIZE.out.versions)
 
         SEURAT_SUBSET_OBJECT(SEURAT_REDUCE_OBJECT_SIZE.out.rds, sample_var, UTILS_CREATE_SAMPLESHEET.out.csv)
-        seurat_obj = SEURAT_SUBSET_OBJECT.out.rds
+        ch_seurat_obj = SEURAT_SUBSET_OBJECT.out.rds
         ch_versions = ch_versions.mix(SEURAT_SUBSET_OBJECT.out.versions)
     }
     else {
-        seurat_obj = input_file
+        ch_seurat_obj = input_file
     }
 
-
     // Only preprocess samples that have at least 2 cell types each having at least min_cells
-    sample_sheet.combine(seurat_obj).set { samples }
+    sample_sheet.combine(ch_seurat_obj).set { ch_samples }
 
-    SEURAT_EXTRACT_SAMPLE(samples, sample_var)
+    SEURAT_EXTRACT_SAMPLE(ch_samples, sample_var)
     ch_versions = ch_versions.mix(SEURAT_EXTRACT_SAMPLE.out.versions.first())
 
     SEURAT_PREPROCESS_SAMPLE(

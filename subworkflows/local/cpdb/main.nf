@@ -12,8 +12,8 @@ workflow CPDB {
 
     main:
     ch_versions = Channel.empty()
-    ch_cellphone_db = Channel.fromPath(file(params.cellphonedb_db))
-    ch_ref_db = Channel.fromPath(file(params.ref_db))
+    ch_cellphone_db = Channel.fromPath(params.cellphonedb_db)
+    ch_ref_db = Channel.fromPath(params.ref_db)
 
     ch_input = mtx_dir_prepped.combine(metadata_csv).combine(ch_cellphone_db)
     CPDB_RUN(

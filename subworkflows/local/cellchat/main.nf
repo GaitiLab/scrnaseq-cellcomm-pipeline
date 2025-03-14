@@ -10,8 +10,8 @@ workflow CELLCHAT {
 
     main:
     ch_versions = Channel.empty()
-    ch_cellchat_db = Channel.fromPath(file(params.cellchat_db))
-    ch_ref_db = Channel.fromPath(file(params.ref_db))
+    ch_cellchat_db = Channel.fromPath(params.cellchat_db)
+    ch_ref_db = Channel.fromPath(params.ref_db)
 
     ch_input = seurat_obj_prepped.combine(ch_cellchat_db)
 
