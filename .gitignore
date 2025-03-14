@@ -33,3 +33,5 @@ containers
 ._subworkflows
 ._test_data
 ._workflows
+
+gaitilab.config
