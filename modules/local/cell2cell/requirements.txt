@@ -1,0 +1,3 @@
+cell2cell==0.7.3
+pandas==1.3.5
+scprep==1.2.2

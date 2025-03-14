@@ -1,70 +1,68 @@
-include { EXTRACT_METADATA                 } from '../../../modules/local/extractmetadata.nf'
-include { REDUCE_SEURAT_OBJECT_SIZE        } from '../../../modules/local/reduceseuratobjectsize.nf'
-include { SAMPLE_PREPROCESSING             } from '../../../modules/local/samplepreprocessing.nf'
-include { SPLIT_SEURAT_OBJECT_INTO_SAMPLES } from '../../../modules/local/splitseuratobjectintosamples.nf'
-include { CREATE_SAMPLE_SHEET              } from '../../../modules/local/createsamplesheet.nf'
-
+include { UTILS_CREATE_SAMPLESHEET         } from '../../../modules/local/utils/create_samplesheet'
+include { UTILS_EXTRACT_METADATA           } from '../../../modules/local/utils/extract_metadata'
+include { SEURAT_REDUCE_OBJECT_SIZE        } from '../../../modules/local/seurat/reduce_object_size'
+include { SEURAT_SPLIT_OBJECT_INTO_SAMPLES } from '../../../modules/local/seurat/split_object_into_samples'
+include { SEURAT_PREPROCESS_SAMPLE         } from '../../../modules/local/seurat/preprocess_sample'
+include { SEURAT_EXTRACT_SAMPLE            } from '../../../modules/local/seurat/extract_sample'
+include { SEURAT_SUBSET_OBJECT             } from '../../../modules/local/seurat/subset_object'
 workflow PREP_DATA {
     take:
-    input_file    
-    sample_var    
-    annot         
-    min_cells     
-    is_confident  
+    input_file
+    sample_var
+    annot
+    min_cells
     skip_reduction
 
     main:
     seurat_obj = Channel.empty()
+    ch_versions = Channel.empty()
 
-    EXTRACT_METADATA(input_file)
+    UTILS_EXTRACT_METADATA(input_file)
+    ch_versions = ch_versions.mix(UTILS_EXTRACT_METADATA.out.versions)
 
-    CREATE_SAMPLE_SHEET(
-        EXTRACT_METADATA.out.rds,
+    UTILS_CREATE_SAMPLESHEET(
+        UTILS_EXTRACT_METADATA.out.rds,
         sample_var,
         annot,
         min_cells,
-        is_confident
     )
+    ch_versions = ch_versions.mix(UTILS_CREATE_SAMPLESHEET.out.versions)
 
-    sample_sheet = CREATE_SAMPLE_SHEET.out.csv
+
+    sample_sheet = UTILS_CREATE_SAMPLESHEET.out.csv
         | splitCsv(header: true)
-        | map { row -> row.Sample }
+        | map { row -> [sample_id: row.Sample] }
 
     if (!skip_reduction) {
-        REDUCE_SEURAT_OBJECT_SIZE(input_file)
-        seurat_obj = REDUCE_SEURAT_OBJECT_SIZE.out.rds
+        SEURAT_REDUCE_OBJECT_SIZE(input_file)
+        ch_versions = ch_versions.mix(SEURAT_REDUCE_OBJECT_SIZE.out.versions)
+
+        SEURAT_SUBSET_OBJECT(SEURAT_REDUCE_OBJECT_SIZE.out.rds, sample_var, UTILS_CREATE_SAMPLESHEET.out.csv)
+        seurat_obj = SEURAT_SUBSET_OBJECT.out.rds
+        ch_versions = ch_versions.mix(SEURAT_SUBSET_OBJECT.out.versions)
     }
     else {
         seurat_obj = input_file
     }
 
-    SPLIT_SEURAT_OBJECT_INTO_SAMPLES(
-        seurat_obj,
-        sample_var
-    )
-
-    SPLIT_SEURAT_OBJECT_INTO_SAMPLES.out.rds
-        .flatten()
-        .map { file -> [file.simpleName, file] }
-        .set {
-            seurat_objects
-        }
 
     // Only preprocess samples that have at least 2 cell types each having at least min_cells
-    seurat_objects = sample_sheet.join(seurat_objects)
+    sample_sheet.combine(seurat_obj).set { samples }
 
-    SAMPLE_PREPROCESSING(
-        seurat_objects,
+    SEURAT_EXTRACT_SAMPLE(samples, sample_var)
+    ch_versions = ch_versions.mix(SEURAT_EXTRACT_SAMPLE.out.versions.first())
+
+    SEURAT_PREPROCESS_SAMPLE(
+        SEURAT_EXTRACT_SAMPLE.out.rds,
         annot,
         min_cells,
-        is_confident
     )
-
-    mtx = SAMPLE_PREPROCESSING.out.tsv.join(SAMPLE_PREPROCESSING.out.mtx)
+    ch_versions = ch_versions.mix(SEURAT_PREPROCESS_SAMPLE.out.versions.first())
 
     emit:
-    metadata_csv = EXTRACT_METADATA.out.csv
-    metadata_rds = EXTRACT_METADATA.out.rds
-    mtx_dir      = mtx
-    seurat_obj   = SAMPLE_PREPROCESSING.out.rds
+    metadata_csv = UTILS_EXTRACT_METADATA.out.csv
+    metadata_rds = UTILS_EXTRACT_METADATA.out.rds
+    mtx_dir      = SEURAT_PREPROCESS_SAMPLE.out.tsv.join(SEURAT_PREPROCESS_SAMPLE.out.mtx)
+    seurat_obj   = SEURAT_PREPROCESS_SAMPLE.out.rds
+    versions     = ch_versions
 }

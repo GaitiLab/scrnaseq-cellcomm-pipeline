@@ -1,84 +1,64 @@
 #!/usr/bin/env nextflow
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    nf-core/scrnaseqcellcomm
+    GaitiLab/scrnaseq-cellcomm-pipeline
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/nf-core/scrnaseqcellcomm
-    Website: https://nf-co.re/scrnaseqcellcomm
-    Slack  : https://nfcore.slack.com/channels/scrnaseqcellcomm
+    Github : https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline
 ----------------------------------------------------------------------------------------
 */
 
-nextflow.enable.dsl = 2
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOW FOR PIPELINE
+    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { SCRNASEQCELLCOMM } from './workflows/scrnaseqcellcomm/main.nf'
+include { SCRNASEQCELLCOMM        } from './workflows/scrnaseqcellcomm'
+include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_scrnaseqcellcomm_pipeline'
+include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_scrnaseqcellcomm_pipeline'
+/*
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    RUN MAIN WORKFLOW
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*/
 
-//
-// WORKFLOW: Run main nf-core/scrnaseqcellcomm analysis pipeline
-//
-workflow NFCORE_SCRNASEQCELLCOMM {
+workflow {
+    //
+    // SUBWORKFLOW: Run initialisation tasks
+    //
+    PIPELINE_INITIALISATION(
+        params.version,
+        params.validate_params,
+        params.monochrome_logs,
+        args,
+        params.outdir,
+    )
 
-    // Convert string paths
-    input_file              = file(params.input_file)
-    metadata_csv            = file(params.metadata_csv)
-    metadata_rds            = file(params.metadata_rds)
-    cellphone_db            = file(params.cellphone_db)
-    cellchat_db             = file(params.cellchat_db)
-    liana_db                = file(params.liana_db)
-    cell2cell_db            = file(params.cell2cell_db)
-    ref_db                  = file(params.ref_db)
-
-    // // Initialize empty channels
-    // preprocessing_mtx_dir       = Channel.empty()
-    // preprocessing_seurat_obj    = Channel.empty()
-    // matched_cci                 = Channel.empty()
-
-    SCRNASEQCELLCOMM (
-        input_file,
-        metadata_csv,
-        metadata_rds,
-        params.annot,
-        params.min_cells,
-        params.sample_var,
-        cellphone_db,
-        cellchat_db,
-        liana_db,
-        cell2cell_db,
-        ref_db,
-        params.min_pct,
-        params.n_perm,
-        params.condition_var,
-        params.patient_var,
-        params.is_confident,
-        params.min_patients,
-        params.alpha,
-        params.interactions_excel_name,
-        params.skip_reduction
+    //
+    // WORKFLOW: Run main workflow
+    //
+    GAITILAB_SCRNASEQCELLCOMM()
+    //
+    // SUBWORKFLOW: Run completion tasks
+    //
+    PIPELINE_COMPLETION(
+        params.outdir,
+        params.monochrome_logs,
     )
 }
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN ALL WORKFLOWS
+    NAMED WORKFLOWS FOR PIPELINE
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
 //
-// WORKFLOW: Execute a single named workflow for the pipeline
-// See: https://github.com/nf-core/rnaseq/issues/619
+// WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow {
-    NFCORE_SCRNASEQCELLCOMM ()
+workflow GAITILAB_SCRNASEQCELLCOMM {
+
+    //
+    // WORKFLOW: Run pipeline
+    //
+    SCRNASEQCELLCOMM()
 }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/

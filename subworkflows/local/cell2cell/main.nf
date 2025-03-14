@@ -1,29 +1,33 @@
-include { RUN_CELL2CELL } from "../../../modules/local/runcell2cell.nf"
-include { FORMAT_CELL2CELL } from "../../../modules/local/formatcell2cell.nf"
+include { CELL2CELL_RUN    } from "../../../modules/local/cell2cell/run"
+include { CELL2CELL_FORMAT } from "../../../modules/local/cell2cell/format"
 
 workflow CELL2CELL {
     take:
     mtx_dir_prepped
     metadata_csv
-    cell2cell_db
-    ref_db
     annot
     n_perm
 
     main:
-    RUN_CELL2CELL(
-        mtx_dir_prepped,
-        metadata_csv,
-        cell2cell_db,
-        annot,
-        n_perm
-    )
+    ch_versions = Channel.empty()
+    ch_ref_db = Channel.fromPath(file(params.ref_db))
+    cell2cell_db = Channel.fromPath(file(params.cell2cell_db))
 
-    FORMAT_CELL2CELL(
-        RUN_CELL2CELL.out.csv,
-        ref_db
+    ch_input = mtx_dir_prepped.combine(metadata_csv).combine(cell2cell_db)
+
+    CELL2CELL_RUN(
+        ch_input,
+        annot,
+        n_perm,
     )
+    ch_versions = ch_versions.mix(CELL2CELL_RUN.out.versions.first())
+
+    CELL2CELL_FORMAT(
+        CELL2CELL_RUN.out.csv.combine(ch_ref_db)
+    )
+    ch_versions = ch_versions.mix(CELL2CELL_FORMAT.out.versions.first())
 
     emit:
-    rds = FORMAT_CELL2CELL.out.rds
+    rds      = CELL2CELL_FORMAT.out.rds
+    versions = ch_versions
 }

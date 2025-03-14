@@ -11,6 +11,7 @@ from pathlib import Path
 import pandas as pd
 import scanpy as sc
 import scprep
+import utils
 from cellphonedb.src.core.methods import cpdb_statistical_analysis_method
 
 
@@ -62,10 +63,16 @@ def get_args():
         "--min_pct",
         type=float,
         default=0.1,
-        help="Minimum percentage of cells expressing a gene",
+        help="Minimum percentage of cells expressing a gene [0.0-1.0], a.k.a. proportion",
     )
 
-    parser.add_argument("--version", action="version", version="0.1.0")
+    parser.add_argument(
+        "--nf_process_id",
+        type=str,
+        help="Nextflow process ID",
+        default=None,
+        dest="nf_process_id",
+    )
     arg = parser.parse_args()
     arg.output_dir = abspath(arg.output_dir)
     arg.input_dir = abspath(arg.input_dir)
@@ -182,6 +189,13 @@ def main(args):
         min_pct=args.min_pct,
         n_cores=args.n_cores,
     )
+
+    if args.nf_process_id is not None:
+        utils.generate_versions_yml(
+            ["scprep", "scprep", "scanpy", "pandas", "cellphonedb"],
+            task_id=args.nf_process_id,
+            output_dir=args.output_dir,
+        )
 
 
 if __name__ == "__main__":

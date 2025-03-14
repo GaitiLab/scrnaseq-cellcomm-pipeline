@@ -1,22 +1,24 @@
-include { RRA             } from "../../../modules/local/rra.nf"
-include { COMBINE_SAMPLES } from '../../../modules/local/combinesamples.nf'
+include { RRA             } from "../../../modules/local/rra"
+include { COMBINE_SAMPLES } from '../../../modules/local/combine_samples'
 
 
 workflow CONSENSUS {
     take:
-    matched_cci  
-    metadata_rds 
-    alpha        
-    n_perm       
+    matched_cci
+    metadata_rds
+    alpha
+    n_perm
     condition_var
-    sample_var   
-    patient_var  
+    sample_var
+    patient_var
 
     main:
+    ch_versions = Channel.empty()
+
     RRA(
         matched_cci,
         alpha,
-        n_perm
+        n_perm,
     )
     RRA.out.rds
         .collect()
@@ -28,8 +30,12 @@ workflow CONSENSUS {
         }
         .set { result }
 
+    ch_versions = ch_versions.mix(RRA.out.versions)
+
     COMBINE_SAMPLES(result.mvoted.collect(), result.signif.collect(), result.agg_rank.collect(), metadata_rds, condition_var, sample_var, patient_var)
+    ch_versions = ch_versions.mix(COMBINE_SAMPLES.out.versions)
 
     emit:
-    rds = COMBINE_SAMPLES.out.rds
+    rds      = COMBINE_SAMPLES.out.rds
+    versions = ch_versions
 }
