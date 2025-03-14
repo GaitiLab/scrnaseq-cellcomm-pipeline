@@ -59,6 +59,7 @@
 ### Interactions Database
 
 To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [assets/interactions_db](../assets/interactions_db). The database contains close to 7K interactions. The database is constructed using the following existing databases:
+To infer CCIs, a database with interactions is required. The multiple tools require differently formatted databases, therefore a custom database has been generated. The main database has already been formatted accordingly so that it can be used for the different tools. The files can be found in [assets/interactions_db](../assets/interactions_db). The database contains close to 7K interactions. The database is constructed using the following existing databases:
 
 - LIANA: Consensus (N=4701) + Ramilowski 2015 (N=1889)
 - CellPhoneDB v5 (N=2911)
@@ -79,6 +80,7 @@ Venn diagram below shows the overlap between the databases after formatting, fil
 The typical command for running the pipeline is as follows:
 
 ```bash
+nextflow run scrnaseq-cellcomm-pipeline --outdir ./results  -profile apptainer -params-file "params.yml" 
 nextflow run scrnaseq-cellcomm-pipeline --outdir ./results  -profile apptainer -params-file "params.yml" 
 ```
 
