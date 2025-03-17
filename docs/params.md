@@ -1,0 +1,65 @@
+# GaitiLab/scrnaseq-cellcomm-pipeline pipeline parameters
+
+Inference of cell-cell communication using scRNAseq data.
+
+## General pipeline options
+
+| Parameter                  | Description                                                                                                                                                                                    | Type     | Default                                 | Required | Hidden |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------- | -------- | ------ |
+| `scrnaseqcellcomm_modules` | available modules in scrnaseq-cellcomm-pipeline as described above. Use a single string to specify modules and separate modules by a comma (default='prep_data,run_cci,consensus,aggregation') | `string` | prep_data,run_cci,consensus,aggregation |          |        |
+| `cci_tools`                | Tools to run, string with tools separated by a comma (default='cell2cell,cellchat,cellphonedb,liana')                                                                                          | `string` | cell2cell,cellchat,cellphonedb,liana    |          |        |
+
+## Input/output options
+
+Define where the pipeline should find input data and save output data.
+
+| Parameter        | Description                                                                                                                  | Type     | Default                                               | Required | Hidden |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------- | -------- | ------ |
+| `input`          |                                                                                                                              | `string` |                                                       |          |        |
+| `input_file`     | Path to Seurat object containing multiple samples.                                                                           | `string` |                                                       |          |        |
+| `outdir`         | The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.     | `string` |                                                       | True     |        |
+| `cell2cell_db`   | Path to the Cell2Cell database (formatted from ref_db)                                                                       | `string` | ${projectDir}/assets/interactions_db/cell2cell_db.csv |          |        |
+| `cellchat_db`    | Path to the CellChat database (formatted from ref_db)                                                                        | `string` | ${projectDir}/assets/interactions_db/cellchat_db.rds  |          |        |
+| `cellphonedb_db` | Path to the CellPhoneDB database (formatted from ref_db)                                                                     | `string` | ${projectDir}/assets/interactions_db/cellphonedb.zip  |          |        |
+| `liana_db`       | Path to the LIANA database  (formatted from ref_db)                                                                          | `string` | ${projectDir}/assets/interactions_db/liana_db.rds     |          |        |
+| `ref_db`         | Path to the CCI reference database same as cellphonedb_db, cellchat_db, liana_db, cell2cell_db, but in a generalized format. | `string` | ${projectDir}/assets/interactions_db/ref_db.rds       |          |        |
+| `metadata_csv`   | Path to metadata from Seurat object (input_file) stored as csv                                                               | `string` |                                                       |          |        |
+| `metadata_rds`   | Path to metadata from Seurat object (input_file) stored as res                                                               | `string` |                                                       |          |        |
+
+## Prepare data & CCI options
+
+| Parameter        | Description                                                                                                                                                       | Type      | Default   | Required | Hidden |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | --------- | -------- | ------ |
+| `sample_var`     | Column in metadata of Seurat object containing the Sample IDs                                                                                                     | `string`  | Sample    | True     |        |
+| `annot`          | Column in metadata of Seurat object containing the cell type labels.                                                                                              | `string`  | cell_type | True     |        |
+| `skip_reduction` | Skip reduction of Seurat object size, i.e. only keeping required assay                                                                                            | `boolean` |           |          |        |
+| `min_cells`      | Minimum number of cells required in each cell group for cell-cell communication                                                                                   | `integer` | 100       |          |        |
+| `min_pct`        | Minimum percentage of cells expressing a gene, used in LIANA & CellPhoneDB, but is actually a proportion, a value between 0 and 1.  (default = 0.1; 10% of cells) | `number`  | 0.1       |          |        |
+| `n_perm`         | Number of permutations, used in all available CCI tools.                                                                                                          | `integer` | 1000      |          |        |
+
+## Consensus and aggregation options
+
+Parameters used in the consensus and aggregation module of scrnaseqcellcomm
+
+| Parameter                                                                                  | Description                                                                                                                                                                                                  | Type            | Default              | Required | Hidden |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- | -------------------- | -------- | ------ |
+| `condition_var`                                                                            | Grouping variable for your samples. Used for **3. CCI Filtering & 4. CCI Aggregation** for comparison of multiple conditions (or groups). If there is no 'condition' for your dataset, use the default. Then |
+| aggregation/filtering will be done based on Patient (or Sample, in case Patient = Sample). | `string`                                                                                                                                                                                                     | Condition_dummy |                      |          |
+| `patient_var`                                                                              | Column in Seurat object's metadata with a patient ID. In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample.                                               | `string`        | Patient              |          |        |
+| `min_patients`                                                                             | Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**).  If only 1 sample per patient, then uses the sample IDs                                                             | `integer`       | 2                    |          |        |
+| `alpha`                                                                                    | Significance level to use for filtering of interactions in the consensus module                                                                                                                              | `number`        | 0.05                 |          |        |
+| `interactions_excel_name`                                                                  | Name for Excel file when export_as_excel is set to true                                                                                                                                                      | `string`        | interactions_summary |          |        |
+| `export_as_excel`                                                                          | Boolean whether to save the overview of the aggregated/filtered interactions as an Excel file                                                                                                                | `boolean`       |                      |          |        |
+
+## Generic options
+
+Less common options for the pipeline, typically set in a config file.
+
+| Parameter                                                                                                                                                                                 | Description                                                                                                                                                                                                        | Type      | Default | Required | Hidden |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------- | ------- | -------- | ------ |
+| `version`                                                                                                                                                                                 | Display version and exit.                                                                                                                                                                                          | `boolean` |         |          | True   |
+| `publish_dir_mode`                                                                                                                                                                        | Method used to save pipeline results to output directory. <details><summary>Help</summary><small>The Nextflow `publishDir` option specifies which intermediate files should be saved to the output directory. This |
+| option tells the pipeline what method should be used to move these files. See [Nextflow docs](https://www.nextflow.io/docs/latest/process.html#publishdir) for details.</small></details> | `string`                                                                                                                                                                                                           | copy      |         | True     |
+| `monochrome_logs`                                                                                                                                                                         | Do not use coloured log outputs.                                                                                                                                                                                   | `boolean` |         |          | True   |
+| `validate_params`                                                                                                                                                                         | Boolean whether to validate parameters against the schema at runtime                                                                                                                                               | `boolean` | True    |          | True   |
+| `trace_report_suffix`                                                                                                                                                                     | Suffix to add to the trace report filename. Default is the date and time in the format yyyy-MM-dd_HH-mm-ss.                                                                                                        | `string`  |         |          | True   |

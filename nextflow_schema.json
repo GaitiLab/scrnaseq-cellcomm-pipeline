@@ -5,6 +5,24 @@
   "description": "Inference of cell-cell communication using scRNAseq data.",
   "type": "object",
   "$defs": {
+    "general_pipeline_options": {
+      "title": "General pipeline options",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "scrnaseqcellcomm_modules": {
+          "type": "string",
+          "description": "available modules in scrnaseq-cellcomm-pipeline as described above. Use a single string to specify modules and separate modules by a comma (default='prep_data,run_cci,consensus,aggregation')",
+          "default": "prep_data,run_cci,consensus,aggregation"
+        },
+        "cci_tools": {
+          "type": "string",
+          "default": "cell2cell,cellchat,cellphonedb,liana",
+          "description": "Tools to run, string with tools separated by a comma (default='cell2cell,cellchat,cellphonedb,liana')"
+        }
+      }
+    },
     "input_output_options": {
       "title": "Input/output options",
       "type": "object",
@@ -31,7 +49,7 @@
         },
         "cell2cell_db": {
           "type": "string",
-          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/gaitilab-scrnaseqcellcomm/assets/interactions_db/cell2cell_db.csv",
+          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/cell2cell_db.csv",
           "description": "Path to the Cell2Cell database (formatted from ref_db)",
           "pattern": "^\\S+\\.csv$",
           "format": "file-path",
@@ -39,7 +57,7 @@
         },
         "cellchat_db": {
           "type": "string",
-          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/gaitilab-scrnaseqcellcomm/assets/interactions_db/cellchat_db.rds",
+          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/cellchat_db.rds",
           "description": "Path to the CellChat database (formatted from ref_db)",
           "pattern": "^\\S+\\.rds$",
           "format": "file-path",
@@ -47,7 +65,7 @@
         },
         "cellphonedb_db": {
           "type": "string",
-          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/gaitilab-scrnaseqcellcomm/assets/interactions_db/cellphonedb.zip",
+          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/cellphonedb.zip",
           "description": "Path to the CellPhoneDB database (formatted from ref_db)",
           "pattern": "^\\S+\\.zip$",
           "format": "file-path",
@@ -55,24 +73,106 @@
         },
         "liana_db": {
           "type": "string",
-          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/gaitilab-scrnaseqcellcomm/assets/interactions_db/liana_db.rds",
+          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/liana_db.rds",
           "description": "Path to the LIANA database  (formatted from ref_db)",
           "pattern": "^\\S+\\.rds$",
-          "format": "file-path"
+          "format": "file-path",
+          "fa_icon": "fas fa-database"
         },
         "ref_db": {
           "type": "string",
-          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/gaitilab-scrnaseqcellcomm/assets/interactions_db/ref_db.rds",
+          "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/ref_db.rds",
           "description": "Path to the CCI reference database same as cellphonedb_db, cellchat_db, liana_db, cell2cell_db, but in a generalized format.",
           "fa_icon": "fas fa-database"
         },
         "metadata_csv": {
           "type": "string",
-          "description": "Path to metadata from Seurat object (input_file) stored as csv"
+          "description": "Path to metadata from Seurat object (input_file) stored as csv",
+          "fa_icon": "far fa-file"
         },
         "metadata_rds": {
           "type": "string",
-          "description": "Path to metadata from Seurat object (input_file) stored as res"
+          "description": "Path to metadata from Seurat object (input_file) stored as res",
+          "fa_icon": "far fa-file"
+        }
+      }
+    },
+    "prepare_data_cci_options": {
+      "title": "Prepare data & CCI options",
+      "type": "object",
+      "description": "",
+      "default": "",
+      "properties": {
+        "sample_var": {
+          "type": "string",
+          "default": "Sample",
+          "description": "Column in metadata of Seurat object containing the Sample IDs"
+        },
+        "annot": {
+          "type": "string",
+          "default": "cell_type",
+          "description": "Column in metadata of Seurat object containing the cell type labels."
+        },
+        "skip_reduction": {
+          "type": "boolean",
+          "description": "Skip reduction of Seurat object size, i.e. only keeping required assay"
+        },
+        "min_cells": {
+          "type": "integer",
+          "default": 100,
+          "description": "Minimum number of cells required in each cell group for cell-cell communication"
+        },
+        "min_pct": {
+          "type": "number",
+          "default": 0.1,
+          "description": "Minimum percentage of cells expressing a gene, used in LIANA & CellPhoneDB, but is actually a proportion, a value between 0 and 1.  (default = 0.1; 10% of cells)",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "n_perm": {
+          "type": "integer",
+          "default": 1000,
+          "description": "Number of permutations, used in all available CCI tools.",
+          "minimum": 1
+        }
+      },
+      "required": ["sample_var", "annot"]
+    },
+    "consensus_and_aggregation_options": {
+      "title": "Consensus and aggregation options",
+      "type": "object",
+      "description": "Parameters used in the consensus and aggregation module of scrnaseqcellcomm",
+      "default": "",
+      "properties": {
+        "condition_var": {
+          "type": "string",
+          "default": "Condition_dummy",
+          "description": "Grouping variable for your samples. Used for **3. CCI Filtering & 4. CCI Aggregation** for comparison of multiple conditions (or groups). If there is no 'condition' for your dataset, use the default. Then aggregation/filtering will be done based on Patient (or Sample, in case Patient = Sample)."
+        },
+        "patient_var": {
+          "type": "string",
+          "default": "Patient",
+          "description": "Column in Seurat object's metadata with a patient ID. In case a patient has multiple samples, if not set then the following assumption is made Patient=Sample."
+        },
+        "min_patients": {
+          "type": "integer",
+          "default": 2,
+          "description": "Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**).  If only 1 sample per patient, then uses the sample IDs",
+          "minimum": 2
+        },
+        "alpha": {
+          "type": "number",
+          "default": 0.05,
+          "description": "Significance level to use for filtering of interactions in the consensus module"
+        },
+        "interactions_excel_name": {
+          "type": "string",
+          "default": "interactions_summary",
+          "description": "Name for Excel file when export_as_excel is set to true"
+        },
+        "export_as_excel": {
+          "type": "boolean",
+          "description": "Boolean whether to save the overview of the aggregated/filtered interactions as an Excel file"
         }
       }
     },
@@ -125,108 +225,23 @@
           "hidden": true
         }
       }
-    },
-    "consensus_and_aggregation": {
-      "title": "Consensus and aggregation",
-      "type": "object",
-      "description": "Parameters used in the consensus and aggregation module of scrnaseqcellcomm",
-      "default": "",
-      "properties": {
-        "condition_var": {
-          "type": "string",
-          "default": "Condition_dummy",
-          "description": "Grouping variable for your samples."
-        },
-        "patient_var": {
-          "type": "string",
-          "default": "Patient",
-          "description": "Column in Seurat object's metadata with a patient ID, in case you have multiple samples per patient."
-        },
-        "min_patients": {
-          "type": "integer",
-          "default": 2,
-          "description": "Minimum number of patients for an interaction to be kept.  If only 1 sample per patient, then uses the sample IDs",
-          "minimum": 2
-        },
-        "alpha": {
-          "type": "number",
-          "default": 0.05,
-          "description": "Significance level to use for filtering of interactions in the consensus subworkflow"
-        },
-        "interactions_excel_name": {
-          "type": "string",
-          "default": "interactions_summary",
-          "description": "Name for Excel file when export_as_excel is set to true"
-        },
-        "export_as_excel": {
-          "type": "boolean",
-          "description": "Boolean whether to save the overview of the aggregated/filtered interactions as an Excel file"
-        }
-      }
-    },
-    "prepare_data_cci": {
-      "title": "Prepare data & CCI",
-      "type": "object",
-      "description": "",
-      "default": "",
-      "properties": {
-        "skip_reduction": {
-          "type": "boolean",
-          "description": "Skip reduction of Seurat object size, i.e. only keeping required assay"
-        },
-        "annot": {
-          "type": "string",
-          "default": "cell_type",
-          "description": "Column in metadata of Seurat object containing the cell type labels."
-        },
-        "min_cells": {
-          "type": "integer",
-          "default": 100,
-          "description": "Minimum number of cells required in each cell group for cell-cell communication"
-        },
-        "min_pct": {
-          "type": "number",
-          "default": 0.1,
-          "description": "Minimum percentage of cells expressing a gene, used in LIANA & CellPhoneDB, but is actually a proportion, a value between 0 and 1.  (default = 0.1; 10% of cells)",
-          "minimum": 0,
-          "maximum": 1
-        },
-        "n_perm": {
-          "type": "integer",
-          "default": 1000,
-          "description": "Number of permutations, used in all available CCI tools.",
-          "minimum": 1
-        }
-      }
     }
   },
   "allOf": [
     {
+      "$ref": "#/$defs/general_pipeline_options"
+    },
+    {
       "$ref": "#/$defs/input_output_options"
     },
     {
+      "$ref": "#/$defs/prepare_data_cci_options"
+    },
+    {
+      "$ref": "#/$defs/consensus_and_aggregation_options"
+    },
+    {
       "$ref": "#/$defs/generic_options"
-    },
-    {
-      "$ref": "#/$defs/consensus_and_aggregation"
-    },
-    {
-      "$ref": "#/$defs/prepare_data_cci"
     }
-  ],
-  "properties": {
-    "scrnaseqcellcomm_modules": {
-      "type": "string",
-      "default": "prep_data,run_cci,consensus,aggregation"
-    },
-    "cci_tools": {
-      "type": "string",
-      "default": "cell2cell,cellchat,cellphonedb,liana"
-    },
-    "sample_var": {
-      "type": "string",
-      "default": "Sample",
-      "description": "Column in metadata of Seurat object containing the Sample IDs"
-    }
-  }
+  ]
 }

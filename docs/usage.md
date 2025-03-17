@@ -119,7 +119,7 @@ outdir: './results/'
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
 ### Parameters
-
+<!-- TODO move to schema -->
 - `scrnaseqcellcomm_modules` available modules in scrnaseq-cellcomm-pipeline as described above. Use a single string to specify modules and separate modules by a comma (default='prep_data,run_cci,consensus,aggregation').
   > Note, `consensus`and `aggregation`can only be run if `cci_tools` includes all available CCI tools.
 - `cci_tools` Tools to run, string with tools separated by a comma (default='cell2cell,cellchat,cellphonedb,liana').
@@ -135,6 +135,9 @@ You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-c
 - `min_patients` Minimum number of patients for an interaction to be kept (used in **3. CCI Filtering**)
 - `alpha` (default = 0.05) threshold used for **3. CCI Filtering**
 - `outdir` directory for saving output files.
+
+
+
 
 ### Reproducibility
 
