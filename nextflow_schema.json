@@ -37,7 +37,7 @@
         "input_file": {
           "type": "string",
           "description": "Path to Seurat object containing multiple samples.",
-          "pattern": "^\\S+\\.rds$",
+          "pattern": "^(?i)\\S+\\.rds$",
           "format": "file-path",
           "fa_icon": "far fa-file"
         },
@@ -59,7 +59,7 @@
           "type": "string",
           "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/cellchat_db.rds",
           "description": "Path to the CellChat database (formatted from ref_db)",
-          "pattern": "^\\S+\\.rds$",
+          "pattern": "^(?i)\\S+\\.rds$",
           "format": "file-path",
           "fa_icon": "fas fa-database"
         },
@@ -75,7 +75,7 @@
           "type": "string",
           "default": "/Users/joankant/Desktop/gaitigroup/Users/Joan/scrnaseq-cellcomm-pipeline/assets/interactions_db/liana_db.rds",
           "description": "Path to the LIANA database  (formatted from ref_db)",
-          "pattern": "^\\S+\\.rds$",
+          "pattern": "^(?i)\\S+\\.rds$",
           "format": "file-path",
           "fa_icon": "fas fa-database"
         },
