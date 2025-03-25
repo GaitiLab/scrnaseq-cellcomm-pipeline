@@ -39,7 +39,7 @@
 
 * Unix-like operating system (Linux, macOS, etc)
 * Java 18
-* Nextflow 23.04.3
+* Nextflow 24.10.5
 
 > Disclaimer: pipeline has been only been tested the abovementioned versions.
 
@@ -47,6 +47,12 @@ First, clone this GitHub repository:
 
 ```bash
 git clone https://github.com/GaitiLab/scrnaseq-cellcomm-pipeline.git
+```
+
+If you run the pipeline offline, then please install the required plugin.
+
+```bash
+nextflow plugin install nf-schema@2.3.0
 ```
 
 Then specify the parameters in `params.yml`, which contains the minimal parameters that need to be set:
