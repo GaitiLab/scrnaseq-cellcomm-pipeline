@@ -76,6 +76,19 @@ cell_ids <- seurat_obj@meta.data %>%
 
 log_info("Subset Seurat object...")
 seurat_obj <- subset(seurat_obj, cells = cell_ids)
+
+log_info("Check Seurat object version...")
+seurat_obj_version <- as.character(Version(seurat_obj))
+if (str_starts(seurat_obj_version, "5")) {
+    log_info(glue("Seurat object version: {seurat_obj_version}"))
+    log_info("Recreate Seurat object...")
+    # Needed for normalization
+    seurat_obj_recreated <- CreateSeuratObject(
+        counts = GetAssayData(seurat_obj, layer = "counts", assay = "RNA"),
+        meta.data = seurat_obj@meta.data
+    )
+}
+
 saveRDS(
     seurat_obj,
     file.path(params$output_dir, paste0(params$sample_id, ".rds"))
