@@ -87,12 +87,16 @@ if (str_starts(seurat_obj_version, "5")) {
         counts = GetAssayData(seurat_obj, layer = "counts", assay = "RNA"),
         meta.data = seurat_obj@meta.data
     )
+    saveRDS(
+        seurat_obj_recreated,
+        file.path(params$output_dir, paste0(params$sample_id, ".rds"))
+    )
+} else {
+    saveRDS(
+        seurat_obj,
+        file.path(params$output_dir, paste0(params$sample_id, ".rds"))
+    )
 }
-
-saveRDS(
-    seurat_obj,
-    file.path(params$output_dir, paste0(params$sample_id, ".rds"))
-)
 
 log_info("Finished")
 

@@ -73,7 +73,6 @@ log_object(params_ls_to_df(params))
 log_info("Format and save as xlsx...")
 scrnaseq.cellcomm::save_as_xlsx(
     interactions_agg_integration = params$interactions_agg_integration,
-    condition_var = params$condition_var,
     alpha = params$alpha,
     output_dir = params$output_dir,
     output_name = params$output_name
