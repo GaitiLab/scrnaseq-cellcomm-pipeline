@@ -77,10 +77,10 @@ cell_ids <- seurat_obj@meta.data %>%
 log_info("Subset Seurat object...")
 seurat_obj <- subset(seurat_obj, cells = cell_ids)
 
-log_info("Check Seurat object version...")
-seurat_obj_version <- as.character(Version(seurat_obj))
-if (str_starts(seurat_obj_version, "5")) {
-    log_info(glue("Seurat object version: {seurat_obj_version}"))
+log_info("Check Seurat assay version...")
+assay_version <- as.character(class(seurat_obj[["RNA"]])[1])
+if (str_detect(assay_version, as.character(5))) {
+    log_info(glue("Seurat assay version: {assay_version}"))
     log_info("Recreate Seurat object...")
     # Needed for normalization
     seurat_obj_recreated <- CreateSeuratObject(
