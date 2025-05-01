@@ -1,6 +1,6 @@
 process FILTER_AGGREGATED_RESULTS {
-    label "mem_4G"
-    label "time_10m"
+    label "mem_16G"
+    label "time_30m"
 
     input:
     path interactions_agg_binarized

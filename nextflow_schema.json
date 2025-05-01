@@ -173,6 +173,10 @@
         "export_as_excel": {
           "type": "boolean",
           "description": "Boolean whether to save the overview of the aggregated/filtered interactions as an Excel file"
+        },
+        "interactions": {
+          "type": "string",
+          "format": "directory-path"
         }
       }
     },

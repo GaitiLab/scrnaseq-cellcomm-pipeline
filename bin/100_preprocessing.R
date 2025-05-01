@@ -74,7 +74,6 @@ log_object(params_ls_to_df(params))
 options(Seurat.object.assay.version = "v4")
 
 log_info("Prepare data...")
-# TODO remove `is_confident` argument in prepare_data()
 scrnaseq.cellcomm::prepare_data(
     input_file = params$input_file,
     annot = params$annot,

@@ -1,6 +1,6 @@
 process AGGREGATE_SAMPLES {
-    label "mem_4G"
-    label "time_10m"
+    label "mem_16G"
+    label "time_30m"
 
     input:
     tuple path(_interactions_mvoted), path(_signif_interactions), path(interactions_agg_rank)

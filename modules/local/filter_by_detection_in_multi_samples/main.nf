@@ -1,6 +1,6 @@
 process FILTER_BY_DETECTION_IN_MULTI_SAMPLES {
-    label "mem_4G"
-    label "time_10m"
+    label "mem_16G"
+    label "time_30m"
 
     input:
     tuple path(interactions_mvoted), path(_signif_interactions), path(_interactions_agg_rank)

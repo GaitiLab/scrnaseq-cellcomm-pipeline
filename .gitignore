@@ -9,4 +9,5 @@ testing*
 null/
 ._**
 ._.**
-internal
+internal/*
+nf-work

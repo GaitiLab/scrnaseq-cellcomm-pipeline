@@ -1,6 +1,6 @@
 process SEURAT_PREPROCESS_SAMPLE {
-    label 'mem_8G'
-    label 'time_10m'
+    label 'mem_32G'
+    label 'time_30m'
 
     input:
     tuple val(meta), path(input_file)
