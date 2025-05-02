@@ -23,10 +23,6 @@ workflow CONSENSUS {
         : Channel.empty()
     ch_metadata = params.metadata_rds ? Channel.fromPath(params.metadata_rds) : metadata_rds
 
-
-    ch_results.mvoted.view()
-
-
     if (!params.interactions) {
         RRA(
             matched_cci,
