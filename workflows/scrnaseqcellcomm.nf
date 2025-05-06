@@ -27,8 +27,8 @@ workflow SCRNASEQCELLCOMM {
 
     // Create channels for inputs
     ch_input_file = Channel.fromPath(params.input_file)
-    ch_metadata_csv = file(params.metadata_csv) ? Channel.empty() : Channel.fromPath(params.metadata_csv)
-    ch_metadata_rds = file(params.metadata_rds) ? Channel.empty() : Channel.fromPath(params.metadata_rds)
+    ch_metadata_csv = !params.metadata_csv ? Channel.empty() : Channel.fromPath(params.metadata_csv)
+    ch_metadata_rds = !params.metadata_rds ? Channel.empty() : Channel.fromPath(params.metadata_rds)
 
     // Create channels
     ch_versions = Channel.empty()
