@@ -5,8 +5,8 @@ include { UTILS_SAVE_AS_XLSX                   } from '../../../modules/local/ut
 
 workflow AGGREGATION {
     take:
-    consensus_objects
-    condition_var
+    ch_ranked_cci_rds
+    ch_mvoted_rds
     min_patients
 
     main:
@@ -14,26 +14,23 @@ workflow AGGREGATION {
     ch_versions = Channel.empty()
 
     FILTER_BY_DETECTION_IN_MULTI_SAMPLES(
-        consensus_objects,
-        condition_var,
+        ch_mvoted_rds,
         min_patients,
     )
     ch_versions = ch_versions.mix(FILTER_BY_DETECTION_IN_MULTI_SAMPLES.out.versions)
 
-    AGGREGATE_SAMPLES(consensus_objects, condition_var)
+    AGGREGATE_SAMPLES(ch_ranked_cci_rds)
     ch_versions = ch_versions.mix(AGGREGATE_SAMPLES.out.versions)
-
 
     FILTER_AGGREGATED_RESULTS(
         FILTER_BY_DETECTION_IN_MULTI_SAMPLES.out.rds,
         AGGREGATE_SAMPLES.out.rds,
-        condition_var,
     )
     ch_versions = ch_versions.mix(FILTER_AGGREGATED_RESULTS.out.versions)
     ch_aggregated_cci = FILTER_AGGREGATED_RESULTS.out.rds
 
     if (params.export_as_excel) {
-        UTILS_SAVE_AS_XLSX(ch_aggregated_cci, params.condition_var, params.alpha, params.interactions_excel_name)
+        UTILS_SAVE_AS_XLSX(ch_aggregated_cci, params.alpha, params.interactions_excel_name)
         ch_versions = ch_versions.mix(UTILS_SAVE_AS_XLSX.out.versions)
     }
 

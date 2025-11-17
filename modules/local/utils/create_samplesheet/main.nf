@@ -14,13 +14,13 @@ process UTILS_CREATE_SAMPLESHEET {
 
     script:
     """
-    create_sample_sheet.R \
+    01_create_sample_sheet.R \
         --sample_var ${sample_var} \
         --input_file ${input_file} \
         --annot "${annot}" \
         --min_cells ${min_cells} \
         --output_dir "\$PWD" \
-        --task_id ${task.process}
+        --nf_process_id ${task.process}
 
     """
 

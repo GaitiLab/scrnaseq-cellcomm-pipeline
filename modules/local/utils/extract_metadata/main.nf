@@ -12,10 +12,10 @@ process UTILS_EXTRACT_METADATA {
 
     script:
     """
-    000_get_metadata.R \
+    00_get_metadata.R \
     --input_file "${input_file}" \
     --output_dir "\$PWD" \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
     """
 
     stub:

@@ -13,12 +13,12 @@ process LIANA_FORMAT {
 
     """
 
-    301_postproc_liana.R \
+    34_postproc_liana.R \
     --output_dir "\$PWD" \
     --input_interactions ${input_interactions} \
     --sample_id ${meta.sample_id} \
     --ref_db ${ref_db} \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
 
     """
 

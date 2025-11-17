@@ -4,7 +4,6 @@ process UTILS_SAVE_AS_XLSX {
 
     input:
     path interactions_agg_integration
-    val condition_var
     val alpha
     val output_name
 
@@ -14,13 +13,12 @@ process UTILS_SAVE_AS_XLSX {
 
     script:
     """
-    403_collect_results.R \
+    45_collect_results.R \
     --output_dir \$PWD \
     --output_name ${output_name} \
     --interactions_agg_integration ${interactions_agg_integration} \
-    --condition_var ${condition_var} \
     --alpha ${alpha} \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
 
     """
 

@@ -1,6 +1,6 @@
-include { RRA             } from "../../../modules/local/rra"
-include { COMBINE_SAMPLES } from '../../../modules/local/combine_samples'
-
+include { RRA                                       } from "../../../modules/local/rra"
+include { COMBINE_SAMPLES as COMBINE_MVOTED_SAMPLES ; COMBINE_SAMPLES as COMBINE_RANKED_SAMPLES } from '../../../modules/local/combine_samples'
+include { TAKE_CONSENSUS_ACROSS_TOOLS               } from '../../../modules/local/take_consensus_across_tools'
 
 workflow CONSENSUS {
     take:
@@ -14,37 +14,31 @@ workflow CONSENSUS {
 
     main:
     ch_versions = Channel.empty()
-    ch_results = params.interactions
-        ? Channel.fromPath("${params.interactions}/*.rds").branch { x ->
-            mvoted: x.name.endsWith("interactions_mvoted.rds")
-            signif: x.name.endsWith("signif_interactions.rds")
-            agg_rank: x.name.endsWith("interactions_agg_rank.rds")
-        }
+    ch_mvoted = params.interactions
+        ? Channel.fromPath("${params.interactions}/*interactions_mvoted.rds")
         : Channel.empty()
+
+    ch_ranked = params.interactions
+        ? Channel.fromPath("${params.interactions}/*interactions_agg_rank.rds")
+        : Channel.empty()
+
     ch_metadata = params.metadata_rds ? Channel.fromPath(params.metadata_rds) : metadata_rds
 
     if (!params.interactions) {
-        RRA(
-            matched_cci,
-            alpha,
-            n_perm,
-        )
-        RRA.out.rds
-            .collect()
-            .flatten()
-            .branch { x ->
-                mvoted: x.name.endsWith("interactions_mvoted.rds")
-                signif: x.name.endsWith("signif_interactions.rds")
-                agg_rank: x.name.endsWith("interactions_agg_rank.rds")
-            }
-            .set { ch_results }
+        TAKE_CONSENSUS_ACROSS_TOOLS(matched_cci, alpha).out.rds.collect().set { ch_mvoted }
+        ch_versions = ch_versions.mix(TAKE_CONSENSUS_ACROSS_TOOLS.out.versions)
+
+        RRA(matched_cci, n_perm).out.rds.collect().set { ch_ranked }
         ch_versions = ch_versions.mix(RRA.out.versions)
     }
+    COMBINE_RANKED_SAMPLES(ch_ranked, ch_metadata, condition_var, sample_var, patient_var, "interactions_agg_rank")
+    ch_versions = ch_versions.mix(COMBINE_RANKED_SAMPLES.out.versions)
 
-    COMBINE_SAMPLES(ch_results.mvoted.collect(), ch_results.signif.collect(), ch_results.agg_rank.collect(), ch_metadata, condition_var, sample_var, patient_var)
-    ch_versions = ch_versions.mix(COMBINE_SAMPLES.out.versions)
+    COMBINE_MVOTED_SAMPLES(ch_mvoted, ch_metadata, condition_var, sample_var, patient_var, "interactions_mvoted")
+    ch_versions = ch_versions.mix(COMBINE_MVOTED_SAMPLES.out.versions)
 
     emit:
-    rds      = COMBINE_SAMPLES.out.rds
-    versions = ch_versions
+    ranked_rds = COMBINE_RANKED_SAMPLES.out.rds
+    mvoted_rds = COMBINE_MVOTED_SAMPLES.out.rds
+    versions   = ch_versions
 }

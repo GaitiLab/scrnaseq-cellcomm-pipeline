@@ -82,13 +82,14 @@ workflow SCRNASEQCELLCOMM {
                 params.patient_var,
             )
             ch_versions = ch_versions.mix(CONSENSUS.out.versions)
-            ch_consensus = CONSENSUS.out.rds
+            ch_ranked_cci_rds = CONSENSUS.out.ranked_rds
+            ch_mvoted_rds = CONSENSUS.out.mvoted_rds
         }
 
         if (scrnaseqcellcomm_modules.contains("aggregation")) {
             AGGREGATION(
-                ch_consensus,
-                params.condition_var,
+                ch_ranked_cci_rds,
+                ch_mvoted_rds,
                 params.min_patients,
             )
             ch_versions = ch_versions.mix(AGGREGATION.out.versions)

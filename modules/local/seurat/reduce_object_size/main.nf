@@ -11,10 +11,10 @@ process SEURAT_REDUCE_OBJECT_SIZE {
 
     script:
     """
-    001_reduce_seurat_object_size.R \
+    02_reduce_seurat_object_size.R \
     --input_file ${input_file} \
     --output_dir \${PWD} \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
 
     """
 

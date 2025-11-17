@@ -4,20 +4,20 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
-require(GaitiLabUtils)
-
-
 # Load libraries
-pacman::p_load(glue, data.table, tidyverse, stringr)
-# Comment/uncomment depending on whether you have an internal package based on the 'R' directory created with usethis::create_package()
-# devtools::load_all("./", export_all = FALSE)
+options(Seurat.object.assay.version = "v4")
+pacman::p_load(GaitiLabUtils, glue, data.table, tidyverse, stringr, duckplyr)
 
 # Define input arguments when running from bash
 parser <- setup_default_argparser(
     description = "Inferring CCIs using LIANA",
-    default_output_dir = "output/201_cci_liana",
-    default_log_file = NULL,
-    default_log_dir = "output"
+    default_output_dir = file.path(
+        "output",
+        "cci_pipeline",
+        "02_run_cci",
+        "04_liana",
+        "01_raw",
+    )
 )
 parser$add_argument(
     "-p",
@@ -61,12 +61,7 @@ parser$add_argument(
     default = 0.1,
     help = "Minimum percentage of cells expressing a gene (default = 0.1; 10%)"
 )
-parser$add_argument(
-    "--task_id",
-    type = "character",
-    help = "Task ID from Nextflow, only needed in Nextflow pipeline",
-    default = NULL
-)
+
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
@@ -88,28 +83,49 @@ log_info(ifelse(
 log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
-options(Seurat.object.assay.version = "v4")
+# ---- Check arguments ----
+arg_paths <- c(params$gene_expr, params$interactions_db)
+checked_filepaths <- data.frame(
+    path = arg_paths,
+    required_file_extension = rep("rds", 2)
+) |>
+    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+    setNames(nm = arg_paths)
+if (!all(checked_filepaths)) {
+    stop(
+        "Not all valid paths, please check the following inputs\n",
+        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+    )
+}
 
-log_info("Run LIANA...")
-scrnaseq.cellcomm::run_liana(
+liana_obj <- scrnaseq.cellcomm::RunLIANA(
     gene_expr = params$gene_expr,
     interactions_db = params$interactions_db,
-    output_dir = params$output_dir,
     min_cells = params$min_cells,
     min_pct = params$min_pct,
     n_perm = params$n_perm,
     annot = params$annot
 )
+log_info("Ran LIANA...")
+
+saveRDS(
+    liana_obj,
+    file = file.path(
+        params$output_dir,
+        paste("liana", paste0(params$sample_id, ".rds"), sep = "__")
+    )
+)
+log_info("Saved LIANA object.")
 
 log_info("Finished")
 
 log_info("Session Info")
 log_object(sessionInfo())
 
-if (!is.null(params$task_id)) {
+if (!is.null(params$nf_process_id)) {
     write_versions_yml(
         unique(c("scrnaseq.cellcomm", pacman::p_loaded(), "liana")),
-        task_id = params$task_id,
+        task_id = params$nf_process_id,
         outdir = params$output_dir
     )
 }

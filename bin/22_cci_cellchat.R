@@ -4,20 +4,22 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
-require(GaitiLabUtils)
-
-
 # Load libraries
-pacman::p_load(glue, data.table, tidyverse, stringr)
-# Comment/uncomment depending on whether you have an internal package based on the 'R' directory created with usethis::create_package()
-# devtools::load_all("./", export_all = FALSE)
+options(stringsAsFactors = FALSE)
+options(Seurat.object.assay.version = "v4")
+
+pacman::p_load(GaitiLabUtils, glue, data.table, tidyverse, stringr, duckplyr)
 
 # Define input arguments when running from bash
 parser <- setup_default_argparser(
     description = "Inferring CCIs using CellChat",
-    default_output_dir = "output/200_cci_cellchat",
-    default_log_file = NULL,
-    default_log_dir = "output/200_cci_cellchat/logs"
+    default_output_dir = file.path(
+        "output",
+        "cci_pipeline",
+        "02_run_cci",
+        "02_cellchat",
+        "01_raw",
+    )
 )
 parser$add_argument(
     "-p",
@@ -28,7 +30,7 @@ parser$add_argument(
 )
 parser$add_argument(
     "-db",
-    "--interactions_db",
+    "--interactions_db_path",
     type = "character",
     default = "data/interactions_db/cellchat_db.rds",
     help = "Path to custom database with interactions (RDS) (default = 'data/interactions_db/cellchat_db.rds')"
@@ -42,7 +44,7 @@ parser$add_argument(
 )
 parser$add_argument(
     "-g",
-    "--gene_expr",
+    "--gene_expr_path",
     type = "character",
     default = "",
     help = "Seurat object with the gene expression (RDS file)"
@@ -62,25 +64,22 @@ parser$add_argument(
     help = "Number of cores to use for parallelization (default =1)"
 )
 parser$add_argument(
-    "--task_id",
+    "--sample_id",
     type = "character",
-    help = "Task ID from Nextflow, only needed in Nextflow pipeline",
-    default = NULL
+    default = "Character string with sample ID"
 )
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
+
+    params$cci_dir <- "/cluster/projects/gaitigroup/Users/Jiaoyi/breast_scrnaseq/07_output/CCI/BRCA2_BSO_Neg_CellClass_L2"
 }
 
 create_dir(params$output_dir)
 # Set up logging
-logr <- init_logging(
-    log_level = params$log_level,
-    log_file = NULL
-)
-obj_logger <- init_obj_logging(
-    log_file = NULL
-)
+log_file <- set_logfile(params)
+logr <- init_logging(log_level = params$log_level, log_file = log_file)
+obj_logger <- init_obj_logging(log_file = log_file)
 log_info(ifelse(
     interactive(),
     "Running interactively...",
@@ -90,14 +89,25 @@ log_info(ifelse(
 log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
-options(stringsAsFactors = FALSE)
-options(Seurat.object.assay.version = "v4")
+# ---- Check arguments ----
+arg_paths <- c(params$gene_expr, params$interactions_db)
+checked_filepaths <- data.frame(
+    path = arg_paths,
+    required_file_extension = rep("rds", 2)
+) |>
+    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+    setNames(nm = arg_paths)
+if (!all(checked_filepaths)) {
+    stop(
+        "Not all valid paths, please check the following inputs\n",
+        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+    )
+}
 
 # Set up for parallelization
 future::plan("multisession", workers = params$n_cores)
 
-log_info("Run CellChat...")
-scrnaseq.cellcomm::run_cellchat(
+cellchat_results <- scrnaseq.cellcomm::RunCellChat(
     gene_expr = params$gene_expr,
     annot = params$annot,
     interactions_db = params$interactions_db,
@@ -105,16 +115,26 @@ scrnaseq.cellcomm::run_cellchat(
     min_cells = params$min_cells,
     n_perm = params$n_perm
 )
+log_info("Ran CellChat...")
+
+saveRDS(
+    cellchat_results,
+    file.path(
+        params$output_dir,
+        paste("cellchat", params$sample_id, "raw_obj.rds", sep = "__")
+    )
+)
+log_info("Saved CellChat object...")
 
 log_info("Finished")
 
 log_info("Session Info")
 log_object(sessionInfo())
 
-if (!is.null(params$task_id)) {
+if (!is.null(params$nf_process_id)) {
     write_versions_yml(
         unique(c("scrnaseq.cellcomm", pacman::p_loaded(), "CellChat")),
-        task_id = params$task_id,
+        task_id = params$nf_process_id,
         outdir = params$output_dir
     )
 }

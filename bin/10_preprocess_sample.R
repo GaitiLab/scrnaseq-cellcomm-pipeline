@@ -3,20 +3,20 @@
 rm(list = ls(all = TRUE))
 pacman::p_unload()
 
-require(GaitiLabUtils)
-
-
 # Load libraries
-pacman::p_load(glue, data.table, tidyverse, stringr)
-# Comment/uncomment depending on whether you have an internal package based on the 'R' directory created with usethis::create_package()
-# devtools::load_all("./", export_all = FALSE)
+options(Seurat.object.assay.version = "v4")
+pacman::p_load(GaitiLabUtils, glue, data.table, tidyverse, stringr, Seurat)
 
 # Define input arguments when running from bash
 parser <- setup_default_argparser(
     description = "Preprocessing of individual samples",
-    default_output_dir = "output/100_preprocessing",
-    default_log_file = NULL,
-    default_log_dir = "output"
+    default_output_dir = file.path(
+        "output",
+        "cci_pipeline",
+        "01_prepare_data",
+        "03_preprocessed_objects",
+        "seurat"
+    )
 )
 parser$add_argument(
     "--input_file",
@@ -43,26 +43,26 @@ parser$add_argument(
     default = NULL,
     help = "Sample ID"
 )
-parser$add_argument(
-    "--task_id",
-    type = "character",
-    help = "Task ID from Nextflow, only needed in Nextflow pipeline",
-    default = NULL
-)
+
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
+    params$sample_id <- "Sample_2"
+    params$input_file <- file.path(
+        "output",
+        "cci_pipeline",
+        "01_prepare_data",
+        "02_intermediate_objects",
+        paste0(params$sample_id, ".rds")
+    )
+    params$annot <- "seurat_annotations"
 }
 
 create_dir(params$output_dir)
 # Set up logging
-logr <- init_logging(
-    log_level = params$log_level,
-    log_file = NULL
-)
-obj_logger <- init_obj_logging(
-    log_file = NULL
-)
+log_file <- set_logfile(params)
+logr <- init_logging(log_level = params$log_level, log_file = log_file)
+obj_logger <- init_obj_logging(log_file = log_file)
 log_info(ifelse(
     interactive(),
     "Running interactively...",
@@ -71,26 +71,39 @@ log_info(ifelse(
 
 log_info("Parameters:")
 log_object(params_ls_to_df(params))
-options(Seurat.object.assay.version = "v4")
 
-log_info("Prepare data...")
-scrnaseq.cellcomm::prepare_data(
-    input_file = params$input_file,
-    annot = params$annot,
-    output_dir = params$output_dir,
-    min_cells = params$min_cells,
-    sample_id = params$sample_id
+# ---- Check arguments ----
+checked_path <- is_valid_path(
+    params$input_file,
+    required_file_extension = "rds"
 )
+if (!checked_path) {
+    stop("Given input file is not a valid path.")
+}
+
+# ---- Workflow ----
+seurat_obj <- readRDS(params$input_file) |>
+    scrnaseq.cellcomm::PrepareData(
+        annot = params$annot,
+        min_cells = params$min_cells
+    )
+log_info("Loaded Seurat object & normalized data.")
+
+saveRDS(
+    seurat_obj,
+    file.path(params$output_dir, paste0(params$sample_id, ".rds"))
+)
+log_info("Saved Seurat object.")
 
 log_info("Finished")
 
 log_info("Session Info")
 log_object(sessionInfo())
 
-if (!is.null(params$task_id)) {
+if (!is.null(params$nf_process_id)) {
     write_versions_yml(
         c("scrnaseq.cellcomm", pacman::p_loaded()),
-        task_id = params$task_id,
+        task_id = params$nf_process_id,
         outdir = params$output_dir
     )
 }

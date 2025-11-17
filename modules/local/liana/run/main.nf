@@ -15,7 +15,7 @@ process LIANA_RUN {
 
     script:
     """
-    201_cci_liana.R \
+    24_cci_liana.R \
         --n_perm ${n_perm} \
         --interactions_db ${interactions_db} \
         --annot ${annot} \
@@ -23,7 +23,7 @@ process LIANA_RUN {
         --min_cells ${min_cells} \
         --min_pct ${min_pct} \
         --output_dir \${PWD} \
-        --task_id ${task.process}
+        --nf_process_id ${task.process}
 
     """
 

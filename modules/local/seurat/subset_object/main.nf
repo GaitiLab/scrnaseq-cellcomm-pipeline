@@ -13,12 +13,12 @@ process SEURAT_SUBSET_OBJECT {
 
     script:
     """
-    002_subset_object.R \
+    03_subset_object.R \
     --sample_var ${sample_var} \
     --samplesheet ${samplesheet} \
     --input_file ${input_file} \
     --output_dir \${PWD} \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
 
     """
 

@@ -24,7 +24,7 @@ process CPDB_RUN {
     mv ${barcodes} ${meta.sample_id}/barcodes.tsv
     mv ${genes} ${meta.sample_id}/genes.tsv
     mv ${matrix} ${meta.sample_id}/matrix.mtx
-    203_cci_cpdb.py \
+    23_cci_cpdb.py \
         --input_dir \${PWD}/${meta.sample_id} \
         --n_perm ${n_perm} \
         --interactions_db ${interactions_db} \

@@ -18,12 +18,7 @@ parser <- setup_default_argparser(
     default_log_file = NULL,
     default_log_dir = "output"
 )
-parser$add_argument(
-    "--task_id",
-    type = "character",
-    help = "Task ID from Nextflow, only needed in Nextflow pipeline",
-    default = NULL
-)
+
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
@@ -48,7 +43,7 @@ log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
 # Load additional libraries
-scrnaseq.cellcomm::create_db(
+scrnaseq.cellcomm::CreateDB(
     output_dir = params$output_dir,
     source_cpdb_dir = params$source_cpdb_dir
 )
@@ -58,10 +53,10 @@ log_info("Finished")
 log_info("Session Info")
 log_object(sessionInfo())
 
-if (!is.null(params$task_id)) {
+if (!is.null(params$nf_process_id)) {
     write_versions_yml(
         c("scrnaseq.cellcomm", pacman::p_loaded()),
-        task_id = params$task_id,
+        task_id = params$nf_process_id,
         outdir = params$output_dir
     )
 }

@@ -15,7 +15,7 @@ process CELL2CELL_RUN {
     script:
     """
 
-    202_cci_cell2cell.py \
+    21_cci_cell2cell.py \
         --input_dir \$PWD \
         --n_perm ${n_perm} \
         --interactions_db ${interactions_db} \

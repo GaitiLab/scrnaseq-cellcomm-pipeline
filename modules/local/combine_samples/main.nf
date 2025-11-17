@@ -3,16 +3,15 @@ process COMBINE_SAMPLES {
     label "time_30m"
 
     input:
-    path "*__interactions_mvoted.rds"
-    path "*__signif_interactions.rds"
-    path "*__interactions_agg_rank.rds"
+    path "*.rds"
     path metadata
     val condition_var
     val sample_var
     val patient_var
+    val suffix
 
     output:
-    tuple path("401_samples_interactions_mvoted.rds"), path("401_samples_sign_interactions.rds"), path("401_samples_interactions_agg_rank.rds"), emit: rds
+    path "${suffix}.rds", emit: rds
     path "versions.yml", emit: versions
 
     script:
@@ -24,18 +23,15 @@ process COMBINE_SAMPLES {
     --condition_var ${condition_var} \
     --sample_var ${sample_var} \
     --patient_var ${patient_var} \
-    --task_id ${task.process}
+    --task_id ${task.process} \
+    --suffix ${suffix}
 
     """
 
     stub:
     """
     #!/usr/bin/env bash
-
-    mkdir -p 401_combine_samples
-    touch "401_samples_interactions_mvoted.rds"
-    touch "401_samples_sign_interactions.rds"
-    touch "401_samples_interactions_agg_rank.rds"
+    touch "${suffix}.rds"
     touch "versions.yml"
 
     """

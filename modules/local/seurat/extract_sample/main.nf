@@ -12,11 +12,11 @@ process SEURAT_EXTRACT_SAMPLE {
 
     script:
     """
-    003_extract_sample.R \
+    04_extract_sample.R \
         --input_file ${input_file} \
         --output_dir "\${PWD}" \
         --sample_id ${meta.sample_id} \
-        --task_id ${task.process} \
+        --nf_process_id ${task.process} \
         --sample_var ${sample_var}
 
     """

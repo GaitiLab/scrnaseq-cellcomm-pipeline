@@ -9,12 +9,12 @@ process CELLCHAT_RUN {
     val min_cells
 
     output:
-    tuple val(meta), path("cellchat__${meta.sample_id}.rds"), path("cellchat__${meta.sample_id}__raw_obj.rds"), emit: rds
+    tuple val(meta), path("cellchat__${meta.sample_id}__raw_obj.rds"), emit: rds
     path "versions.yml", emit: versions
 
     script:
     """
-    200_cci_cellchat.R \
+    22_cci_cellchat.R \
         --n_perm ${n_perm} \
         --interactions_db ${interactions_db} \
         --annot ${annot} \
@@ -22,14 +22,12 @@ process CELLCHAT_RUN {
         --min_cells ${min_cells} \
         --output_dir "\$PWD" \
         --n_cores ${task.cpus} \
-        --task_id ${task.process}
-
+        --nf_process_id ${task.process}
     """
 
     stub:
     """
     #!/usr/bin/env bash
-    touch "cellchat__${meta.sample_id}.rds"
     touch "cellchat__${meta.sample_id}__raw_obj.rds"
     touch "versions.yml"
 

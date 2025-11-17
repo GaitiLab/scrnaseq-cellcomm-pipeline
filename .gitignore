@@ -11,3 +11,13 @@ null/
 ._.**
 internal/*
 nf-work
+
+slurm_out
+output
+
+Rscripts
+**-log
+**cache
+07_output
+
+jobs

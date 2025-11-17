@@ -3,30 +3,28 @@ process FILTER_AGGREGATED_RESULTS {
     label "time_30m"
 
     input:
-    path interactions_agg_binarized
-    path interactions_agg_continuous
-    val condition_var
+    path interactions_mvoted
+    path interactions_ranked
 
     output:
-    path "402c_filtering_aggregated_res.rds", emit: rds
+    path "filtering_aggregated_res.rds", emit: rds
     path "versions.yml", emit: versions
 
     script:
     """
 
-    402c_filtering_aggregated_res.R \
+    44_filtering_aggregated_res.R \
     --output_dir \$PWD \
-    --interactions_agg_binarized \$PWD/${interactions_agg_binarized} \
-    --interactions_agg_continuous \$PWD/${interactions_agg_continuous} \
-    --condition_var ${condition_var} \
-    --task_id ${task.process}
+    --interactions_mvoted \$PWD/${interactions_mvoted} \
+    --interactions_ranked \$PWD/${interactions_ranked} \
+    --nf_process_id ${task.process}
 
     """
 
     stub:
     """
     #!/usr/bin/env bash
-    touch "402c_filtering_aggregated_res.rds"
+    touch "filtering_aggregated_res.rds"
     touch "versions.yml"
 
     """

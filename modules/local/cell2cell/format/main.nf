@@ -3,7 +3,7 @@ process CELL2CELL_FORMAT {
     label 'mem_4G'
 
     input:
-    tuple val(meta), path(input_interactions_scores), path(input_interactions_pval), path(ref_db)
+    tuple val(meta), path(input_interactions_pval), path(input_interactions_scores), path(ref_db)
 
     output:
     tuple val(meta), path("cell2cell__${meta.sample_id}__postproc.rds"), emit: rds
@@ -11,13 +11,13 @@ process CELL2CELL_FORMAT {
 
     script:
     """
-    302_postproc_cell2cell.R \
+    31_postproc_cell2cell.R \
     --output_dir "\${PWD}" \
     --input_interactions_scores ${input_interactions_scores} \
     --input_interactions_pval ${input_interactions_pval} \
     --sample_id ${meta.sample_id} \
     --ref_db ${ref_db} \
-    --task_id ${task.process}
+    --nf_process_id ${task.process}
 
     """
 

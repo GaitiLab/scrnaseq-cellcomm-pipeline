@@ -11,7 +11,7 @@ process CPDB_FORMAT {
 
     script:
     """
-    303_postproc_cellphonedb.R \
+    33_postproc_cpdb.R \
     --output_dir "\$PWD" \
     --sample_id ${meta.sample_id} \
     --interaction_scores ${interaction_scores} \
@@ -19,9 +19,7 @@ process CPDB_FORMAT {
     --sign_means ${significant_means} \
     --means ${means} \
     --ref_db ${ref_db} \
-    --task_id ${task.process}
-
-
+    --nf_process_id ${task.process}
     """
 
     stub:
