@@ -11,7 +11,7 @@ workflow AGGREGATION {
 
     main:
 
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     FILTER_BY_DETECTION_IN_MULTI_SAMPLES(
         ch_mvoted_rds,

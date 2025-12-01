@@ -7,7 +7,7 @@ process TAKE_CONSENSUS_ACROSS_TOOLS {
     val alpha
 
     output:
-    tuple val(meta), path("${meta.sample_id}__interactions_mvoted.rds"), emit: rds
+    path ("${meta.sample_id}__interactions_mvoted.rds"), emit: rds
     path "versions.yml", emit: versions
 
     script:

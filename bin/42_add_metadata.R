@@ -54,17 +54,17 @@ parser$add_argument(
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
-    params$sample_var <- "ID"
-    params$condition_var <- "disease_status"
-    params$patient_var <- "patient"
+    params$sample_var <- "Sample"
+    params$condition_var <- "Condition"
+    params$patient_var <- "Patient"
     params$input_dir <- file.path(
+        "internal",
         "output",
-        "PR_GBM",
         "03_consensus",
         "intermediate_objects"
     )
     # params$meta_df <- "/cluster/projects/gaitigroup/Users/Jiaoyi/breast_scrnaseq/07_output/CCI/BRCA2_BSO_Neg_CellClass_L2/01_prepare_data/01_misc/BRCA2_neg_BSO_res05_scVI_w_anno__metadata.rds"
-    params$meta_df <- "/cluster/projects/gaitigroup/Users/Yiyan/Reanalysis/07_output/PR_reanalysis/CCI/01_prepare_data/01_misc/combined_matched_PR1__metadata.rds"
+    params$meta_df <- "internal/output/01_prepare_data/01_misc/example_data__metadata.rds"
     params$suffix <- "interactions_mvoted"
 }
 

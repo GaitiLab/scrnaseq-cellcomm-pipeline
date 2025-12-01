@@ -107,7 +107,7 @@ if (params$is_stringent) {
         as.data.frame()
     log_info("Removed not significant interactions based on RRA.")
 }
-openxlsx::write.xlsx(
+xlsx::write.xlsx(
     df_filtered |> as.data.frame(),
     output_filename
 )

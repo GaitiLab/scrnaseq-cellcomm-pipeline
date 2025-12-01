@@ -13,24 +13,27 @@ workflow CONSENSUS {
     patient_var
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
     ch_mvoted = params.interactions
-        ? Channel.fromPath("${params.interactions}/*interactions_mvoted.rds")
-        : Channel.empty()
+        ? channel.fromPath("${params.interactions}/*interactions_mvoted.rds")
+        : channel.empty()
 
     ch_ranked = params.interactions
-        ? Channel.fromPath("${params.interactions}/*interactions_agg_rank.rds")
-        : Channel.empty()
+        ? channel.fromPath("${params.interactions}/*interactions_agg_rank.rds")
+        : channel.empty()
 
-    ch_metadata = params.metadata_rds ? Channel.fromPath(params.metadata_rds) : metadata_rds
+    ch_metadata = params.metadata_rds ? channel.fromPath(params.metadata_rds) : metadata_rds
 
     if (!params.interactions) {
-        TAKE_CONSENSUS_ACROSS_TOOLS(matched_cci, alpha).out.rds.collect().set { ch_mvoted }
+        TAKE_CONSENSUS_ACROSS_TOOLS(matched_cci, alpha)
+        TAKE_CONSENSUS_ACROSS_TOOLS.out.rds.collect().set { ch_mvoted }
         ch_versions = ch_versions.mix(TAKE_CONSENSUS_ACROSS_TOOLS.out.versions)
 
-        RRA(matched_cci, n_perm).out.rds.collect().set { ch_ranked }
+        RRA(matched_cci, n_perm)
+        RRA.out.rds.collect().set { ch_ranked }
         ch_versions = ch_versions.mix(RRA.out.versions)
     }
+
     COMBINE_RANKED_SAMPLES(ch_ranked, ch_metadata, condition_var, sample_var, patient_var, "interactions_agg_rank")
     ch_versions = ch_versions.mix(COMBINE_RANKED_SAMPLES.out.versions)
 

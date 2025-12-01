@@ -15,8 +15,8 @@ workflow PREP_DATA {
     skip_reduction
 
     main:
-    ch_seurat_obj = Channel.empty()
-    ch_versions = Channel.empty()
+    ch_seurat_obj = channel.empty()
+    ch_versions = channel.empty()
 
     UTILS_EXTRACT_METADATA(input_file)
     ch_versions = ch_versions.mix(UTILS_EXTRACT_METADATA.out.versions)

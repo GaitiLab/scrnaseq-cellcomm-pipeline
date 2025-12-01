@@ -3,10 +3,10 @@ process AGGREGATE_SAMPLES {
     label "time_30m"
 
     input:
-    tuple path(_interactions_mvoted), path(interactions_agg_rank)
+    path interactions_agg_rank
 
     output:
-    path "aggregation_samples.rds.rds", emit: rds
+    path "aggregation_samples.rds", emit: rds
     path "versions.yml", emit: versions
 
     script:

@@ -9,13 +9,13 @@ workflow RUN_CCI {
     metadata_csv
 
     main:
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Set channels for cci 
-    ch_cell2cell = Channel.empty()
-    ch_cellchat = Channel.empty()
-    ch_cellphonedb = Channel.empty()
-    ch_liana = Channel.empty()
+    ch_cell2cell = channel.empty()
+    ch_cellchat = channel.empty()
+    ch_cellphonedb = channel.empty()
+    ch_liana = channel.empty()
 
     def cci_tools = params.cci_tools ? params.cci_tools.split(',').collect { it.trim().toLowerCase() } : []
 

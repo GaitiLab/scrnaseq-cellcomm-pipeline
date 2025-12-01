@@ -3,7 +3,7 @@ process FILTER_BY_DETECTION_IN_MULTI_SAMPLES {
     label "time_30m"
 
     input:
-    tuple path(interactions_mvoted), path(_interactions_agg_rank)
+    path interactions_mvoted
     val min_patients
 
     output:

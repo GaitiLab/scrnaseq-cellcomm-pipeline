@@ -147,7 +147,7 @@ log_info("Checked paths.")
 ranked_interactions_df <- arg_paths |>
     purrr::map(readRDS) |>
     setNames(nm = names(arg_paths)) |>
-    scrnaseq.cellcomm::AggegateCCIRanks(n_perm = params$n_perm)
+    scrnaseq.cellcomm::AggregateCCIRanks(n_perm = params$n_perm)
 log_info("Aggregated ranks.")
 
 saveRDS(

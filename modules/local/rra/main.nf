@@ -7,7 +7,7 @@ process RRA {
     val n_perm
 
     output:
-    tuple val(meta), path("${meta.sample_id}__interactions_agg_rank.rds"), emit: rds
+    path ("${meta.sample_id}__interactions_agg_rank.rds"), emit: rds
     path "versions.yml", emit: versions
 
     script:
