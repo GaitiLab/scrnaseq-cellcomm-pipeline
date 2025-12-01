@@ -16,7 +16,7 @@ process CELLCHAT_FORMAT {
     --input_interactions ${input_interactions} \
     --ref_db ${ref_db} \
     --sample_id ${meta.sample_id} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

@@ -16,7 +16,7 @@ process SEURAT_EXTRACT_SAMPLE {
         --input_file ${input_file} \
         --output_dir "\${PWD}" \
         --sample_id ${meta.sample_id} \
-        --nf_process_id ${task.process} \
+        --nf-process-id ${task.process} \
         --sample_var ${sample_var}
 
     """

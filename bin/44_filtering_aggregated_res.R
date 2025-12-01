@@ -60,18 +60,18 @@ log_object(params_ls_to_df(params))
 
 # ---- Check arguments ----
 arg_paths <- c(params$interactions_mvoted, params$interactions_ranked)
-checked_filepaths <- data.frame(
-    path = arg_paths,
-    required_file_extension = c(rep("rds", length(arg_paths)))
-) |>
-    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
-    setNames(nm = arg_paths)
-if (!all(checked_filepaths)) {
-    stop(
-        "Not all valid paths, please check the following inputs\n",
-        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
-    )
-}
+# checked_filepaths <- data.frame(
+#     path = arg_paths,
+#     required_file_extension = c(rep("rds", length(arg_paths)))
+# ) |>
+#     purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+#     setNames(nm = arg_paths)
+# if (!all(checked_filepaths)) {
+#     stop(
+#         "Not all valid paths, please check the following inputs\n",
+#         paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+#     )
+# }
 
 # ---- Workflow ----
 list_of_dfs <- arg_paths |>

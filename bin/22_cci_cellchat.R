@@ -18,7 +18,7 @@ parser <- setup_default_argparser(
         "cci_pipeline",
         "02_run_cci",
         "02_cellchat",
-        "01_raw",
+        "01_raw"
     )
 )
 parser$add_argument(
@@ -73,6 +73,13 @@ if (interactive()) {
     # Provide arguments here for local runs
 
     params$cci_dir <- "/cluster/projects/gaitigroup/Users/Jiaoyi/breast_scrnaseq/07_output/CCI/BRCA2_BSO_Neg_CellClass_L2"
+
+    params$gene_expr_path <- "internal/stromaProject/bySourceSampleId/output/01_prepare_data/03_preprocessed_objects/seurat/50y.rds"
+    params$annot <- "CellClass_L2"
+
+    params$n_perm <- 10
+    params$interactions_db_path <- "assets/interactions_db/cellchat_db.rds"
+    params$min_cells <- 100
 }
 
 create_dir(params$output_dir)
@@ -90,28 +97,27 @@ log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
 # ---- Check arguments ----
-arg_paths <- c(params$gene_expr, params$interactions_db)
-checked_filepaths <- data.frame(
-    path = arg_paths,
-    required_file_extension = rep("rds", 2)
-) |>
-    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
-    setNames(nm = arg_paths)
-if (!all(checked_filepaths)) {
-    stop(
-        "Not all valid paths, please check the following inputs\n",
-        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
-    )
-}
+# arg_paths <- c(params$gene_expr_path, params$interactions_db)
+# checked_filepaths <- data.frame(
+#     path = arg_paths,
+#     required_file_extension = rep("rds", 2)
+# ) |>
+#     purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+#     setNames(nm = arg_paths)
+# if (!all(checked_filepaths)) {
+#     stop(
+#         "Not all valid paths, please check the following inputs\n",
+#         paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+#     )
+# }
 
 # Set up for parallelization
 future::plan("multisession", workers = params$n_cores)
 
 cellchat_results <- scrnaseq.cellcomm::RunCellChat(
-    gene_expr = params$gene_expr,
+    gene_expr = params$gene_expr_path,
     annot = params$annot,
-    interactions_db = params$interactions_db,
-    output_dir = params$output_dir,
+    interactions_db = params$interactions_db_path,
     min_cells = params$min_cells,
     n_perm = params$n_perm
 )

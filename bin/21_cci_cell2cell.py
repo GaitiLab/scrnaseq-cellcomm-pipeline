@@ -55,7 +55,7 @@ def get_args():
     parser.add_argument("-m", "--meta", type=str, help="Path to metadata file (CSV)")
 
     parser.add_argument(
-        "--nf_process_id",
+        "--nf-process-id",
         type=str,
         help="Nextflow process ID",
         default=None,

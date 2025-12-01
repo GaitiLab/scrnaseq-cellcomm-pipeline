@@ -31,7 +31,7 @@ workflow PREP_DATA {
 
     sample_sheet = UTILS_CREATE_SAMPLESHEET.out.csv
         | splitCsv(header: true)
-        | map { row -> [sample_id: row.Sample] }
+        | map { row -> [sample_id: row.sample_id] }
 
     if (!skip_reduction) {
         SEURAT_REDUCE_OBJECT_SIZE(input_file)

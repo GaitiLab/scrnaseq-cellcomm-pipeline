@@ -20,7 +20,7 @@ process RRA {
     --cell2cell_obj ${cell2cell_obj} \
     --cpdb_obj ${cpdb_obj} \
     --n_perm ${n_perm} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

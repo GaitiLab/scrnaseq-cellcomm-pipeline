@@ -20,7 +20,7 @@ process UTILS_CREATE_SAMPLESHEET {
         --annot "${annot}" \
         --min_cells ${min_cells} \
         --output_dir "\$PWD" \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process}
 
     """
 

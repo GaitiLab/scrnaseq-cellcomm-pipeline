@@ -18,7 +18,7 @@ process SEURAT_SUBSET_OBJECT {
     --samplesheet ${samplesheet} \
     --input_file ${input_file} \
     --output_dir \${PWD} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

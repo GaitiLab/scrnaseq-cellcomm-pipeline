@@ -14,7 +14,7 @@ process AGGREGATE_SAMPLES {
     43_aggregation_samples.R \
     --output_dir \$PWD \
     --input_file ${interactions_agg_rank} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
     """
 
     stub:

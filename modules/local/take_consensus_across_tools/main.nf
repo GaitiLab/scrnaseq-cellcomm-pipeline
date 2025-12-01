@@ -20,7 +20,7 @@ process TAKE_CONSENSUS_ACROSS_TOOLS {
     --liana_obj ${liana_obj} \
     --cell2cell_obj ${cell2cell_obj} \
     --cpdb_obj ${cpdb_obj} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
     """
 
     stub:

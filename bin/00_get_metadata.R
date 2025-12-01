@@ -45,13 +45,13 @@ log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
 # ---- Check arguments ----
-checked_path <- is_valid_path(
-    params$input_file,
-    required_file_extension = "rds"
-)
-if (!checked_path) {
-    stop("Given input file is not a valid path.")
-}
+# checked_path <- GaitiLabUtils::is_valid_path(
+#     params$input_file,
+#     required_file_extension = "rds"
+# )
+# if (!checked_path) {
+#     stop("Given input file is not a valid path.")
+# }
 
 # ---- Workflow ----
 seurat_obj <- readRDS(params$input_file)

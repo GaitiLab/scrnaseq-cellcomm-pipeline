@@ -34,16 +34,17 @@ parser$add_argument(
 params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
-    params$sample_id <- "Sample_2"
+    params$sample_id <- "50y"
 
-    params$input_file <- file.path(
-        "output",
-        "cci_pipeline",
-        "01_prepare_data",
-        "03_preprocessed_objects",
-        "seurat",
-        paste0(params$sample_id, ".rds")
-    )
+    # params$input_file <- file.path(
+    #     "output",
+    #     "cci_pipeline",
+    #     "01_prepare_data",
+    #     "03_preprocessed_objects",
+    #     "seurat",
+    #     paste0(params$sample_id, ".rds")
+    # )
+    params$input_file <- "internal/stromaProject/bySourceSampleId/output/01_prepare_data/03_preprocessed_objects/seurat/50y.rds"
 }
 
 create_dir(params$output_dir)
@@ -62,29 +63,27 @@ log_object(params_ls_to_df(params))
 
 
 # ---- Check arguments ----
-checked_path <- is_valid_path(
-    params$input_file,
-    required_file_extension = "rds"
-)
-if (!checked_path) {
-    stop("Given input file is not a valid path.")
-}
+# checked_path <- is_valid_path(
+#     params$input_file,
+#     required_file_extension = "rds"
+# )
+# if (!checked_path) {
+#     stop("Given input file is not a valid path.")
+# }
 
 # ---- Workflow ----
 seurat_obj <- readRDS(params$input_file)
 log_info("Loaded Seurat object.")
 
-message("Convert to mtx format (for Cell2Cell) and save...")
-mtx_output_dir <- file.path(params$output_dir, params$sample_id)
+mtx_output_dir <- file.path(params$output_dir, "mtx", params$sample_id)
 if (fs::dir_exists(mtx_output_dir)) {
     file.remove(mtx_output_dir)
 }
+log_info("Converted and saved Seurat to mtx format.")
 
+GaitiLabUtils::create_dir(file.path(params$output_dir, 'mtx'))
 mat <- seurat_obj[["RNA"]]@data
-DropletUtils::write10xCounts(
-    mtx_output_dir,
-    mat
-)
+DropletUtils::write10xCounts(mtx_output_dir, mat)
 log_info("Saved as 10x format.")
 
 log_info("Finished")

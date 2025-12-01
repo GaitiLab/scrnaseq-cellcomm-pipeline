@@ -14,7 +14,7 @@ process SEURAT_REDUCE_OBJECT_SIZE {
     02_reduce_seurat_object_size.R \
     --input_file ${input_file} \
     --output_dir \${PWD} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

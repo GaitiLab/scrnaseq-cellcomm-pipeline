@@ -16,7 +16,7 @@ process SEURAT_CONVERT_TO_MTX {
         --input_file ${input_file} \
         --output_dir "\$PWD" \
         --sample_id ${meta.sample_id} \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process}
 
     """
 

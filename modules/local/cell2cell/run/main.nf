@@ -23,7 +23,7 @@ process CELL2CELL_RUN {
         --sample_id ${meta.sample_id} \
         --meta ${meta_path} \
         --output_dir "\$PWD" \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process}
 
     """
 

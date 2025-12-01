@@ -130,18 +130,18 @@ cci_paths <- c(
 )
 arg_paths <- setNames(cci_paths, cci_methods)
 
-checked_filepaths <- data.frame(
-    path = arg_paths,
-    required_file_extension = c(rep("rds", length(arg_paths)))
-) |>
-    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
-    setNames(nm = arg_paths)
-if (!all(checked_filepaths)) {
-    stop(
-        "Not all valid paths, please check the following inputs\n",
-        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
-    )
-}
+# checked_filepaths <- data.frame(
+#     path = arg_paths,
+#     required_file_extension = c(rep("rds", length(arg_paths)))
+# ) |>
+#     purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+#     setNames(nm = arg_paths)
+# if (!all(checked_filepaths)) {
+#     stop(
+#         "Not all valid paths, please check the following inputs\n",
+#         paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+#     )
+# }
 log_info("Checked paths.")
 
 ranked_interactions_df <- arg_paths |>

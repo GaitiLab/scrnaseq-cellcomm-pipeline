@@ -16,7 +16,7 @@ process FILTER_BY_DETECTION_IN_MULTI_SAMPLES {
     --output_dir \$PWD \
     --input_file ${interactions_mvoted} \
     --min_patients ${min_patients} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

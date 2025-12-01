@@ -17,7 +17,7 @@ process FILTER_AGGREGATED_RESULTS {
     --output_dir \$PWD \
     --interactions_mvoted \$PWD/${interactions_mvoted} \
     --interactions_ranked \$PWD/${interactions_ranked} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

@@ -133,19 +133,19 @@ cpdb_paths <- setNames(
     c("interaction_score", "pval", "sign_mean", "mean")
 )
 
-arg_paths <- c(cpdb_paths, params$ref_db)
-checked_filepaths <- data.frame(
-    path = arg_paths,
-    required_file_extension = c(rep("txt", 4), "rds")
-) |>
-    purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
-    setNames(nm = arg_paths)
-if (!all(checked_filepaths)) {
-    stop(
-        "Not all valid paths, please check the following inputs\n",
-        paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
-    )
-}
+# arg_paths <- c(cpdb_paths, params$ref_db)
+# checked_filepaths <- data.frame(
+#     path = arg_paths,
+#     required_file_extension = c(rep("txt", 4), "rds")
+# ) |>
+#     purrr::pmap_lgl(GaitiLabUtils::is_valid_path) |>
+#     setNames(nm = arg_paths)
+# if (!all(checked_filepaths)) {
+#     stop(
+#         "Not all valid paths, please check the following inputs\n",
+#         paste(names(checked_filepaths)[!checked_filepaths], collapse = "\n")
+#     )
+# }
 
 # ---- Load data ----
 cpdb_dfs <- cpdb_paths |>

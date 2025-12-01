@@ -23,7 +23,8 @@ process LIANA_RUN {
         --min_cells ${min_cells} \
         --min_pct ${min_pct} \
         --output_dir \${PWD} \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process} \
+        --sample_id ${meta.sample_id}
 
     """
 

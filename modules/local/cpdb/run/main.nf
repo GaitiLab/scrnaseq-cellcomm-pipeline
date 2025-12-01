@@ -34,7 +34,7 @@ process CPDB_RUN {
         --min_pct ${min_pct} \
         --n_cores ${task.cpus} \
         --output_dir \$PWD \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process}
 
     """
 

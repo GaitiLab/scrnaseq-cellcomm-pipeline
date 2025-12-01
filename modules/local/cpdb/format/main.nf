@@ -19,7 +19,7 @@ process CPDB_FORMAT {
     --sign_means ${significant_means} \
     --means ${means} \
     --ref_db ${ref_db} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
     """
 
     stub:

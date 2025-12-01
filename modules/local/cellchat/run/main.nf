@@ -1,5 +1,5 @@
 process CELLCHAT_RUN {
-    label 'mem_32G'
+    label 'mem_64G'
     label 'time_12h'
 
     input:
@@ -16,13 +16,14 @@ process CELLCHAT_RUN {
     """
     22_cci_cellchat.R \
         --n_perm ${n_perm} \
-        --interactions_db ${interactions_db} \
+        --interactions_db_path ${interactions_db} \
         --annot ${annot} \
-        --gene_expr ${input_file} \
+        --gene_expr_path ${input_file} \
         --min_cells ${min_cells} \
         --output_dir "\$PWD" \
         --n_cores ${task.cpus} \
-        --nf_process_id ${task.process}
+        --nf-process-id ${task.process} \
+        --sample_id ${meta.sample_id}
     """
 
     stub:

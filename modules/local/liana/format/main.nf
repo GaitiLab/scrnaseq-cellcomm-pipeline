@@ -18,7 +18,7 @@ process LIANA_FORMAT {
     --input_interactions ${input_interactions} \
     --sample_id ${meta.sample_id} \
     --ref_db ${ref_db} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

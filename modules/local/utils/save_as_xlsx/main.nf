@@ -18,7 +18,7 @@ process UTILS_SAVE_AS_XLSX {
     --output_name ${output_name} \
     --interactions_agg_integration ${interactions_agg_integration} \
     --alpha ${alpha} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 

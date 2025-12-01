@@ -73,25 +73,26 @@ log_info("Parameters:")
 log_object(params_ls_to_df(params))
 
 # ---- Check arguments ----
-checked_path <- is_valid_path(
-    params$input_file,
-    required_file_extension = "rds"
-)
-if (!checked_path) {
-    stop("Given input file is not a valid path.")
-}
+# checked_path <- is_valid_path(
+#     params$input_file,
+#     required_file_extension = "rds"
+# )
+# if (!checked_path) {
+#     stop("Given input file is not a valid path.")
+# }
 
 # ---- Workflow ----
 seurat_obj <- readRDS(params$input_file) |>
-    scrnaseq.cellcomm::PrepareData(
+    scrnaseq.cellcomm::prepareData(
         annot = params$annot,
         min_cells = params$min_cells
     )
 log_info("Loaded Seurat object & normalized data.")
 
+GaitiLabUtils::create_dir(file.path(params$output_dir, "seurat"))
 saveRDS(
     seurat_obj,
-    file.path(params$output_dir, paste0(params$sample_id, ".rds"))
+    file.path(params$output_dir, "seurat", paste0(params$sample_id, ".rds"))
 )
 log_info("Saved Seurat object.")
 

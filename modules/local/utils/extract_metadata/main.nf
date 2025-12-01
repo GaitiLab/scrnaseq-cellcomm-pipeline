@@ -15,7 +15,7 @@ process UTILS_EXTRACT_METADATA {
     00_get_metadata.R \
     --input_file "${input_file}" \
     --output_dir "\$PWD" \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
     """
 
     stub:

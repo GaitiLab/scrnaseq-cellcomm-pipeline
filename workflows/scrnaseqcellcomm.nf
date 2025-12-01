@@ -23,6 +23,7 @@ include { RUN_CCI                } from '../subworkflows/local/run_cci/main.nf'
 */
 
 workflow SCRNASEQCELLCOMM {
+
     main:
 
     // Create channels for inputs

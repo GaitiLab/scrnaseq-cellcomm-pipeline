@@ -17,7 +17,7 @@ process CELL2CELL_FORMAT {
     --input_interactions_pval ${input_interactions_pval} \
     --sample_id ${meta.sample_id} \
     --ref_db ${ref_db} \
-    --nf_process_id ${task.process}
+    --nf-process-id ${task.process}
 
     """
 
