@@ -27,21 +27,19 @@ workflow SCRNASEQCELLCOMM {
     main:
 
     // Create channels for inputs
-    ch_input_file = Channel.fromPath(params.input_file)
-    ch_metadata_csv = !params.metadata_csv ? Channel.empty() : Channel.fromPath(params.metadata_csv)
-    ch_metadata_rds = !params.metadata_rds ? Channel.empty() : Channel.fromPath(params.metadata_rds)
+    ch_input_file = channel.fromPath(params.input_file)
+    ch_metadata_csv = !params.metadata_csv ? channel.empty() : channel.fromPath(params.metadata_csv)
+    ch_metadata_rds = !params.metadata_rds ? channel.empty() : channel.fromPath(params.metadata_rds)
 
     // Create channels
-    ch_versions = Channel.empty()
+    ch_versions = channel.empty()
 
     // Create channels for scrnaseqcellcomm_modules
     ch_cci = channel.empty()
-    ch_consensus = Channel.empty()
 
     def scrnaseqcellcomm_modules = params.scrnaseqcellcomm_modules ? params.scrnaseqcellcomm_modules.split(',').collect { it.trim().toLowerCase() } : []
     def avail_cci_tools = ("cell2cell,cellchat,cellphonedb,liana").split(",").collect { it.trim().toLowerCase() }
     def cci_tools = params.cci_tools ? params.cci_tools.split(',').collect { it.trim().toLowerCase() } : []
-
 
     if (scrnaseqcellcomm_modules.contains("prep_data")) {
         PREP_DATA(
@@ -71,6 +69,20 @@ workflow SCRNASEQCELLCOMM {
 
     // All CCI tools need to be run for the consensus and aggregation
     if (cci_tools.intersect(avail_cci_tools).size() == 4) {
+        if (!scrnaseqcellcomm_modules.contains("run_cci")) {
+            ch_cci = channel.fromPath(params.sample_sheet)
+                .splitCsv(header: true)
+                .map { row ->
+                    def sid = row.sample_id
+                    tuple(
+                        [sample_id: sid],
+                        file("${params.interactions}/02_run_cci/01_cell2cell/02_formatted/cell2cell__${sid}__postproc.rds"),
+                        file("${params.interactions}/02_run_cci/02_cellchat/02_formatted/cellchat__${sid}__postproc.rds"),
+                        file("${params.interactions}/02_run_cci/03_cellphonedb/02_formatted/cpdb__${sid}__postproc.rds"),
+                        file("${params.interactions}/02_run_cci/04_liana/02_formatted/liana__${sid}__postproc.rds"),
+                    )
+                }
+        }
 
         if (scrnaseqcellcomm_modules.contains("consensus")) {
             CONSENSUS(
@@ -96,7 +108,6 @@ workflow SCRNASEQCELLCOMM {
             ch_versions = ch_versions.mix(AGGREGATION.out.versions)
         }
     }
-
     //
     // Collate and save software versions
     //
