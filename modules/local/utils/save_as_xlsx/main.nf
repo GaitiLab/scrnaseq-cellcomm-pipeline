@@ -8,7 +8,8 @@ process UTILS_SAVE_AS_XLSX {
     val output_name
 
     output:
-    path "${output_name}.xlsx"
+    path "${output_name}.tsv"
+    path "${output_name}.rds"
     path "versions.yml", emit: versions
 
     script:
