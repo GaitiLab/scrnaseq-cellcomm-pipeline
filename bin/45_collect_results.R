@@ -42,7 +42,6 @@ params <- parser$parse_args()
 if (interactive()) {
     # Provide arguments here for local runs
     params$interactions_agg_integration <- file.path(
-        "output",
         "04_aggregation",
         "filtering_aggregated_res.rds"
     )
@@ -81,7 +80,7 @@ log_info("Loaded dataframe.")
 
 output_filename <- file.path(
     params$output_dir,
-    paste0(params$output_name, ".xlsx")
+    paste0(params$output_name)
 )
 
 if (fs::file_exists(output_filename)) {
@@ -107,11 +106,25 @@ if (params$is_stringent) {
         as.data.frame()
     log_info("Removed not significant interactions based on RRA.")
 }
-xlsx::write.xlsx(
-    df_filtered |> as.data.frame(),
-    output_filename
+
+write.table(
+    df_filtered,
+    file = file.path(
+        params$output_dir,
+        paste0(params$output_name, ".tsv")
+    ),
+    row.names = FALSE,
+    quote = FALSE,
+    sep = "\t"
 )
-log_info("Saved dataframe as Excel file.")
+
+log_info("Saved dataframe as tsv.")
+
+saveRDS(
+    df_filtered,
+    file = file.path(params$output_dir, paste0(params$output_name, ".rds"))
+)
+log_info("Saved dataframe as rds.")
 
 log_info("Finished")
 
