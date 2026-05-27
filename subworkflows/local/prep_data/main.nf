@@ -29,9 +29,7 @@ workflow PREP_DATA {
     )
     ch_versions = ch_versions.mix(UTILS_CREATE_SAMPLESHEET.out.versions)
 
-    sample_sheet = UTILS_CREATE_SAMPLESHEET.out.csv
-        | splitCsv(header: true)
-        | map { row -> [sample_id: row.sample_id] }
+    sample_sheet = UTILS_CREATE_SAMPLESHEET.out.csv | splitCsv(header: true) | map { row -> [sample_id: row.sample_id] }
 
     if (!skip_reduction) {
         SEURAT_REDUCE_OBJECT_SIZE(input_file)

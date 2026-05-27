@@ -41,6 +41,12 @@
           "format": "file-path",
           "fa_icon": "far fa-file"
         },
+         "seurat_obj_dir": {
+          "type": "string",
+          "format": "directory-path",
+          "description": "Directory with Seurat objects for each sample",
+          "fa_icon": "fas fa-folder-open"
+        },
         "outdir": {
           "type": "string",
           "format": "directory-path",

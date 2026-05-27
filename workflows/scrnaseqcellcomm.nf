@@ -8,6 +8,7 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_scrnaseqcellcomm_pipeline'
 
 include { PREP_DATA              } from '../subworkflows/local/prep_data'
+include { PREP_DATA_ALT          } from '../subworkflows/local/prep_data_alt'
 include { CELL2CELL              } from '../subworkflows/local/cell2cell'
 include { CELLCHAT               } from '../subworkflows/local/cellchat'
 include { CPDB                   } from '../subworkflows/local/cpdb'
@@ -27,7 +28,7 @@ workflow SCRNASEQCELLCOMM {
     main:
 
     // Create channels for inputs
-    ch_input_file = channel.fromPath(params.input_file)
+    ch_input_file = !params.input_file ? channel.empty() : channel.fromPath(params.input_file)
     ch_metadata_csv = !params.metadata_csv ? channel.empty() : channel.fromPath(params.metadata_csv)
     ch_metadata_rds = !params.metadata_rds ? channel.empty() : channel.fromPath(params.metadata_rds)
 
@@ -42,19 +43,35 @@ workflow SCRNASEQCELLCOMM {
     def cci_tools = params.cci_tools ? params.cci_tools.split(',').collect { it.trim().toLowerCase() } : []
 
     if (scrnaseqcellcomm_modules.contains("prep_data")) {
-        PREP_DATA(
-            ch_input_file,
-            params.sample_var,
-            params.annot,
-            params.min_cells,
-            params.skip_reduction,
-        )
 
-        ch_metadata_csv = PREP_DATA.out.metadata_csv
-        ch_metadata_rds = PREP_DATA.out.metadata_rds
-        mtx_dir_prepped = PREP_DATA.out.mtx_dir
-        seurat_obj_prepped = PREP_DATA.out.seurat_obj
-        ch_versions = ch_versions.mix(PREP_DATA.out.versions)
+        if (!params.seurat_obj_dir) {
+            PREP_DATA(
+                ch_input_file,
+                params.sample_var,
+                params.annot,
+                params.min_cells,
+                params.skip_reduction,
+            )
+
+            ch_metadata_csv = PREP_DATA.out.metadata_csv
+            ch_metadata_rds = PREP_DATA.out.metadata_rds
+            mtx_dir_prepped = PREP_DATA.out.mtx_dir
+            seurat_obj_prepped = PREP_DATA.out.seurat_obj
+            ch_versions = ch_versions.mix(PREP_DATA.out.versions)
+        }
+        else {
+            PREP_DATA_ALT(
+                params.seurat_obj_dir,
+                params.sample_var,
+                params.annot,
+                params.min_cells,
+            )
+            ch_metadata_csv = PREP_DATA_ALT.out.metadata_csv
+            ch_metadata_rds = PREP_DATA_ALT.out.metadata_rds
+            mtx_dir_prepped = PREP_DATA_ALT.out.mtx_dir
+            seurat_obj_prepped = PREP_DATA_ALT.out.seurat_obj
+            ch_versions = ch_versions.mix(PREP_DATA_ALT.out.versions)
+        }
     }
 
     if (scrnaseqcellcomm_modules.contains("run_cci")) {
@@ -69,7 +86,7 @@ workflow SCRNASEQCELLCOMM {
 
     // All CCI tools need to be run for the consensus and aggregation
     if (cci_tools.intersect(avail_cci_tools).size() == 4) {
-        if (!scrnaseqcellcomm_modules.contains("run_cci")) {
+        if (!scrnaseqcellcomm_modules.contains("run_cci") && scrnaseqcellcomm_modules.contains("consensus")) {
             ch_cci = channel.fromPath(params.sample_sheet)
                 .splitCsv(header: true)
                 .map { row ->
