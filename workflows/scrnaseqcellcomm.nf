@@ -31,7 +31,8 @@ workflow SCRNASEQCELLCOMM {
     ch_input_file = !params.input_file ? channel.empty() : channel.fromPath(params.input_file)
     ch_metadata_csv = !params.metadata_csv ? channel.empty() : channel.fromPath(params.metadata_csv)
     ch_metadata_rds = !params.metadata_rds ? channel.empty() : channel.fromPath(params.metadata_rds)
-
+    ch_ranked_cci_rds = channel.empty()
+    ch_mvoted_rds = channel.empty()
     // Create channels
     ch_versions = channel.empty()
 
@@ -116,7 +117,16 @@ workflow SCRNASEQCELLCOMM {
             ch_mvoted_rds = CONSENSUS.out.mvoted_rds
         }
 
+
+
         if (scrnaseqcellcomm_modules.contains("aggregation")) {
+            // Required by aggregation, either generated above or supplied as params
+            if (!scrnaseqcellcomm_modules.contains("consensus")) {
+                ch_ranked_cci_rds = !params.ranked_cci_rds ? channel.empty() : channel.fromPath(params.ranked_cci_rds)
+                ch_mvoted_rds = !params.mvoted_rds ? channel.empty() : channel.fromPath(params.mvoted_rds)
+            }
+
+
             AGGREGATION(
                 ch_ranked_cci_rds,
                 ch_mvoted_rds,

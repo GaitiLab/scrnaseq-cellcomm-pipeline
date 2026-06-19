@@ -41,7 +41,7 @@
           "format": "file-path",
           "fa_icon": "far fa-file"
         },
-         "seurat_obj_dir": {
+        "seurat_obj_dir": {
           "type": "string",
           "format": "directory-path",
           "description": "Directory with Seurat objects for each sample",
@@ -253,5 +253,20 @@
     {
       "$ref": "#/$defs/generic_options"
     }
-  ]
+  ],
+  "properties": {
+    "consensus_dir": {
+      "type": "string"
+    },
+    "combine_samples": {
+      "type": "boolean",
+      "default": true
+    },
+    "ranked_cci_rds": {
+      "type": "string"
+    },
+    "mvoted_rds": {
+      "type": "string"
+    }
+  }
 }
